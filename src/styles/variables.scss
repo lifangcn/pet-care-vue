@@ -1,0 +1,25 @@
+$el-color-primary: #409eff;
+$el-color-success: #67c23a;
+$el-color-warning: #e6a23c;
+$el-color-danger: #f56c6c;
+$el-color-info: #909399;
+
+$pet-color-orange: #ff9f43;
+$pet-color-green: #1dd1a1;
+$pet-color-blue: #54a0ff;
+$pet-color-pink: #ff6b9c;
+
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
+$font-family-base: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+  '微软雅黑', Arial, sans-serif;
+$font-family-pet: 'Comic Neue', cursive;
+
+$--color-primary: $el-color-primary;
+$--color-success: $el-color-success;
+$--color-warning: $el-color-warning;
+$--color-danger: $el-color-danger;
+$--color-info: $el-color-info;
+$--font-family: $font-family-base;
+$--font-family-pet: $font-family-pet;
+

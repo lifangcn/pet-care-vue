@@ -27,70 +27,23 @@
                   {{ editMode ? '取消编辑' : '编辑信息' }}
                 </el-button>
               </div>
-              <el-form
+              <DynamicForm
                 ref="basicFormRef"
-                :model="basicForm"
-                :rules="basicRules"
-                label-width="120px"
+                :config="basicFormConfig"
+                v-model="basicForm"
                 :disabled="!editMode"
               >
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="宠物名称" prop="name">
-                      <el-input v-model="basicForm.name" />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="品种" prop="breed">
-                      <el-select v-model="basicForm.breed" filterable style="width: 100%">
-                        <el-option
-                          v-for="breed in breedOptions"
-                          :key="breed.value"
-                          :label="breed.label"
-                          :value="breed.value"
-                        />
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="性别" prop="gender">
-                      <el-radio-group v-model="basicForm.gender">
-                        <el-radio-button value="male">公</el-radio-button>
-                        <el-radio-button value="female">母</el-radio-button>
-                      </el-radio-group>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="生日" prop="birthday">
-                      <el-date-picker v-model="basicForm.birthday" type="date" style="width: 100%" />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-form-item label="体重(kg)" prop="weight">
-                      <el-input-number v-model="basicForm.weight" :precision="2" :min="0" style="width: 100%" />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-form-item label="绝育情况" prop="neutered">
-                      <el-switch v-model="basicForm.neutered" />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-form-item label="过敏史" prop="allergies">
-                  <el-input v-model="basicForm.allergies" type="textarea" :rows="3" />
-                </el-form-item>
-                <el-form-item label="疫苗记录" prop="vaccineRecord">
-                  <el-input v-model="basicForm.vaccineRecord" type="textarea" :rows="3" />
-                </el-form-item>
-                <el-form-item v-if="editMode">
-                  <el-button type="primary" @click="saveBasicInfo">保存</el-button>
-                  <el-button @click="cancelEdit">取消</el-button>
-                </el-form-item>
-              </el-form>
+                <template #gender-radio="{ value, update }">
+                  <el-radio-group :model-value="value" @update:model-value="update">
+                    <el-radio-button label="male">公</el-radio-button>
+                    <el-radio-button label="female">母</el-radio-button>
+                  </el-radio-group>
+                </template>
+              </DynamicForm>
+              <div v-if="editMode" class="form-actions">
+                <el-button type="primary" @click="saveBasicInfo">保存</el-button>
+                <el-button @click="cancelEdit">取消</el-button>
+              </div>
             </div>
           </el-tab-pane>
 
@@ -257,6 +210,8 @@ import {
 import VChart, { THEME_KEY } from 'vue-echarts'
 import { fetchPetById, updatePet, fetchHealthRecords, createHealthRecord, fetchDiaries, createDiary } from '@/services/petService'
 import type { Pet, HealthRecord, Diary, CreateHealthRecordPayload, CreateDiaryPayload } from '@/types/pet'
+import DynamicForm from '@/components/shared/DynamicForm.vue'
+import type { DynamicFormConfig } from '@/types/form'
 
 use([
   CanvasRenderer,
@@ -276,7 +231,7 @@ const pet = ref<Pet | null>(null)
 const activeTab = ref('basic')
 const editMode = ref(false)
 
-const basicFormRef = ref<FormInstance>()
+const basicFormRef = ref<InstanceType<typeof DynamicForm>>()
 const healthFormRef = ref<FormInstance>()
 const diaryFormRef = ref<FormInstance>()
 
@@ -322,6 +277,81 @@ const breedOptions = [
   { label: '其他', value: 'other' },
 ]
 
+const basicFormConfig: DynamicFormConfig = {
+  labelWidth: '120px',
+  fields: [
+    {
+      type: 'input',
+      label: '宠物名称',
+      prop: 'name',
+      placeholder: '请输入宠物名称',
+      rules: [{ required: true, message: '请输入宠物名称', trigger: 'blur' }],
+      span: 12,
+    },
+    {
+      type: 'select',
+      label: '品种',
+      prop: 'breed',
+      placeholder: '请选择品种',
+      options: breedOptions.map((b) => ({ label: b.label, value: b.value })),
+      rules: [{ required: true, message: '请选择品种', trigger: 'change' }],
+      props: { filterable: true },
+      span: 12,
+    },
+    {
+      type: 'radio-group',
+      label: '性别',
+      prop: 'gender',
+      slot: 'gender-radio',
+      options: [
+        { label: '公', value: 'male' },
+        { label: '母', value: 'female' },
+      ],
+      rules: [{ required: true, message: '请选择性别', trigger: 'change' }],
+      span: 12,
+    },
+    {
+      type: 'date',
+      label: '生日',
+      prop: 'birthday',
+      placeholder: '请选择生日',
+      rules: [{ required: true, message: '请选择生日', trigger: 'change' }],
+      span: 12,
+    },
+    {
+      type: 'number',
+      label: '体重(kg)',
+      prop: 'weight',
+      placeholder: '请输入体重',
+      props: { precision: 2, min: 0, style: { width: '100%' } },
+      span: 12,
+    },
+    {
+      type: 'switch',
+      label: '绝育情况',
+      prop: 'neutered',
+      props: { activeText: '已绝育', inactiveText: '未绝育' },
+      span: 12,
+    },
+    {
+      type: 'textarea',
+      label: '过敏史',
+      prop: 'allergies',
+      placeholder: '请输入过敏信息',
+      props: { rows: 3 },
+      span: 24,
+    },
+    {
+      type: 'textarea',
+      label: '疫苗记录',
+      prop: 'vaccineRecord',
+      placeholder: '请输入疫苗信息',
+      props: { rows: 3 },
+      span: 24,
+    },
+  ],
+}
+
 const healthTagMap = {
   good: { type: 'success', label: '良好' },
   warn: { type: 'warning', label: '注意' },
@@ -330,12 +360,6 @@ const healthTagMap = {
 
 const genderLabel = (gender: 'male' | 'female') => (gender === 'male' ? '公' : '母')
 
-const basicRules: FormRules = {
-  name: [{ required: true, message: '请输入宠物名称', trigger: 'blur' }],
-  breed: [{ required: true, message: '请选择品种', trigger: 'change' }],
-  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-  birthday: [{ required: true, message: '请选择生日', trigger: 'change' }],
-}
 
 const healthRules: FormRules = {
   date: [{ required: true, message: '请选择记录日期', trigger: 'change' }],
@@ -489,8 +513,9 @@ const saveBasicInfo = async () => {
   if (!valid) return
 
   try {
+    const formData = basicFormRef.value.getFormData()
     // [API调用] PUT /pets/:id - 更新宠物信息
-    await updatePet(petId, basicForm)
+    await updatePet(petId, formData)
     ElMessage.success('保存成功')
     editMode.value = false
     await loadPet()
@@ -657,6 +682,11 @@ onMounted(async () => {
     font-size: 18px;
     color: #1f2d3d;
   }
+}
+
+.form-actions {
+  margin-top: 24px;
+  text-align: right;
 }
 
 .health-record-item {

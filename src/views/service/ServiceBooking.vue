@@ -108,14 +108,13 @@
       width="600px"
       destroy-on-close
     >
-      <el-form
+      <DynamicForm
         ref="bookingFormRef"
-        :model="bookingForm"
-        :rules="bookingRules"
-        label-width="100px"
+        :config="bookingFormConfig"
+        v-model="bookingForm"
       >
-        <el-form-item label="服务项目" prop="serviceIds">
-          <el-checkbox-group v-model="bookingForm.serviceIds">
+        <template #service-checkbox="{ value, update }">
+          <el-checkbox-group :model-value="value" @update:model-value="update">
             <el-checkbox
               v-for="service in availableServices"
               :key="service.id"
@@ -126,30 +125,9 @@
               <span v-if="service.duration" class="service-duration">({{ service.duration }}分钟)</span>
             </el-checkbox>
           </el-checkbox-group>
-        </el-form-item>
-
-        <el-form-item label="预约日期" prop="date">
-          <el-date-picker
-            v-model="bookingForm.date"
-            type="date"
-            placeholder="选择预约日期"
-            style="width: 100%"
-            :disabled-date="disabledDate"
-          />
-        </el-form-item>
-
-        <el-form-item label="预约时间" prop="time">
-          <el-time-picker
-            v-model="bookingForm.time"
-            placeholder="选择预约时间"
-            style="width: 100%"
-            format="HH:mm"
-            value-format="HH:mm"
-          />
-        </el-form-item>
-
-        <el-form-item label="选择宠物" prop="petId">
-          <el-select v-model="bookingForm.petId" placeholder="请选择宠物" style="width: 100%">
+        </template>
+        <template #pet-select="{ value, update }">
+          <el-select :model-value="value" @update:model-value="update" placeholder="请选择宠物" style="width: 100%">
             <el-option
               v-for="pet in userPets"
               :key="pet.id"
@@ -162,17 +140,8 @@
               </div>
             </el-option>
           </el-select>
-        </el-form-item>
-
-        <el-form-item label="备注" prop="notes">
-          <el-input
-            v-model="bookingForm.notes"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入备注信息（选填）"
-          />
-        </el-form-item>
-      </el-form>
+        </template>
+      </DynamicForm>
 
       <template #footer>
         <el-button @click="bookingDialogVisible = false">取消</el-button>
@@ -190,6 +159,8 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { fetchProviders, createBooking } from '@/services/serviceService'
 import { usePetStore } from '@/store/pet'
 import type { ServiceProvider, ServiceItem, BookingForm, ServiceCategory } from '@/types/service'
+import DynamicForm from '@/components/shared/DynamicForm.vue'
+import type { DynamicFormConfig } from '@/types/form'
 
 const petStore = usePetStore()
 
@@ -201,7 +172,7 @@ const bookingDialogVisible = ref(false)
 const selectedProvider = ref<ServiceProvider | null>(null)
 const availableServices = ref<ServiceItem[]>([])
 
-const bookingFormRef = ref<FormInstance>()
+const bookingFormRef = ref<InstanceType<typeof DynamicForm>>()
 const bookingForm = reactive<BookingForm>({
   providerId: '',
   serviceIds: [],
@@ -222,12 +193,63 @@ const filteredProviders = computed(() => {
   )
 })
 
-const bookingRules: FormRules<BookingForm> = {
-  serviceIds: [{ required: true, message: '请至少选择一个服务项目', trigger: 'change' }],
-  date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
-  time: [{ required: true, message: '请选择预约时间', trigger: 'change' }],
-  petId: [{ required: true, message: '请选择宠物', trigger: 'change' }],
-}
+const bookingFormConfig = computed<DynamicFormConfig>(() => ({
+  labelWidth: '100px',
+  fields: [
+    {
+      type: 'checkbox-group',
+      label: '服务项目',
+      prop: 'serviceIds',
+      slot: 'service-checkbox',
+      rules: [{ required: true, message: '请至少选择一个服务项目', trigger: 'change' }],
+      span: 24,
+    },
+    {
+      type: 'date',
+      label: '预约日期',
+      prop: 'date',
+      placeholder: '选择预约日期',
+      rules: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
+      props: {
+        disabledDate: (time: Date) => {
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          return time.getTime() < today.getTime()
+        },
+      },
+      span: 24,
+    },
+    {
+      type: 'time',
+      label: '预约时间',
+      prop: 'time',
+      placeholder: '选择预约时间',
+      rules: [{ required: true, message: '请选择预约时间', trigger: 'change' }],
+      props: {
+        format: 'HH:mm',
+        valueFormat: 'HH:mm',
+      },
+      span: 24,
+    },
+    {
+      type: 'select',
+      label: '选择宠物',
+      prop: 'petId',
+      placeholder: '请选择宠物',
+      slot: 'pet-select',
+      rules: [{ required: true, message: '请选择宠物', trigger: 'change' }],
+      span: 24,
+    },
+    {
+      type: 'textarea',
+      label: '备注',
+      prop: 'notes',
+      placeholder: '请输入备注信息（选填）',
+      props: { rows: 4 },
+      span: 24,
+    },
+  ],
+}))
 
 /**
  * [API调用] GET /services/providers
@@ -266,11 +288,6 @@ const openBookingDialog = async (provider: ServiceProvider) => {
   bookingDialogVisible.value = true
 }
 
-const disabledDate = (time: Date) => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return time.getTime() < today.getTime()
-}
 
 const formatDistance = (distance: number) => {
   if (distance < 1000) {
@@ -290,9 +307,10 @@ const handleSubmitBooking = async () => {
   if (!valid) return
 
   try {
+    const formData = bookingFormRef.value.getFormData()
     // 使用MessageBox确认预约
     await ElMessageBox.confirm(
-      `确认预约以下服务？\n服务商：${selectedProvider.value?.name}\n日期：${bookingForm.date}\n时间：${bookingForm.time}`,
+      `确认预约以下服务？\n服务商：${selectedProvider.value?.name}\n日期：${formData.date}\n时间：${formData.time}`,
       '确认预约',
       {
         confirmButtonText: '确认',
@@ -302,7 +320,7 @@ const handleSubmitBooking = async () => {
     )
 
     // [API调用] POST /services/bookings - 创建服务预约
-    await createBooking(bookingForm)
+    await createBooking(formData as BookingForm)
     ElMessage.success('预约成功！')
     bookingDialogVisible.value = false
   } catch (error: any) {

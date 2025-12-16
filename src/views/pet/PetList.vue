@@ -40,21 +40,22 @@
       >
         <el-card shadow="hover" class="pet-card">
           <div class="pet-card-header">
-            <el-avatar :size="72" :src="pet.avatar" />
+            <el-avatar :size="72" :src="pet.avatarUrl || pet.avatar" />
             <div class="pet-meta">
               <h3>{{ pet.name }}</h3>
-              <p>{{ pet.breed }} · {{ pet.age }} · {{ genderLabel(pet.gender) }}</p>
-              <small>上次体检：{{ pet.lastCheck }}</small>
+              <p>{{ pet.breed || '未设置品种' }} · {{ typeLabel(pet.type) }} · {{ genderLabel(pet.gender) }}</p>
+              <small v-if="pet.lastCheck">上次体检：{{ pet.lastCheck }}</small>
+              <small v-else>暂无体检记录</small>
             </div>
           </div>
           <div class="pet-body">
-            <el-tag :type="healthTagMap[pet.healthStatus].type" class="health-tag">
-              {{ healthTagMap[pet.healthStatus].label }}
+            <el-tag :type="healthTagMap[pet.healthStatus || 'good'].type" class="health-tag">
+              {{ healthTagMap[pet.healthStatus || 'good'].label }}
             </el-tag>
             <ul>
-              <li>生日：{{ pet.birthday }}</li>
-              <li>体重：{{ pet.weight }} kg</li>
-              <li>绝育：{{ pet.neutered ? '已完成' : '未绝育' }}</li>
+              <li v-if="pet.birthday">生日：{{ pet.birthday }}</li>
+              <li v-if="pet.weight !== null && pet.weight !== undefined">体重：{{ pet.weight }} kg</li>
+              <li>绝育：{{ (pet.isSterilized ?? pet.neutered) ? '已完成' : '未绝育' }}</li>
             </ul>
           </div>
           <div class="pet-actions">
@@ -77,7 +78,8 @@
       <DynamicForm
         ref="formRef"
         :config="petFormConfig"
-        v-model="formState"
+        :model-value="formState"
+        @update:model-value="(val) => Object.assign(formState, val)"
         @validate="handleValidate"
       >
         <template #avatar-upload="{ field, value, update }">
@@ -96,8 +98,9 @@
         </template>
         <template #gender-radio="{ field, value, update }">
           <el-radio-group :model-value="value" @update:model-value="update">
-            <el-radio-button label="male">公</el-radio-button>
-            <el-radio-button label="female">母</el-radio-button>
+            <el-radio-button :value="0">未知</el-radio-button>
+            <el-radio-button :value="1">公</el-radio-button>
+            <el-radio-button :value="2">母</el-radio-button>
           </el-radio-group>
         </template>
       </DynamicForm>
@@ -113,6 +116,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Plus, ArrowDown, Search, UploadFilled } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { usePetStore } from '@/store/pet'
 import type { CreatePetPayload, Pet } from '@/types/pet'
 import { useRouter } from 'vue-router'
@@ -128,16 +132,17 @@ const searchValue = ref('')
 const formRef = ref<InstanceType<typeof DynamicForm>>()
 const editingPetId = ref<string | null>(null)
 
-const formState = reactive<CreatePetPayload>({
+const formState = reactive<Partial<CreatePetPayload>>({
   name: '',
   breed: '',
-  gender: 'male',
+  type: 1,
+  gender: 0,
   birthday: '',
   weight: null,
   neutered: false,
   avatar: '',
   healthStatus: 'good',
-  vaccineRecord: '',
+  healthNotes: '',
   allergies: '',
 })
 
@@ -163,6 +168,18 @@ const petFormConfig: DynamicFormConfig = {
     },
     {
       type: 'select',
+      label: '宠物类型',
+      prop: 'type',
+      options: [
+        { label: '狗', value: 1 },
+        { label: '猫', value: 2 },
+        { label: '其他', value: 3 },
+      ],
+      rules: [{ required: true, message: '请选择宠物类型', trigger: 'change' }],
+      span: 12,
+    },
+    {
+      type: 'select',
       label: '品种',
       prop: 'breed',
       placeholder: '选择或输入品种',
@@ -176,8 +193,9 @@ const petFormConfig: DynamicFormConfig = {
       label: '性别',
       prop: 'gender',
       options: [
-        { label: '公', value: 'male' },
-        { label: '母', value: 'female' },
+        { label: '未知', value: 0 },
+        { label: '公', value: 1 },
+        { label: '母', value: 2 },
       ],
       span: 12,
       slot: 'gender-radio',
@@ -219,16 +237,16 @@ const petFormConfig: DynamicFormConfig = {
     },
     {
       type: 'textarea',
-      label: '疫苗记录',
-      prop: 'vaccineRecord',
-      placeholder: '请输入疫苗信息',
+      label: '健康备注',
+      prop: 'healthNotes',
+      placeholder: '请输入健康备注信息（可选）',
       props: { rows: 2 },
     },
     {
       type: 'textarea',
-      label: '过敏史',
+      label: '过敏信息',
       prop: 'allergies',
-      placeholder: '请输入过敏信息',
+      placeholder: '请输入过敏信息（可选）',
       props: { rows: 2 },
     },
   ],
@@ -240,9 +258,20 @@ const healthTagMap = {
   bad: { label: '健康偏差', type: 'danger' as const },
 }
 
-const genderLabel = (gender: Pet['gender']) => (gender === 'male' ? '公' : '母')
+const genderLabel = (gender: Pet['gender']) => {
+  if (gender === 1) return '公'
+  if (gender === 2) return '母'
+  return '未知'
+}
+
+const typeLabel = (type: Pet['type']) => {
+  if (type === 1) return '狗'
+  if (type === 2) return '猫'
+  return '其他'
+}
 
 const handleSearch = () => {
+  // 前端过滤，不需要调用 API
   petStore.setSearch(searchValue.value)
 }
 
@@ -258,14 +287,15 @@ const openEditDialog = (pet: Pet) => {
   Object.assign(formState, {
     name: pet.name,
     breed: pet.breed,
+    type: pet.type,
     gender: pet.gender,
     birthday: pet.birthday,
     weight: pet.weight,
-    neutered: pet.neutered,
-    avatar: pet.avatar,
-    healthStatus: pet.healthStatus,
-    vaccineRecord: pet.vaccineRecord,
-    allergies: pet.allergies,
+    neutered: pet.isSterilized ?? pet.neutered ?? false,
+    avatar: pet.avatarUrl || pet.avatar || '',
+    healthStatus: pet.healthStatus || 'good',
+    healthNotes: pet.healthNotes || '',
+    allergies: pet.allergyInfo || pet.allergies || '',
   })
   dialogVisible.value = true
 }
@@ -275,13 +305,14 @@ const resetForm = () => {
   Object.assign(formState, {
     name: '',
     breed: '',
-    gender: 'male',
+    type: 1, // 默认狗
+    gender: 0, // 默认未知
     birthday: '',
     weight: null,
     neutered: false,
     avatar: '',
     healthStatus: 'good',
-    vaccineRecord: '',
+    healthNotes: '',
     allergies: '',
   })
   formRef.value?.clearValidate()
@@ -290,16 +321,21 @@ const resetForm = () => {
 const buildPayload = (): CreatePetPayload => {
   const data = formRef.value?.getFormData() || formState
   return {
+    id: editingPetId.value || undefined, // 有id则为更新
     name: data.name,
     breed: data.breed,
-    gender: data.gender,
+    type: data.type || 1,
+    gender: data.gender || 0,
     birthday: data.birthday,
     weight: data.weight,
-    neutered: data.neutered,
-    avatar: data.avatar,
-    healthStatus: data.healthStatus,
-    vaccineRecord: data.vaccineRecord,
-    allergies: data.allergies,
+    isSterilized: data.neutered ?? false,
+    neutered: data.neutered ?? false, // 兼容字段
+    avatarUrl: data.avatar,
+    avatar: data.avatar, // 兼容字段
+    healthStatus: data.healthStatus || 'good',
+    healthNotes: data.healthNotes || '',
+    allergyInfo: data.allergies || '',
+    allergies: data.allergies || '', // 兼容字段
   }
 }
 
@@ -313,20 +349,27 @@ const submitForm = async () => {
   if (!valid) return
   
   const payload = buildPayload()
-  if (dialogMode.value === 'create') {
-    // [API调用] 通过store调用 POST /pets - 创建新宠物
-    await petStore.addPet(payload)
-  } else if (editingPetId.value) {
-    // [API调用] 通过store调用 PUT /pets/:id - 更新宠物信息
-    await petStore.editPet(editingPetId.value, payload)
-  }
+  // [API调用] 通过store调用 POST /pets/save - 保存宠物信息（新增或更新）
+  // 保存成功后 store 会自动更新本地状态，无需重新加载
+  await petStore.savePet(payload)
   dialogVisible.value = false
   resetForm()
 }
 
-const confirmDelete = (id: string) => {
-  // [API调用] 通过store调用 DELETE /pets/:id - 删除宠物
-  petStore.deletePet(id)
+const confirmDelete = (id: string | number) => {
+  ElMessageBox.confirm('确定要删除这只宠物吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(async () => {
+      // [API调用] 通过store调用 POST /pets/remove/{id} - 删除宠物
+      await petStore.deletePet(id)
+      // 删除操作已在 store 中更新本地状态，无需重新加载
+    })
+    .catch(() => {
+      // 用户取消
+    })
 }
 
 const viewDetail = (id: string) => {
@@ -338,12 +381,13 @@ const handleUploadSuccess = (_: unknown, file: any) => {
 }
 
 const handleBatch = (type: string) => {
-  console.log('batch action', type)
+  // TODO: 实现批量操作功能
 }
 
-onMounted(() => {
-  // [API调用] 通过store调用 GET /pets - 加载宠物列表
-  petStore.loadPets()
+onMounted(async () => {
+  // [API调用] 通过store调用 GET /pets/list - 获取当前用户的宠物列表
+  // 如果 store 中已有数据且不是过期数据，则不会重复请求
+  await petStore.loadPets()
 })
 </script>
 

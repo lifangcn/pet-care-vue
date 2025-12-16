@@ -5,7 +5,12 @@
       <div class="hero-content">
         <div class="hero-text">
           <p class="hero-subtitle">温暖守护 · 贴心陪伴</p>
-          <h1>欢迎回来，{{ userName }}</h1>
+          <div class="hero-welcome">
+            <el-avatar :size="64" :src="userAvatar" class="hero-avatar">
+              <el-icon><User /></el-icon>
+            </el-avatar>
+            <h1>欢迎回来，{{ userName }}</h1>
+          </div>
           <p class="hero-desc">
             今日已为 <strong>{{ stats.todos }}</strong> 项任务设定提醒，<strong>{{ stats.community }}</strong> 条社区互动待查收。
             保持宠物健康，从当下开始。
@@ -173,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   BellFilled,
@@ -186,10 +191,22 @@ import {
   MagicStick,
   Clock,
   Sunny,
+  User,
 } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/store/auth'
+import { getUserAvatar } from '@/utils/avatarUtils'
 
 const router = useRouter()
-const userName = 'Laura'
+const authStore = useAuthStore()
+
+const userName = computed(() => {
+  return authStore.user?.nickname || authStore.user?.phone || '用户'
+})
+
+const userAvatar = computed(() => {
+  const username = authStore.user?.nickname || authStore.user?.phone || '用户'
+  return getUserAvatar(authStore.user?.avatar, username)
+})
 
 const stats = reactive({
   todos: 4,
@@ -241,7 +258,7 @@ const pets = [
     id: 1,
     name: 'Milo',
     breed: '布偶猫',
-    avatar: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&w=120&h=120&fit=crop',
+    avatar: '', // 使用默认头像，避免外部资源加载
     health: 92,
     lastActivity: '今早完成体检',
   },
@@ -249,7 +266,7 @@ const pets = [
     id: 2,
     name: 'Lucky',
     breed: '金毛犬',
-    avatar: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&w=120&h=120&fit=crop',
+    avatar: '', // 使用默认头像，避免外部资源加载
     health: 75,
     lastActivity: '昨日完成洗护',
   },
@@ -342,6 +359,24 @@ const openPet = (pet: { id: number }) => {
 .hero-text {
   flex: 1 1 320px;
   min-width: 280px;
+}
+
+.hero-welcome {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  .hero-avatar {
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+  }
 }
 
 .hero-subtitle {

@@ -111,7 +111,8 @@
       <DynamicForm
         ref="bookingFormRef"
         :config="bookingFormConfig"
-        v-model="bookingForm"
+        :model-value="bookingForm"
+        @update:model-value="(val) => Object.assign(bookingForm, val)"
       >
         <template #service-checkbox="{ value, update }">
           <el-checkbox-group :model-value="value" @update:model-value="update">
@@ -263,7 +264,6 @@ const loadProviders = async () => {
     providers.value = data
   } catch (error) {
     ElMessage.error('加载服务商失败')
-    console.error(error)
   } finally {
     loading.value = false
   }
@@ -326,7 +326,6 @@ const handleSubmitBooking = async () => {
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error('预约失败，请重试')
-      console.error(error)
     }
   }
 }

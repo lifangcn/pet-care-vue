@@ -13,6 +13,7 @@
               <el-image
                 :src="currentImage"
                 fit="cover"
+                lazy
                 class="main-image"
                 :preview-src-list="product.images"
                 :initial-index="currentImageIndex"
@@ -24,6 +25,7 @@
                   :key="index"
                   :src="img"
                   fit="cover"
+                  lazy
                   class="thumbnail"
                   :class="{ active: currentImageIndex === index }"
                   @click="currentImageIndex = index"
@@ -307,7 +309,6 @@ const loadReviews = async () => {
     reviewTotal.value = data.total
   } catch (error) {
     ElMessage.error('加载评价失败')
-    console.error(error)
   } finally {
     loadingReviews.value = false
   }
@@ -315,7 +316,6 @@ const loadReviews = async () => {
 
 const handleSpecChange = () => {
   // 规格变化时的处理逻辑
-  console.log('Selected specs:', selectedSpecs)
 }
 
 const handleAddToCart = () => {

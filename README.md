@@ -214,17 +214,22 @@ const formConfig: DynamicFormConfig = {
 
 ## 🔌 API 配置
 
-所有 API 调用都通过 `src/services/api.ts` 中的 Axios 实例进行。默认 `baseURL` 为 `https://api.example.com`，可通过环境变量 `VITE_API_BASE_URL` 配置。
+所有 API 调用都通过 `src/services/api.ts` 中的 Axios 实例进行。
+
+**配置说明：**
+- 开发/预览环境：使用相对路径 `/api`（通过 Vite 代理）
+- 生产环境：使用相对路径 `/api`（通过 Nginx 代理到 `localhost:18080`）
+- 可通过环境变量 `VITE_API_BASE_URL` 自定义
 
 **环境变量配置：**
 
-创建 `.env` 文件：
+创建 `.env` 或 `.env.production` 文件：
 
 ```env
-VITE_API_BASE_URL=https://your-api-domain.com
+VITE_API_BASE_URL=/api
 ```
 
-所有服务函数都包含 `[API调用]` 注释，便于后续后端代码生成。
+所有服务函数都包含 `[API调用]` 注释，便于后续后端代码生成。详细说明请查看 [API 注释指南](./docs/API_COMMENT_GUIDE.md)。
 
 ## 🎨 样式系统
 
@@ -278,6 +283,18 @@ VITE_API_BASE_URL=https://your-api-domain.com
 
 - Chrome/Edge: [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
 - Firefox: [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
+
+## 📚 文档
+
+详细的技术文档和指南请查看 [docs/](./docs/) 目录：
+
+- **[文档索引](./docs/README.md)** - 所有文档的索引和导航
+- **[部署指南](./docs/DEPLOYMENT.md)** - Nginx 部署配置和步骤
+- **[部署检查清单](./docs/DEPLOYMENT_CHECKLIST.md)** - 快速部署检查清单
+- **[环境变量说明](./docs/ENV_VARIABLES.md)** - 环境变量配置说明
+- **[CORS 配置](./docs/CORS_CONFIG.md)** - CORS 问题解决方案
+- **[API 注释指南](./docs/API_COMMENT_GUIDE.md)** - API 调用注释规范
+- **[性能优化](./docs/PERFORMANCE_OPTIMIZATION.md)** - 性能优化总结
 
 ## 📄 许可证
 

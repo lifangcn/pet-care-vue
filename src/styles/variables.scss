@@ -9,11 +9,12 @@ $pet-color-green: #1dd1a1;
 $pet-color-blue: #54a0ff;
 $pet-color-pink: #ff6b9c;
 
-@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
-
+// 使用系统字体，避免网络请求
 $font-family-base: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
   '微软雅黑', Arial, sans-serif;
-$font-family-pet: 'Comic Neue', cursive;
+// 宠物相关字体使用系统自带的 Comic Sans MS，如果没有则使用默认字体
+$font-family-pet: 'Comic Sans MS', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+  'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
 
 $--color-primary: $el-color-primary;
 $--color-success: $el-color-success;

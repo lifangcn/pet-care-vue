@@ -54,7 +54,6 @@ export const useCommunityStore = defineStore('community', {
         }
       } catch (error) {
         ElMessage.error('加载动态失败')
-        console.error(error)
       } finally {
         this.loading = false
       }
@@ -72,7 +71,6 @@ export const useCommunityStore = defineStore('community', {
         ElMessage.success('发布成功')
       } catch (error) {
         ElMessage.error('发布失败')
-        console.error(error)
       }
     },
     /**
@@ -91,7 +89,6 @@ export const useCommunityStore = defineStore('community', {
         }
       } catch (error) {
         ElMessage.error('操作失败')
-        console.error(error)
       }
     },
     /**
@@ -120,7 +117,6 @@ export const useCommunityStore = defineStore('community', {
         }
       } catch (error) {
         ElMessage.error('加载评论失败')
-        console.error(error)
       }
     },
     /**
@@ -144,7 +140,6 @@ export const useCommunityStore = defineStore('community', {
         ElMessage.success('评论成功')
       } catch (error) {
         ElMessage.error('评论失败')
-        console.error(error)
       }
     },
   },

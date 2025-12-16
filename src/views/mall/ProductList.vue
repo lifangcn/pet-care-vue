@@ -82,6 +82,7 @@
                   <el-image
                     :src="product.image"
                     fit="cover"
+                    lazy
                     class="product-image"
                     :lazy="true"
                   />
@@ -188,7 +189,6 @@ const loadCategories = async () => {
     categories.value = data
   } catch (error) {
     ElMessage.error('加载分类失败')
-    console.error(error)
   }
 }
 
@@ -213,7 +213,6 @@ const loadProducts = async () => {
     total.value = data.total
   } catch (error) {
     ElMessage.error('加载商品失败')
-    console.error(error)
   } finally {
     loading.value = false
   }
@@ -230,7 +229,6 @@ const loadBrands = async () => {
     brands.value = data
   } catch (error) {
     ElMessage.error('加载品牌失败')
-    console.error(error)
   }
 }
 

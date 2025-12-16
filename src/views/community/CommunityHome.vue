@@ -77,6 +77,7 @@
                 v-if="post.media[0].type === 'image'"
                 :src="post.media[0].url"
                 fit="cover"
+                lazy
                 class="media-image"
                 :preview-src-list="[post.media[0].url]"
                 preview-teleported
@@ -102,6 +103,7 @@
                   v-if="media.type === 'image'"
                   :src="media.url"
                   fit="cover"
+                  lazy
                   class="media-image"
                   :preview-src-list="post.media.filter(m => m.type === 'image').map(m => m.url)"
                   :initial-index="index"
@@ -267,7 +269,7 @@ const handlePublish = async () => {
     postContent.value = ''
     uploadedImages.value = []
   } catch (error) {
-    console.error(error)
+    // 错误已在 store 中处理
   } finally {
     publishing.value = false
   }

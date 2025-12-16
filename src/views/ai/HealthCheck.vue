@@ -50,7 +50,8 @@
             v-else
             ref="symptomFormRef"
             :config="symptomFormConfig"
-            v-model="form"
+            :model-value="form"
+            @update:model-value="(val) => Object.assign(form, val)"
           />
           <div class="step-actions">
             <el-button @click="prevStep">上一步</el-button>
@@ -266,7 +267,6 @@ const loadCommonSymptoms = async () => {
     commonSymptoms.value = data
   } catch (error) {
     ElMessage.error('加载症状列表失败')
-    console.error(error)
   }
 }
 
@@ -335,7 +335,6 @@ const handleSubmit = async () => {
     currentStep.value = 3
   } catch (error) {
     ElMessage.error('分析失败，请重试')
-    console.error(error)
     currentStep.value = 1
   } finally {
     loadingInstance.close()

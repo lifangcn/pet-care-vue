@@ -7,6 +7,7 @@ import type { HealthCheckForm, HealthCheckResult, CommonSymptom } from '@/types/
  * @returns {Promise} 返回常见症状列表数据
  */
 export const fetchCommonSymptoms = () => {
+  // TODO: 后端接口地址 GET /ai/symptoms
   return apiClient.get<CommonSymptom[]>('/ai/symptoms')
 }
 
@@ -17,6 +18,7 @@ export const fetchCommonSymptoms = () => {
  * @returns {Promise} 返回AI分析结果数据
  */
 export const submitHealthCheck = (payload: HealthCheckForm) => {
+  // TODO: 后端接口地址 POST /ai/health-check
   return apiClient.post<HealthCheckResult>('/ai/health-check', payload)
 }
 
@@ -27,6 +29,7 @@ export const submitHealthCheck = (payload: HealthCheckForm) => {
  * @returns {Promise} 返回健康检查结果数据
  */
 export const fetchHealthCheckResult = (id: string) => {
+  // TODO: 后端接口地址 GET /ai/health-check/:id
   return apiClient.get<HealthCheckResult>(`/ai/health-check/${id}`)
 }
 

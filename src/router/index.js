@@ -16,11 +16,14 @@ const router = createRouter({
       },
     },
     {
-      path: '/register',
-      name: 'register',
-      component: () => import('@/views/auth/Register.vue'),
+      path: '/profile',
+      name: 'user-profile',
+      component: () => import('@/views/profile/UserProfile.vue'),
       meta: {
-        title: '注册 - 宠物关怀系统',
+        title: '完善信息 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
       },
     },
     {
@@ -120,6 +123,215 @@ const router = createRouter({
           title: 'AI健康检查',
           icon: 'MagicStick',
           order: 6,
+        },
+      },
+    },
+    {
+      path: '/messages',
+      name: 'messages',
+      component: () => import('@/views/user/Messages.vue'),
+      meta: {
+        title: '消息中心 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/wallet',
+      name: 'wallet',
+      component: () => import('@/views/user/Wallet.vue'),
+      meta: {
+        title: '我的钱包 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/user/Settings.vue'),
+      meta: {
+        title: '设置 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/addresses',
+      name: 'addresses',
+      component: () => import('@/views/user/Addresses.vue'),
+      meta: {
+        title: '地址管理 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/cart',
+      name: 'cart',
+      component: () => import('@/views/mall/Cart.vue'),
+      meta: {
+        title: '购物车 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/orders',
+      name: 'orders',
+      component: () => import('@/views/mall/OrderList.vue'),
+      meta: {
+        title: '我的订单 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/orders/:id',
+      name: 'order-detail',
+      component: () => import('@/views/mall/OrderDetail.vue'),
+      meta: {
+        title: '订单详情 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/coupons',
+      name: 'coupons',
+      component: () => import('@/views/mall/Coupons.vue'),
+      meta: {
+        title: '优惠券 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/reminders',
+      name: 'reminders',
+      component: () => import('@/views/pet/Reminders.vue'),
+      meta: {
+        title: '提醒管理 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/diaries',
+      name: 'diaries',
+      component: () => import('@/views/pet/Diaries.vue'),
+      meta: {
+        title: '成长日记 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/consultations',
+      name: 'consultations',
+      component: () => import('@/views/service/Consultations.vue'),
+      meta: {
+        title: '在线咨询 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/consultations/:id',
+      name: 'consultation-detail',
+      component: () => import('@/views/service/ConsultationDetail.vue'),
+      meta: {
+        title: '咨询详情 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/service-orders',
+      name: 'service-orders',
+      component: () => import('@/views/service/ServiceOrders.vue'),
+      meta: {
+        title: '服务订单 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/experts',
+      name: 'experts',
+      component: () => import('@/views/community/Experts.vue'),
+      meta: {
+        title: '专家与达人 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/experts/:id',
+      name: 'expert-detail',
+      component: () => import('@/views/community/ExpertDetail.vue'),
+      meta: {
+        title: '专家详情 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/circles',
+      name: 'circles',
+      component: () => import('@/views/community/Circles.vue'),
+      meta: {
+        title: '兴趣圈子 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/questions',
+      name: 'questions',
+      component: () => import('@/views/community/Questions.vue'),
+      meta: {
+        title: '问答求助 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/questions/:id',
+      name: 'question-detail',
+      component: () => import('@/views/community/QuestionDetail.vue'),
+      meta: {
+        title: '问题详情 - 宠物关怀系统',
+        menu: {
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/activities',
+      name: 'activities',
+      component: () => import('@/views/community/Activities.vue'),
+      meta: {
+        title: '活动与打卡 - 宠物关怀系统',
+        menu: {
+          hidden: true,
         },
       },
     },

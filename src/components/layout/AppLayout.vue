@@ -13,10 +13,17 @@
       </div>
       <div class="header-right">
         <el-dropdown>
-          <el-avatar :size="32" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" />
+          <el-avatar :size="32" :src="userAvatar">
+            <el-icon><User /></el-icon>
+          </el-avatar>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
+              <el-dropdown-item @click="goToProfile">完善个人信息</el-dropdown-item>
+              <el-dropdown-item @click="goToMessages">消息中心</el-dropdown-item>
+              <el-dropdown-item @click="goToWallet">我的钱包</el-dropdown-item>
+              <el-dropdown-item @click="goToAddresses">地址管理</el-dropdown-item>
+              <el-dropdown-item @click="goToSettings">设置</el-dropdown-item>
+              <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -72,7 +79,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Fold, Menu, Close } from '@element-plus/icons-vue'
+import { Fold, Menu, Close, User } from '@element-plus/icons-vue'
 import {
   DataBoard,
   Avatar,
@@ -82,6 +89,8 @@ import {
   MagicStick,
 } from '@element-plus/icons-vue'
 import { useLayoutStore } from '@/store/layout'
+import { useAuthStore } from '@/store/auth'
+import { getUserAvatar } from '@/utils/avatarUtils'
 
 interface Props {
   showFooter?: boolean
@@ -94,6 +103,13 @@ const props = withDefaults(defineProps<Props>(), {
 const route = useRoute()
 const router = useRouter()
 const layoutStore = useLayoutStore()
+const authStore = useAuthStore()
+
+// 获取用户头像
+const userAvatar = computed(() => {
+  const username = authStore.user?.nickname || authStore.user?.phone || '用户'
+  return getUserAvatar(authStore.user?.avatar, username)
+})
 
 // 图标映射
 const iconMap: Record<string, any> = {
@@ -141,9 +157,37 @@ const checkMobile = () => {
   layoutStore.setMobile(isMobile)
 }
 
+const goToProfile = () => {
+  router.push('/profile')
+}
+
+const goToMessages = () => {
+  router.push('/messages')
+}
+
+const goToWallet = () => {
+  router.push('/wallet')
+}
+
+const goToAddresses = () => {
+  router.push('/addresses')
+}
+
+const goToSettings = () => {
+  router.push('/settings')
+}
+
 // 退出登录
-const handleLogout = () => {
-  router.push('/login')
+const handleLogout = async () => {
+  try {
+    // 调用退出登录接口
+    await authStore.logout()
+    // 跳转到登录页
+    router.push('/login')
+  } catch (error) {
+    // 即使接口失败，也清除本地状态并跳转
+    router.push('/login')
+  }
 }
 
 onMounted(() => {
@@ -238,6 +282,7 @@ onUnmounted(() => {
   padding: 20px;
   background: #f6f7fb;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .app-footer {

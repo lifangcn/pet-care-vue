@@ -12,8 +12,8 @@
           <div class="pet-info">
             <h1>{{ pet.name }}</h1>
             <p>{{ pet.breed }} · {{ pet.age }} · {{ genderLabel(pet.gender) }}</p>
-            <el-tag :type="healthTagMap[pet.healthStatus].type" size="large">
-              {{ healthTagMap[pet.healthStatus].label }}
+            <el-tag :type="healthTagMap[pet.healthStatus || 'good'].type" size="large">
+              {{ healthTagMap[pet.healthStatus || 'good'].label }}
             </el-tag>
           </div>
         </div>
@@ -30,7 +30,8 @@
               <DynamicForm
                 ref="basicFormRef"
                 :config="basicFormConfig"
-                v-model="basicForm"
+                :model-value="basicForm"
+                @update:model-value="(val) => Object.assign(basicForm, val)"
                 :disabled="!editMode"
               >
                 <template #gender-radio="{ value, update }">
@@ -64,11 +65,11 @@
                     <div class="health-record-item">
                       <div class="record-info">
                         <p v-if="record.weight" class="record-field">
-                          <el-icon><Scale /></el-icon>
+                          <el-icon><DataLine /></el-icon>
                           体重：{{ record.weight }}kg
                         </p>
                         <p v-if="record.temperature" class="record-field">
-                          <el-icon><Thermometer /></el-icon>
+                          <el-icon><Sunny /></el-icon>
                           体温：{{ record.temperature }}°C
                         </p>
                         <p v-if="record.symptoms" class="record-field">
@@ -100,6 +101,7 @@
                         :key="idx"
                         :src="img"
                         fit="cover"
+                        lazy
                         class="diary-image"
                       />
                     </div>
@@ -197,7 +199,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { FormInstance, FormRules, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { Edit, Plus, Scale, Thermometer, Warning } from '@element-plus/icons-vue'
+import { Edit, Plus, DataLine, Sunny, Warning } from '@element-plus/icons-vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
@@ -208,8 +210,8 @@ import {
   GridComponent,
 } from 'echarts/components'
 import VChart, { THEME_KEY } from 'vue-echarts'
-import { fetchPetById, updatePet, fetchHealthRecords, createHealthRecord, fetchDiaries, createDiary } from '@/services/petService'
-import type { Pet, HealthRecord, Diary, CreateHealthRecordPayload, CreateDiaryPayload } from '@/types/pet'
+import { fetchPetById, savePet, fetchHealthRecords, createHealthRecord, fetchDiaries, createDiary } from '@/services/petService'
+import type { Pet, HealthRecord, Diary, CreateHealthRecordPayload, CreateDiaryPayload, CreatePetPayload } from '@/types/pet'
 import DynamicForm from '@/components/shared/DynamicForm.vue'
 import type { DynamicFormConfig } from '@/types/form'
 
@@ -249,7 +251,7 @@ const basicForm = reactive({
   weight: null as number | null,
   neutered: false,
   allergies: '',
-  vaccineRecord: '',
+  healthNotes: '',
 })
 
 const healthForm = reactive<CreateHealthRecordPayload>({
@@ -335,30 +337,34 @@ const basicFormConfig: DynamicFormConfig = {
     },
     {
       type: 'textarea',
-      label: '过敏史',
+      label: '过敏信息',
       prop: 'allergies',
-      placeholder: '请输入过敏信息',
+      placeholder: '请输入过敏信息（可选）',
       props: { rows: 3 },
       span: 24,
     },
     {
       type: 'textarea',
-      label: '疫苗记录',
-      prop: 'vaccineRecord',
-      placeholder: '请输入疫苗信息',
+      label: '健康备注',
+      prop: 'healthNotes',
+      placeholder: '请输入健康备注信息（可选）',
       props: { rows: 3 },
       span: 24,
     },
   ],
 }
 
-const healthTagMap = {
+const healthTagMap: Record<string, { type: 'success' | 'warning' | 'danger'; label: string }> = {
   good: { type: 'success', label: '良好' },
   warn: { type: 'warning', label: '注意' },
   bad: { type: 'danger', label: '差' },
 }
 
-const genderLabel = (gender: 'male' | 'female') => (gender === 'male' ? '公' : '母')
+const genderLabel = (gender: any) => {
+  if (gender === 'male' || gender === 1) return '公'
+  if (gender === 'female' || gender === 2) return '母'
+  return '未知'
+}
 
 
 const healthRules: FormRules = {
@@ -460,12 +466,12 @@ const loadPet = async () => {
     Object.assign(basicForm, {
       name: data.name,
       breed: data.breed,
-      gender: data.gender,
+      gender: data.gender === 1 ? 'male' : data.gender === 2 ? 'female' : 'male',
       birthday: data.birthday,
       weight: data.weight,
-      neutered: data.neutered,
-      allergies: data.allergies || '',
-      vaccineRecord: data.vaccineRecord || '',
+      neutered: data.isSterilized ?? data.neutered ?? false,
+      allergies: data.allergyInfo || data.allergies || '',
+      healthNotes: data.healthNotes || '',
     })
   } catch (error) {
     ElMessage.error('加载宠物信息失败')
@@ -513,9 +519,25 @@ const saveBasicInfo = async () => {
   if (!valid) return
 
   try {
-    const formData = basicFormRef.value.getFormData()
-    // [API调用] PUT /pets/:id - 更新宠物信息
-    await updatePet(petId, formData)
+    const formData = basicFormRef.value.getFormData() as any
+    // 构建保存的 payload，转换字段格式
+    const payload: CreatePetPayload & { id?: string | number } = {
+      id: petId,
+      name: formData.name,
+      breed: formData.breed,
+      type: pet.value?.type || 1,
+      gender: formData.gender === 'male' ? 1 : formData.gender === 'female' ? 2 : 0,
+      birthday: formData.birthday,
+      weight: formData.weight,
+      isSterilized: formData.neutered ?? false,
+      neutered: formData.neutered ?? false,
+      avatarUrl: pet.value?.avatarUrl || pet.value?.avatar || '',
+      healthStatus: pet.value?.healthStatus || 'good',
+      healthNotes: formData.healthNotes || '',
+      allergyInfo: formData.allergies || '',
+    }
+    // [API调用] POST /pets/save - 保存宠物信息（更新）
+    await savePet(payload)
     ElMessage.success('保存成功')
     editMode.value = false
     await loadPet()
@@ -529,12 +551,12 @@ const cancelEdit = () => {
     Object.assign(basicForm, {
       name: pet.value.name,
       breed: pet.value.breed,
-      gender: pet.value.gender,
+      gender: pet.value.gender === 1 ? 'male' : pet.value.gender === 2 ? 'female' : 'male',
       birthday: pet.value.birthday,
       weight: pet.value.weight,
-      neutered: pet.value.neutered,
-      allergies: pet.value.allergies || '',
-      vaccineRecord: pet.value.vaccineRecord || '',
+      neutered: pet.value.isSterilized ?? pet.value.neutered ?? false,
+      allergies: pet.value.allergyInfo || pet.value.allergies || '',
+      healthNotes: pet.value.healthNotes || '',
     })
   }
   editMode.value = false
@@ -589,11 +611,14 @@ const saveDiary = async () => {
   if (!valid) return
 
   try {
-    const imageUrls = diaryForm.images.map((file) => {
+    const imageUrls = diaryForm.images.map((file: UploadFile) => {
+      if (typeof file === 'string') return file
       if (file.url) return file.url
-      if (file.response?.url) return file.response.url
+      if (file.response && typeof file.response === 'object' && 'url' in file.response) {
+        return (file.response as { url: string }).url
+      }
       return ''
-    }).filter(Boolean)
+    }).filter(Boolean) as string[]
 
     // [API调用] POST /diaries - 创建成长日记
     await createDiary({
@@ -743,6 +768,7 @@ onMounted(async () => {
       font-size: 14px;
       display: -webkit-box;
       -webkit-line-clamp: 3;
+      line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }

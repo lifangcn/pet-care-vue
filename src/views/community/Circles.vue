@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { fetchCircles, joinCircle, leaveCircle } from '@/services/communityService'
+import { fetchCircles, joinCircle as joinCircleApi, leaveCircle as leaveCircleApi } from '@/services/communityService'
 import type { Circle } from '@/services/communityService'
 
 const keyword = ref('')
@@ -68,18 +68,18 @@ const loadCircles = async () => {
   }
 }
 
-const joinCircleHandler = async (id: string) => {
+const joinCircle = async (id: string) => {
   try {
-    await joinCircle(id)
+    await joinCircleApi(id)
     loadCircles()
   } catch (error) {
     console.error('加入圈子失败:', error)
   }
 }
 
-const leaveCircleHandler = async (id: string) => {
+const leaveCircle = async (id: string) => {
   try {
-    await leaveCircle(id)
+    await leaveCircleApi(id)
     loadCircles()
   } catch (error) {
     console.error('退出圈子失败:', error)

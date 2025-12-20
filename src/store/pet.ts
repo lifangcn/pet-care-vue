@@ -25,14 +25,14 @@ export const usePetStore = defineStore('pet', {
         (pet) =>
           (pet.name || '').toLowerCase().includes(keyword) ||
           (pet.breed || '').toLowerCase().includes(keyword) ||
-          (pet.healthStatus || 'good').toLowerCase().includes(keyword),
+          (pet.type || '').toLowerCase().includes(keyword),
       )
     },
   },
   actions: {
     /**
      * [API调用] 加载宠物列表
-     * 调用 GET /pets/list 接口获取当前用户的宠物列表（后端通过token获取用户信息）
+     * 调用 GET /pet/list 接口获取当前用户的宠物列表（后端通过token获取用户信息）
      * @param {boolean} force - 是否强制刷新，默认 false
      */
     async loadPets(force: boolean = false) {
@@ -49,7 +49,7 @@ export const usePetStore = defineStore('pet', {
 
       try {
         this.loading = true
-        // [API调用] GET /pets/list - 获取当前用户的宠物列表（后端通过token获取用户信息）
+        // [API调用] GET /pet/list - 获取当前用户的宠物列表（后端通过token获取用户信息）
         const { data } = await fetchPets()
         // 转换后端数据格式为前端期望的格式
         this.pets = (Array.isArray(data) ? data : []).map((pet: any) => this.normalizePetData(pet))
@@ -67,51 +67,43 @@ export const usePetStore = defineStore('pet', {
     normalizePetData(pet: any): Pet {
       return {
         id: pet.id,
+        user_id: pet.user_id ?? pet.userId,
         name: pet.name || '',
         type: this.convertType(pet.type),
-        breed: pet.breed || '',
+        breed: pet.breed ?? '',
         gender: this.convertGender(pet.gender),
-        birthday: pet.birthday || '',
+        birthday: pet.birthday ?? '',
         weight: pet.weight ?? null,
-        avatarUrl: pet.avatarUrl || pet.avatar || '',
-        avatar: pet.avatarUrl || pet.avatar || '',
-        isSterilized: pet.isSterilized ?? pet.neutered ?? false,
-        neutered: pet.isSterilized ?? pet.neutered ?? false,
-        healthNotes: pet.healthNotes || pet.health_notes || '',
-        allergyInfo: pet.allergyInfo || pet.allergy_info || pet.allergies || '',
-        allergies: pet.allergyInfo || pet.allergy_info || pet.allergies || '',
-        healthStatus: pet.healthStatus || 'good',
-        status: pet.status,
-        createdAt: pet.createdAt,
-        updatedAt: pet.updatedAt,
+        avatar: pet.avatar ?? '',
+        health_notes: pet.health_notes ?? pet.healthNotes ?? '',
+        created_at: pet.created_at ?? pet.createdAt,
       }
     },
     /**
      * 转换宠物类型：后端可能返回布尔值或其他格式，转换为 1|2|3
      */
-    convertType(type: any): 1 | 2 | 3 {
-      if (type === true || type === 1 || type === '1') return 1 // 狗
-      if (type === false || type === 2 || type === '2') return 2 // 猫
-      if (typeof type === 'number' && (type === 1 || type === 2 || type === 3)) return type as 1 | 2 | 3
-      return 1 // 默认狗
+    convertType(type: any): string {
+      if (typeof type === 'string') return type
+      if (type === 1 || type === '1') return 'dog'
+      if (type === 2 || type === '2') return 'cat'
+      if (type === 3 || type === '3') return 'other'
+      return ''
     },
     /**
      * 转换性别：后端可能返回布尔值或其他格式，转换为 0|1|2
      */
-    convertGender(gender: any): 0 | 1 | 2 {
-      if (gender === true || gender === 1 || gender === '1') return 1 // 雄性
-      if (gender === false || gender === 2 || gender === '2') return 2 // 雌性
-      if (typeof gender === 'number' && (gender === 0 || gender === 1 || gender === 2)) return gender as 0 | 1 | 2
-      return 0 // 默认未知
+    convertGender(gender: any): 0 | 1 {
+      if (gender === true || gender === 1 || gender === '1') return 1
+      return 0
     },
     /**
      * [API调用] 保存宠物
-     * 调用 POST /pets/save 接口保存宠物信息（新增或更新）
+     * 调用 POST /pet/save 接口保存宠物信息（新增或更新）
      * @param {CreatePetPayload & { id?: string | number }} payload - 宠物数据（包含id则为更新，不包含则为新增）
      */
     async savePet(payload: CreatePetPayload & { id?: string | number }) {
       try {
-        // [API调用] POST /pets/save - 保存宠物信息
+        // [API调用] POST /pet/save - 保存宠物信息
         const { data } = await savePet(payload)
         // 标准化返回的数据
         const normalizedPet = this.normalizePetData(data)
@@ -135,12 +127,12 @@ export const usePetStore = defineStore('pet', {
     },
     /**
      * [API调用] 删除宠物
-     * 调用 POST /pets/remove/{id} 接口删除宠物
+     * 调用 POST /pet/remove/{id} 接口删除宠物
      * @param {string | number} id - 宠物ID
      */
     async deletePet(id: string | number) {
       try {
-        // [API调用] POST /pets/remove/{id} - 删除宠物
+        // [API调用] POST /pet/remove/{id} - 删除宠物
         await removePet(id)
         this.pets = this.pets.filter((pet) => String(pet.id) !== String(id))
         ElMessage.success('删除宠物成功')

@@ -19,9 +19,18 @@
           :prop="field.prop"
           :rules="field.rules"
         >
+          <!-- Custom Slot (优先) -->
+          <slot
+            v-if="field.slot"
+            :name="field.slot"
+            :field="field"
+            :value="formData[field.prop]"
+            :update="(val: any) => updateField(field.prop, val)"
+          />
+
           <!-- Input -->
           <el-input
-            v-if="field.type === 'input'"
+            v-else-if="field.type === 'input'"
             v-model="formData[field.prop]"
             :placeholder="field.placeholder"
             :disabled="field.disabled || isDisabled"
@@ -170,14 +179,6 @@
             v-bind="field.props"
           />
 
-          <!-- Custom Slot -->
-          <slot
-            v-else-if="field.slot"
-            :name="field.slot"
-            :field="field"
-            :value="formData[field.prop]"
-            :update="(val: any) => updateField(field.prop, val)"
-          />
         </el-form-item>
       </el-col>
     </el-row>

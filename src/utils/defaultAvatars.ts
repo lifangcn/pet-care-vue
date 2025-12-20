@@ -10,7 +10,7 @@ export interface AvatarOption {
 }
 
 // 生成头像 URL 的工具函数
-const generateAvatarURL = (name: string, backgroundColor: string): string => {
+const generateavatar = (name: string, backgroundColor: string): string => {
   // 使用 UI Avatars 服务生成头像
   // 如果没有网络，可以使用本地 SVG，但这里优先使用在线服务
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${backgroundColor.replace('#', '')}&color=fff&size=200&bold=true`
@@ -20,32 +20,32 @@ export const DEFAULT_AVATARS: AvatarOption[] = [
   {
     id: 'avatar-1',
     name: '蓝色头像',
-    url: generateAvatarURL('用户', '54A0FF'),
+    url: generateavatar('用户', '54A0FF'),
   },
   {
     id: 'avatar-2',
     name: '绿色头像',
-    url: generateAvatarURL('用户', '1DD1A1'),
+    url: generateavatar('用户', '1DD1A1'),
   },
   {
     id: 'avatar-3',
     name: '橙色头像',
-    url: generateAvatarURL('用户', 'FF9F43'),
+    url: generateavatar('用户', 'FF9F43'),
   },
   {
     id: 'avatar-4',
     name: '粉色头像',
-    url: generateAvatarURL('用户', 'FF6B9C'),
+    url: generateavatar('用户', 'FF6B9C'),
   },
   {
     id: 'avatar-5',
     name: '紫色头像',
-    url: generateAvatarURL('用户', 'A855F7'),
+    url: generateavatar('用户', 'A855F7'),
   },
   {
     id: 'avatar-6',
     name: '青色头像',
-    url: generateAvatarURL('用户', '14B8A6'),
+    url: generateavatar('用户', '14B8A6'),
   },
 ]
 

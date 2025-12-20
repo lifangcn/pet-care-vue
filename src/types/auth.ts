@@ -4,21 +4,22 @@ export interface LoginForm {
 }
 
 export interface LoginResponse {
-  token: string
-  refreshToken?: string | null
+  accessToken: string
+  refreshToken: string
   username: string
   nickname?: string | null
-  avatarUrl?: string | null
+  avatar?: string | null
 }
 
 export interface UserInfo {
   id?: string | number
-  phone: string
-  nickname: string
-  avatar?: string
-  email?: string
-  gender?: 'male' | 'female' | 'other'
-  birthday?: string
+  username?: string | null
+  phone?: string | null
+  nickname?: string | null
+  avatar?: string | null
+  status?: 0 | 1
+  address?: string | null
+  created_at?: string
 }
 
 

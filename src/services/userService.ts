@@ -2,13 +2,21 @@ import apiClient from './api'
 import type { UserInfo } from '@/types/auth'
 
 export const getCurrentUser = () => {
-  // TODO: 后端接口地址 GET /users/me
-  return apiClient.get<UserInfo>('/users/me')
+  // TODO: 后端接口地址 GET /user/me
+  return apiClient.get<UserInfo>('/user/me')
 }
 
-export const updateUserProfile = (payload: { nickname?: string; gender?: number; birthday?: string; avatar?: string }) => {
-  // TODO: 后端接口地址 PUT /users/profile
-  return apiClient.put<UserInfo>('/users/profile', payload)
+export const updateUserProfile = (payload: { nickname?: string; avatar?: string; address?: string; status?: 0 | 1 }) => {
+  // TODO: 后端接口地址 PUT /user/update
+  return apiClient.put<UserInfo>('/user/update', payload)
+}
+
+export const uploadUserAvatar = (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return apiClient.post<{ url?: string; avatar?: string } | string>('/user/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
 }
 
 export interface Message {
@@ -72,41 +80,5 @@ export const fetchTransactions = (params?: { type?: string; page?: number; pageS
 export const fetchPointsHistory = (params?: { page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /wallet/points/history
   return apiClient.get<{ data: Transaction[]; total: number; page: number; pageSize: number }>('/wallet/points/history', { params })
-}
-
-export interface Address {
-  id: string
-  name: string
-  phone: string
-  province: string
-  city: string
-  district: string
-  detail: string
-  isDefault: boolean
-}
-
-export const fetchAddresses = () => {
-  // TODO: 后端接口地址 GET /addresses
-  return apiClient.get<Address[]>('/addresses')
-}
-
-export const createAddress = (payload: Partial<Address>) => {
-  // TODO: 后端接口地址 POST /addresses
-  return apiClient.post<Address>('/addresses', payload)
-}
-
-export const updateAddress = (id: string, payload: Partial<Address>) => {
-  // TODO: 后端接口地址 PUT /addresses/:id
-  return apiClient.put<Address>(`/addresses/${id}`, payload)
-}
-
-export const deleteAddress = (id: string) => {
-  // TODO: 后端接口地址 DELETE /addresses/:id
-  return apiClient.delete(`/addresses/${id}`)
-}
-
-export const setDefaultAddress = (id: string) => {
-  // TODO: 后端接口地址 PUT /addresses/:id/default
-  return apiClient.put(`/addresses/${id}/default`)
 }
 

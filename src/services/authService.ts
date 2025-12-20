@@ -35,3 +35,8 @@ export const logout = () => {
   return apiClient.post('/auth/logout')
 }
 
+export const refreshToken = (refreshToken: string) => {
+  // TODO: 后端接口地址 POST /auth/refresh
+  return apiClient.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken })
+}
+

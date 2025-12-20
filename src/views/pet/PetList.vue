@@ -19,7 +19,7 @@
       </div>
       <el-input
         v-model="searchValue"
-        placeholder="搜索宠物名称 / 品种 / 健康状态"
+        placeholder="搜索宠物名称 / 品种 / 类型"
         clearable
         class="search-input"
         @input="handleSearch"
@@ -40,22 +40,17 @@
       >
         <el-card shadow="hover" class="pet-card">
           <div class="pet-card-header">
-            <el-avatar :size="72" :src="pet.avatarUrl || pet.avatar" />
+            <el-avatar :size="72" :src="pet.avatar || ''" />
             <div class="pet-meta">
               <h3>{{ pet.name }}</h3>
               <p>{{ pet.breed || '未设置品种' }} · {{ typeLabel(pet.type) }} · {{ genderLabel(pet.gender) }}</p>
-              <small v-if="pet.lastCheck">上次体检：{{ pet.lastCheck }}</small>
-              <small v-else>暂无体检记录</small>
             </div>
           </div>
           <div class="pet-body">
-            <el-tag :type="healthTagMap[pet.healthStatus || 'good'].type" class="health-tag">
-              {{ healthTagMap[pet.healthStatus || 'good'].label }}
-            </el-tag>
             <ul>
               <li v-if="pet.birthday">生日：{{ pet.birthday }}</li>
               <li v-if="pet.weight !== null && pet.weight !== undefined">体重：{{ pet.weight }} kg</li>
-              <li>绝育：{{ (pet.isSterilized ?? pet.neutered) ? '已完成' : '未绝育' }}</li>
+              <li v-if="pet.health_notes">健康备注：{{ pet.health_notes }}</li>
             </ul>
           </div>
           <div class="pet-actions">
@@ -83,24 +78,34 @@
         @validate="handleValidate"
       >
         <template #avatar-upload="{ field, value, update }">
-          <el-upload
-            class="avatar-uploader"
-            drag
-            :on-success="(res: any) => { update(res.url || ''); handleUploadSuccess(null, res) }"
-            :auto-upload="false"
-          >
-            <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
-            <div class="el-upload__text">将头像拖拽到此处，或<em>点击上传</em></div>
-            <template #tip>
-              <div class="el-upload__tip">支持 JPG/PNG，最大 2MB</div>
-            </template>
-          </el-upload>
+          <div class="avatar-upload-wrapper">
+            <el-avatar v-if="avatarPreview || value" :size="80" :src="avatarPreview || value" class="avatar-preview" />
+            <el-upload
+              class="avatar-uploader"
+              action="#"
+              :auto-upload="false"
+              :show-file-list="false"
+              :on-change="(file: any) => handleAvatarChange(file, update)"
+              :before-upload="beforeAvatarUpload"
+              accept="image/*"
+            >
+              <el-button type="primary" :icon="UploadFilled">选择头像</el-button>
+            </el-upload>
+            <el-button
+              v-if="avatarPreview || value"
+              type="danger"
+              text
+              size="small"
+              @click="handleRemoveAvatar(update)"
+            >
+              移除
+            </el-button>
+          </div>
         </template>
         <template #gender-radio="{ field, value, update }">
           <el-radio-group :model-value="value" @update:model-value="update">
-            <el-radio-button :value="0">未知</el-radio-button>
             <el-radio-button :value="1">公</el-radio-button>
-            <el-radio-button :value="2">母</el-radio-button>
+            <el-radio-button :value="0">母</el-radio-button>
           </el-radio-group>
         </template>
       </DynamicForm>
@@ -115,13 +120,14 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Plus, ArrowDown, Search, UploadFilled } from '@element-plus/icons-vue'
-import type { FormInstance } from 'element-plus'
-import { ElMessageBox } from 'element-plus'
+import type { FormInstance, UploadFile, UploadProps } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { usePetStore } from '@/store/pet'
 import type { CreatePetPayload, Pet } from '@/types/pet'
 import { useRouter } from 'vue-router'
 import DynamicForm from '@/components/shared/DynamicForm.vue'
 import type { DynamicFormConfig } from '@/types/form'
+import { uploadPetAvatar } from '@/services/petService'
 
 const petStore = usePetStore()
 const router = useRouter()
@@ -130,20 +136,19 @@ const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const searchValue = ref('')
 const formRef = ref<InstanceType<typeof DynamicForm>>()
-const editingPetId = ref<string | null>(null)
+const editingPetId = ref<string | number | null>(null)
+const pendingAvatarFile = ref<File | null>(null)
+const avatarPreview = ref<string>('')
 
 const formState = reactive<Partial<CreatePetPayload>>({
   name: '',
   breed: '',
-  type: 1,
-  gender: 0,
-  birthday: '',
+  type: 'dog',
+  gender: 1,
+  birthday: null,
   weight: null,
-  neutered: false,
   avatar: '',
-  healthStatus: 'good',
-  healthNotes: '',
-  allergies: '',
+  health_notes: '',
 })
 
 const breedOptions = ['布偶猫', '英短', '金毛', '哈士奇', '柴犬', '兔子', '其他']
@@ -171,9 +176,9 @@ const petFormConfig: DynamicFormConfig = {
       label: '宠物类型',
       prop: 'type',
       options: [
-        { label: '狗', value: 1 },
-        { label: '猫', value: 2 },
-        { label: '其他', value: 3 },
+        { label: '狗', value: 'dog' },
+        { label: '猫', value: 'cat' },
+        { label: '其他', value: 'other' },
       ],
       rules: [{ required: true, message: '请选择宠物类型', trigger: 'change' }],
       span: 12,
@@ -205,69 +210,36 @@ const petFormConfig: DynamicFormConfig = {
       label: '生日',
       prop: 'birthday',
       placeholder: '选择生日',
-      rules: [{ required: true, message: '请选择生日', trigger: 'change' }],
       span: 12,
     },
     {
       type: 'number',
       label: '体重(kg)',
       prop: 'weight',
-      rules: [{ required: true, message: '请输入体重', trigger: 'change' }],
       props: { min: 0, precision: 1, step: 0.5 },
-      span: 12,
-    },
-    {
-      type: 'switch',
-      label: '绝育情况',
-      prop: 'neutered',
-      props: { activeText: '已绝育', inactiveText: '未绝育' },
-      span: 12,
-    },
-    {
-      type: 'select',
-      label: '健康状态',
-      prop: 'healthStatus',
-      options: [
-        { label: '良好', value: 'good' },
-        { label: '注意', value: 'warn' },
-        { label: '偏差', value: 'bad' },
-      ],
-      rules: [{ required: true, message: '请选择健康状态', trigger: 'change' }],
       span: 12,
     },
     {
       type: 'textarea',
       label: '健康备注',
-      prop: 'healthNotes',
+      prop: 'health_notes',
       placeholder: '请输入健康备注信息（可选）',
-      props: { rows: 2 },
-    },
-    {
-      type: 'textarea',
-      label: '过敏信息',
-      prop: 'allergies',
-      placeholder: '请输入过敏信息（可选）',
       props: { rows: 2 },
     },
   ],
 }
 
-const healthTagMap = {
-  good: { label: '健康良好', type: 'success' as const },
-  warn: { label: '需要注意', type: 'warning' as const },
-  bad: { label: '健康偏差', type: 'danger' as const },
-}
-
 const genderLabel = (gender: Pet['gender']) => {
   if (gender === 1) return '公'
-  if (gender === 2) return '母'
-  return '未知'
+  if (gender === 0) return '母'
+  return '-'
 }
 
 const typeLabel = (type: Pet['type']) => {
-  if (type === 1) return '狗'
-  if (type === 2) return '猫'
-  return '其他'
+  if (type === 'dog') return '狗'
+  if (type === 'cat') return '猫'
+  if (type === 'other') return '其他'
+  return type || '未设置类型'
 }
 
 const handleSearch = () => {
@@ -286,34 +258,30 @@ const openEditDialog = (pet: Pet) => {
   editingPetId.value = pet.id
   Object.assign(formState, {
     name: pet.name,
-    breed: pet.breed,
-    type: pet.type,
-    gender: pet.gender,
-    birthday: pet.birthday,
+    breed: pet.breed || '',
+    type: pet.type || 'dog',
+    gender: pet.gender ?? 1,
+    birthday: pet.birthday || null,
     weight: pet.weight,
-    neutered: pet.isSterilized ?? pet.neutered ?? false,
-    avatar: pet.avatarUrl || pet.avatar || '',
-    healthStatus: pet.healthStatus || 'good',
-    healthNotes: pet.healthNotes || '',
-    allergies: pet.allergyInfo || pet.allergies || '',
+    avatar: pet.avatar || '',
+    health_notes: pet.health_notes || '',
   })
   dialogVisible.value = true
 }
 
 const resetForm = () => {
   editingPetId.value = null
+  pendingAvatarFile.value = null
+  avatarPreview.value = ''
   Object.assign(formState, {
     name: '',
     breed: '',
-    type: 1, // 默认狗
-    gender: 0, // 默认未知
-    birthday: '',
+    type: 'dog',
+    gender: 1,
+    birthday: null,
     weight: null,
-    neutered: false,
     avatar: '',
-    healthStatus: 'good',
-    healthNotes: '',
-    allergies: '',
+    health_notes: '',
   })
   formRef.value?.clearValidate()
 }
@@ -323,19 +291,13 @@ const buildPayload = (): CreatePetPayload => {
   return {
     id: editingPetId.value || undefined, // 有id则为更新
     name: data.name,
-    breed: data.breed,
-    type: data.type || 1,
-    gender: data.gender || 0,
-    birthday: data.birthday,
+    breed: data.breed || '',
+    type: data.type || 'dog',
+    gender: (data.gender === 0 ? 0 : 1) as 0 | 1,
+    birthday: data.birthday || null,
     weight: data.weight,
-    isSterilized: data.neutered ?? false,
-    neutered: data.neutered ?? false, // 兼容字段
-    avatarUrl: data.avatar,
-    avatar: data.avatar, // 兼容字段
-    healthStatus: data.healthStatus || 'good',
-    healthNotes: data.healthNotes || '',
-    allergyInfo: data.allergies || '',
-    allergies: data.allergies || '', // 兼容字段
+    avatar: data.avatar,
+    health_notes: data.health_notes || '',
   }
 }
 
@@ -349,9 +311,21 @@ const submitForm = async () => {
   if (!valid) return
   
   const payload = buildPayload()
-  // [API调用] 通过store调用 POST /pets/save - 保存宠物信息（新增或更新）
+  // [API调用] 通过store调用 POST /pet/save - 保存宠物信息（新增或更新）
   // 保存成功后 store 会自动更新本地状态，无需重新加载
-  await petStore.savePet(payload)
+  const savedPet = await petStore.savePet(payload)
+  
+  if (pendingAvatarFile.value && savedPet?.id) {
+    try {
+      const { data } = await uploadPetAvatar(savedPet.id, pendingAvatarFile.value)
+      const url = typeof data === 'string' ? data : (data.avatar || data.url || '')
+      await petStore.savePet({ ...payload, id: savedPet.id, avatar: url })
+      pendingAvatarFile.value = null
+    } catch (e) {
+      ElMessage.error('头像上传失败')
+    }
+  }
+  
   dialogVisible.value = false
   resetForm()
 }
@@ -363,7 +337,7 @@ const confirmDelete = (id: string | number) => {
     type: 'warning',
   })
     .then(async () => {
-      // [API调用] 通过store调用 POST /pets/remove/{id} - 删除宠物
+      // [API调用] 通过store调用 POST /pet/remove/{id} - 删除宠物
       await petStore.deletePet(id)
       // 删除操作已在 store 中更新本地状态，无需重新加载
     })
@@ -372,12 +346,55 @@ const confirmDelete = (id: string | number) => {
     })
 }
 
-const viewDetail = (id: string) => {
+const viewDetail = (id: string | number) => {
   router.push(`/pet/${id}`)
 }
 
-const handleUploadSuccess = (_: unknown, file: any) => {
-  formState.avatar = file?.url || ''
+const handleAvatarChange = async (file: UploadFile, update: (val: string) => void) => {
+  if (!file.raw) return
+  
+  if (editingPetId.value) {
+    try {
+      const { data } = await uploadPetAvatar(editingPetId.value, file.raw)
+      const url = typeof data === 'string' ? data : (data.avatar || data.url || '')
+      update(url)
+      formState.avatar = url
+      avatarPreview.value = ''
+      pendingAvatarFile.value = null
+      ElMessage.success('头像上传成功')
+    } catch (e) {
+      ElMessage.error('头像上传失败')
+    }
+  } else {
+    pendingAvatarFile.value = file.raw
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      avatarPreview.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file.raw)
+  }
+}
+
+const handleRemoveAvatar = (update: (val: string) => void) => {
+  update('')
+  formState.avatar = ''
+  avatarPreview.value = ''
+  pendingAvatarFile.value = null
+}
+
+const beforeAvatarUpload: UploadProps['beforeUpload'] = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('头像大小不能超过 2MB!')
+    return false
+  }
+  return true
 }
 
 const handleBatch = (type: string) => {
@@ -385,7 +402,7 @@ const handleBatch = (type: string) => {
 }
 
 onMounted(async () => {
-  // [API调用] 通过store调用 GET /pets/list - 获取当前用户的宠物列表
+  // [API调用] 通过store调用 GET /pet/list - 获取当前用户的宠物列表
   // 如果 store 中已有数据且不是过期数据，则不会重复请求
   await petStore.loadPets()
 })
@@ -469,6 +486,21 @@ onMounted(async () => {
   margin-top: 16px;
   display: flex;
   gap: 12px;
+}
+
+.avatar-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  
+  .avatar-preview {
+    border: 2px solid #e4e7ed;
+  }
+  
+  .avatar-uploader {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {

@@ -53,7 +53,7 @@ const router = createRouter({
       },
     },
     {
-      path: '/pets/:id',
+      path: '/pet/:id',
       name: 'pet-detail',
       component: () => import('@/views/pet/PetDetail.vue'),
       meta: {
@@ -160,17 +160,6 @@ const router = createRouter({
       },
     },
     {
-      path: '/addresses',
-      name: 'addresses',
-      component: () => import('@/views/user/Addresses.vue'),
-      meta: {
-        title: '地址管理 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
-    },
-    {
       path: '/cart',
       name: 'cart',
       component: () => import('@/views/mall/Cart.vue'),
@@ -215,22 +204,11 @@ const router = createRouter({
       },
     },
     {
-      path: '/reminders',
-      name: 'reminders',
+      path: '/reminder',
+      name: 'reminder',
       component: () => import('@/views/pet/Reminders.vue'),
       meta: {
         title: '提醒管理 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
-    },
-    {
-      path: '/diaries',
-      name: 'diaries',
-      component: () => import('@/views/pet/Diaries.vue'),
-      meta: {
-        title: '成长日记 - 宠物关怀系统',
         menu: {
           hidden: true,
         },

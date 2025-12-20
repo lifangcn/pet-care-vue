@@ -123,7 +123,7 @@ export interface OrderItem {
   spec: string
 }
 
-export const createOrder = (payload: { addressId: string; items: any[]; paymentMethod: string; couponId?: string }) => {
+export const createOrder = (payload: { items: any[]; paymentMethod: string; couponId?: string }) => {
   // TODO: 后端接口地址 POST /orders
   return apiClient.post<Order>('/orders', payload)
 }

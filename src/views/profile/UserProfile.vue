@@ -2,24 +2,15 @@
   <div class="profile-page">
     <div class="profile-container">
       <div class="page-header">
+        <div class="header-icon">
+          <el-icon :size="48"><User /></el-icon>
+        </div>
         <h1>完善个人信息</h1>
-        <p>所有信息均可跳过</p>
-      </div>
-
-      <div class="steps-indicator">
-        <div class="step-item" :class="{ active: activeStep === 0, completed: activeStep > 0 }">
-          <div class="step-number">1</div>
-          <span class="step-title">基础信息</span>
-        </div>
-        <div class="step-divider"></div>
-        <div class="step-item" :class="{ active: activeStep === 1 }">
-          <div class="step-number">2</div>
-          <span class="step-title">宠物信息</span>
-        </div>
+        <p>让我们更好地了解您</p>
       </div>
 
       <div class="steps-body">
-        <section v-show="activeStep === 0">
+        <section>
           <el-form
             ref="stepOneFormRef"
             :model="stepOneForm"
@@ -28,9 +19,23 @@
           >
             <el-form-item label="头像" prop="avatar">
               <div class="avatar-section">
-                <el-avatar :size="80" :src="displayAvatar" class="avatar-preview">
-                  <el-icon><User /></el-icon>
-                </el-avatar>
+                <div class="avatar-wrapper">
+                  <el-avatar :size="100" :src="displayAvatar" class="avatar-preview">
+                    <el-icon :size="50"><User /></el-icon>
+                  </el-avatar>
+                  <div class="avatar-overlay">
+                    <el-upload
+                      action="#"
+                      :auto-upload="false"
+                      :show-file-list="false"
+                      :on-change="handleAvatarChange"
+                      :before-upload="beforeAvatarUpload"
+                      accept="image/*"
+                    >
+                      <el-button circle :icon="Upload" size="small" />
+                    </el-upload>
+                  </div>
+                </div>
                 <div class="avatar-actions">
                   <el-upload
                     action="#"
@@ -40,11 +45,10 @@
                     :before-upload="beforeAvatarUpload"
                     accept="image/*"
                   >
-                    <el-button size="small" :icon="Upload">上传</el-button>
+                    <el-button type="primary" :icon="Upload">更换头像</el-button>
                   </el-upload>
                   <el-button
                     v-if="stepOneForm.avatar"
-                    size="small"
                     text
                     type="danger"
                     @click="removeAvatar"
@@ -62,111 +66,18 @@
               </el-col>
             </el-row>
             <el-row :gutter="16">
-              <el-col :span="12">
-                <el-form-item label="性别" prop="gender">
-                  <el-radio-group v-model="stepOneForm.gender">
-                    <el-radio :value="1">男</el-radio>
-                    <el-radio :value="2">女</el-radio>
-                  </el-radio-group>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="生日" prop="birthday">
-                  <el-date-picker
-                    v-model="stepOneForm.birthday"
-                    type="date"
-                    placeholder="选择日期"
-                    style="width: 100%"
-                    value-format="YYYY-MM-DD"
-                  />
+              <el-col :span="24">
+                <el-form-item label="地址" prop="address">
+                  <el-input v-model="stepOneForm.address" placeholder="请输入地址（可选）" />
                 </el-form-item>
               </el-col>
             </el-row>
           </el-form>
         </section>
-
-        <section v-show="activeStep === 1">
-          <div class="pets-section">
-            <div class="pets-header">
-              <h3>我的宠物</h3>
-              <el-button type="primary" :icon="Plus" @click="addPet">添加宠物</el-button>
-            </div>
-            
-            <div v-if="pets.length === 0" class="empty-pets">
-              <el-empty description="暂无宠物，点击上方按钮添加" :image-size="100" />
-            </div>
-
-            <div v-else class="pets-list">
-              <div
-                v-for="(pet, index) in pets"
-                :key="index"
-                class="pet-card"
-              >
-                <div class="pet-card-header">
-                  <el-avatar :size="48" :src="pet.avatarUrl || pet.avatar" />
-                  <div class="pet-info">
-                    <h4>{{ pet.name || '未命名' }}</h4>
-                    <p>{{ pet.breed || '未设置品种' }}</p>
-                  </div>
-                  <el-button
-                    text
-                    type="danger"
-                    :icon="Delete"
-                    @click="removePet(index)"
-                    class="delete-btn"
-                  />
-                </div>
-                <el-form label-position="top" class="pet-form">
-                  <el-row :gutter="12">
-                    <el-col :span="12">
-                      <el-form-item label="宠物类型">
-                        <el-select v-model="pet.type" placeholder="选择类型" style="width: 100%">
-                          <el-option label="狗" :value="1" />
-                          <el-option label="猫" :value="2" />
-                          <el-option label="其他" :value="3" />
-                        </el-select>
-                      </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                      <el-form-item label="宠物名称">
-                        <el-input v-model="pet.name" placeholder="输入名称" />
-                      </el-form-item>
-                    </el-col>
-                  </el-row>
-                  <el-row :gutter="12">
-                    <el-col :span="12">
-                      <el-form-item label="宠物品种">
-                        <el-input v-model="pet.breed" placeholder="输入品种" />
-                      </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                      <el-form-item label="宠物生日">
-                        <el-date-picker
-                          v-model="pet.birthday"
-                          type="date"
-                          placeholder="选择日期"
-                          style="width: 100%"
-                          value-format="YYYY-MM-DD"
-                        />
-                      </el-form-item>
-                    </el-col>
-                  </el-row>
-                </el-form>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
 
       <div class="form-actions">
-        <el-button :disabled="activeStep === 0" text @click="prevStep">上一步</el-button>
-        <div class="actions-right">
-          <el-button v-if="activeStep < 1" type="primary" @click="nextStep">下一步</el-button>
-          <template v-else>
-            <el-button text @click="skipAll">跳过</el-button>
-            <el-button type="primary" @click="handleSubmit">完成</el-button>
-          </template>
-        </div>
+        <el-button type="primary" size="large" @click="handleSubmit" :icon="Check">保存信息</el-button>
       </div>
     </div>
   </div>
@@ -176,25 +87,21 @@
 import { reactive, ref, onMounted, computed } from 'vue'
 import type { FormInstance, FormRules, UploadProps, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { Plus, Delete, User, Upload } from '@element-plus/icons-vue'
+import { User, Upload, Check } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
-import { updateUserProfile } from '@/services/userService'
-import { savePet } from '@/services/petService'
-import type { CreatePetPayload } from '@/types/pet'
+import { updateUserProfile, uploadUserAvatar } from '@/services/userService'
 import { getUserAvatar } from '@/utils/avatarUtils'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const activeStep = ref(0)
 
 const stepOneFormRef = ref<FormInstance>()
 
 const stepOneForm = reactive({
   nickname: '',
-  gender: 0 as 0 | 1 | 2, // 0-其他 1-男 2-女
-  birthday: '',
   avatar: '',
+  address: '',
 })
 
 // 计算显示的头像（如果未上传，则根据用户名生成）
@@ -203,38 +110,25 @@ const displayAvatar = computed(() => {
   return getUserAvatar(stepOneForm.avatar, username)
 })
 
-// 宠物列表（支持多个）
-const pets = reactive<Array<Partial<CreatePetPayload>>>([])
-
 // 所有字段都是可选的，不需要必填验证
 const stepOneRules: FormRules<typeof stepOneForm> = {}
 
-const nextStep = () => {
-  activeStep.value = Math.min(activeStep.value + 1, 1)
-}
-
-const prevStep = () => {
-  activeStep.value = Math.max(activeStep.value - 1, 0)
-}
-
-const skipAll = () => {
-  router.push({ name: 'dashboard' })
-}
 
 // 处理头像上传
-const handleAvatarChange = (file: UploadFile) => {
+const handleAvatarChange = async (file: UploadFile) => {
   if (!file.raw) return
-  
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    if (e.target?.result) {
-      // 将图片转为 base64 或上传到服务器
-      // 这里先使用 base64，实际应该上传到服务器获取 URL
-      stepOneForm.avatar = e.target.result as string
-      ElMessage.success('头像上传成功')
+  try {
+    const { data } = await uploadUserAvatar(file.raw)
+    const url = typeof data === 'string' ? data : (data.avatar || data.url || '')
+    stepOneForm.avatar = url
+    if (authStore.user) {
+      authStore.user.avatar = url
+      localStorage.setItem('user', JSON.stringify(authStore.user))
     }
+    ElMessage.success('头像上传成功')
+  } catch (e) {
+    ElMessage.error('头像上传失败')
   }
-  reader.readAsDataURL(file.raw)
 }
 
 // 上传前的校验
@@ -250,7 +144,7 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (file) => {
     ElMessage.error('头像大小不能超过 2MB!')
     return false
   }
-  return false // 阻止自动上传，使用手动处理
+  return true
 }
 
 // 移除头像
@@ -265,92 +159,39 @@ onMounted(async () => {
   if (authStore.user) {
     stepOneForm.nickname = authStore.user.nickname || ''
     stepOneForm.avatar = authStore.user.avatar || ''
-    if (authStore.user.gender) {
-      stepOneForm.gender = authStore.user.gender === 'male' ? 1 : authStore.user.gender === 'female' ? 2 : 0
-    }
-    if (authStore.user.birthday) {
-      stepOneForm.birthday = authStore.user.birthday
-    }
+    stepOneForm.address = authStore.user.address || ''
   }
 })
 
-// 添加宠物
-const addPet = () => {
-  pets.push({
-    type: 1, // 默认狗
-    name: '',
-    breed: '',
-    gender: 0, // 默认未知
-    birthday: '',
-    weight: null,
-    isSterilized: false,
-    avatarUrl: '',
-    healthStatus: 'good',
-  })
-}
-
-// 移除宠物
-const removePet = (index: number) => {
-  pets.splice(index, 1)
-}
-
 /**
  * [API调用] 提交用户信息
- * 分别调用用户信息更新和宠物保存接口
+ * 调用用户信息更新接口
  */
 const handleSubmit = async () => {
   try {
-    // 1. 更新用户基础信息（如果有填写）
-    if (stepOneForm.nickname || stepOneForm.birthday || stepOneForm.gender !== 0 || stepOneForm.avatar) {
+    // 更新用户基础信息（如果有填写）
+    if (stepOneForm.nickname || stepOneForm.avatar || stepOneForm.address) {
       try {
-        // [API调用] PUT /users/profile - 更新用户信息
+        // [API调用] PUT /user/update - 更新用户信息
         await updateUserProfile({
           nickname: stepOneForm.nickname || undefined,
-          gender: stepOneForm.gender !== 0 ? stepOneForm.gender : undefined,
-          birthday: stepOneForm.birthday || undefined,
           avatar: stepOneForm.avatar || undefined,
+          address: stepOneForm.address || undefined,
         })
         // 更新 store 中的用户信息
         if (authStore.user) {
           authStore.user.nickname = stepOneForm.nickname || authStore.user.nickname
           authStore.user.avatar = stepOneForm.avatar || authStore.user.avatar
+          authStore.user.address = stepOneForm.address || authStore.user.address
         }
+        ElMessage.success('信息保存成功')
+        router.push({ name: 'dashboard' })
       } catch (error) {
-        // 不阻止流程继续
+        ElMessage.error('保存失败，请稍后重试')
       }
+    } else {
+      router.push({ name: 'dashboard' })
     }
-
-    // 2. 保存所有宠物信息（如果有填写）
-    if (pets.length > 0) {
-      const savePromises = pets
-        .filter((pet) => pet.name || pet.breed) // 只保存有名称或品种的宠物
-        .map((pet) => {
-          const petPayload: CreatePetPayload = {
-            name: pet.name || '未命名',
-            breed: pet.breed || '',
-            type: (pet.type as 1 | 2 | 3) || 1,
-            gender: (pet.gender as 0 | 1 | 2) || 0,
-            birthday: pet.birthday || new Date().toISOString().split('T')[0],
-            weight: pet.weight || null,
-            isSterilized: pet.isSterilized ?? false,
-            avatarUrl: pet.avatarUrl || '',
-            healthStatus: pet.healthStatus || 'good',
-            allergyInfo: pet.allergyInfo || '',
-            healthNotes: pet.healthNotes || '',
-          }
-          // [API调用] POST /pets/save - 保存宠物信息
-          return savePet(petPayload)
-        })
-
-      try {
-        await Promise.all(savePromises)
-      } catch (error) {
-        // 不阻止流程继续
-      }
-    }
-
-    ElMessage.success('信息保存成功')
-    router.push({ name: 'dashboard' })
   } catch (error) {
     ElMessage.error('保存失败，请稍后重试')
   }
@@ -362,10 +203,12 @@ const handleSubmit = async () => {
 
 .profile-page {
   width: 100%;
-  background: #fff;
-  padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
   display: flex;
   justify-content: center;
+  align-items: center;
   font-family: vars.$font-family-base;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -373,96 +216,52 @@ const handleSubmit = async () => {
 
 .profile-container {
   width: 100%;
-  max-width: 700px;
+  max-width: 600px;
   margin: 0 auto;
   box-sizing: border-box;
 }
 
 .page-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  
+  .header-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
   
   h1 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1f2d3d;
-    margin: 0 0 4px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
   
   p {
-    font-size: 12px;
-    color: #909399;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
     margin: 0;
   }
 }
 
-.steps-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
-  gap: 16px;
-  
-  .step-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    
-    .step-number {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #f0f2f5;
-      color: #909399;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.3s;
-    }
-    
-    .step-title {
-      font-size: 14px;
-      color: #909399;
-      transition: all 0.3s;
-    }
-    
-    &.active {
-      .step-number {
-        background: vars.$pet-color-blue;
-        color: #fff;
-      }
-      
-      .step-title {
-        color: vars.$pet-color-blue;
-        font-weight: 500;
-      }
-    }
-    
-    &.completed {
-      .step-number {
-        background: #67c23a;
-        color: #fff;
-      }
-    }
-  }
-  
-  .step-divider {
-    width: 60px;
-    height: 2px;
-    background: #e4e7ed;
-    margin-top: -16px;
-  }
-}
 
 .steps-body {
   background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 20px;
-  border: 1px solid #e4e7ed;
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
 }
 
 section {
@@ -471,112 +270,114 @@ section {
 
 .avatar-section {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
+  padding: 30px 0;
   
-  .avatar-preview {
-    flex-shrink: 0;
-    border: 2px solid #e4e7ed;
+  .avatar-wrapper {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+    
+    .avatar-preview {
+      border: 4px solid #f0f2f5;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .avatar-overlay {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 36px;
+      height: 36px;
+      background: vars.$pet-color-blue;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(64, 158, 255, 0.6);
+      }
+      
+      :deep(.el-button) {
+        border: 2px solid #fff;
+        background: transparent;
+        color: #fff;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      }
+    }
   }
   
   .avatar-actions {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     flex-wrap: wrap;
+    justify-content: center;
   }
 }
 
 :deep(.el-form-item) {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   
   .el-form-item__label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #606266;
-    padding-bottom: 6px;
-  }
-}
-
-.pets-section {
-  .pets-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    
-    h3 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-      color: #1f2d3d;
-    }
-  }
-
-  .empty-pets {
-    padding: 40px 0;
-    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #303133;
+    padding-bottom: 8px;
+    letter-spacing: 0.3px;
   }
   
-  .pets-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .pet-card {
-    border: 1px solid #e4e7ed;
+  .el-input__wrapper {
     border-radius: 8px;
-    padding: 20px;
-    background: #fafafa;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
     
-    .pet-card-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #e4e7ed;
-      
-      .pet-info {
-        flex: 1;
-        
-        h4 {
-          margin: 0 0 4px;
-          font-size: 15px;
-          font-weight: 600;
-          color: #1f2d3d;
-        }
-        
-        p {
-          margin: 0;
-          font-size: 13px;
-          color: #909399;
-        }
-      }
-      
-      .delete-btn {
-        color: #f56c6c;
-      }
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
-    .pet-form {
-      :deep(.el-form-item) {
-        margin-bottom: 16px;
-      }
+    &.is-focus {
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
     }
   }
 }
+
 
 .form-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 16px;
-  border-top: 1px solid #e4e7ed;
+  justify-content: center;
+  padding-top: 8px;
   
-  .actions-right {
-    display: flex;
-    gap: 12px;
+  :deep(.el-button) {
+    min-width: 200px;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(64, 158, 255, 0.4);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
   }
 }
 
@@ -591,60 +392,44 @@ section {
   }
 }
 
-:deep(.el-input__wrapper) {
-  border-radius: 4px;
-}
-
-:deep(.el-radio) {
-  margin-right: 16px;
-}
 
 @media (max-width: 768px) {
   .profile-page {
-    padding: 16px;
-    padding-bottom: 40px;
+    padding: 20px 16px;
+    min-height: auto;
   }
   
-  .page-header h1 {
-    font-size: 20px;
+  .page-header {
+    margin-bottom: 24px;
+    
+    .header-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+    
+    h1 {
+      font-size: 24px;
+    }
+    
+    p {
+      font-size: 14px;
+    }
   }
   
   .steps-body {
-    padding: 20px;
-  }
-  
-  .steps-indicator {
-    margin-bottom: 24px;
-    gap: 8px;
-    
-    .step-divider {
-      width: 30px;
-    }
-    
-    .step-title {
-      font-size: 12px;
-    }
+    padding: 24px 20px;
+    border-radius: 16px;
   }
   
   .avatar-section {
-    flex-direction: column;
-    align-items: flex-start;
-    
-    .avatar-actions {
-      flex-direction: row;
-    }
+    padding: 20px 0;
   }
   
   .form-actions {
-    flex-direction: column;
-    gap: 12px;
-    
-    .actions-right {
+    :deep(.el-button) {
       width: 100%;
-      
-      .el-button {
-        flex: 1;
-      }
+      min-width: auto;
     }
   }
 }

@@ -21,7 +21,6 @@
               <el-dropdown-item @click="goToProfile">完善个人信息</el-dropdown-item>
               <el-dropdown-item @click="goToMessages">消息中心</el-dropdown-item>
               <el-dropdown-item @click="goToWallet">我的钱包</el-dropdown-item>
-              <el-dropdown-item @click="goToAddresses">地址管理</el-dropdown-item>
               <el-dropdown-item @click="goToSettings">设置</el-dropdown-item>
               <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -167,10 +166,6 @@ const goToMessages = () => {
 
 const goToWallet = () => {
   router.push('/wallet')
-}
-
-const goToAddresses = () => {
-  router.push('/addresses')
 }
 
 const goToSettings = () => {

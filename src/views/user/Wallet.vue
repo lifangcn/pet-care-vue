@@ -94,8 +94,8 @@ const loadTransactions = async () => {
     } else {
       res = await fetchPointsHistory(params)
     }
-    transactions.value = res.data.data || []
-    pagination.value.total = res.data.total || 0
+    transactions.value = res.data.records || []
+    pagination.value.total = res.data.totalRow || 0
   } catch (error) {
     console.error('加载交易记录失败:', error)
   }

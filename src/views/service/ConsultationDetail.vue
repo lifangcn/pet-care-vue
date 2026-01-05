@@ -55,7 +55,7 @@ const consultation = ref<Consultation>({
   expertAvatar: '',
   petId: '',
   petName: '',
-  status: 'pending',
+  status: 'PENDING',
   messages: [],
   createdAt: '',
 })

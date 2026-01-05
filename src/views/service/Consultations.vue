@@ -69,8 +69,8 @@ const loadConsultations = async () => {
       params.status = activeTab.value
     }
     const res = await fetchConsultations(params)
-    consultations.value = res.data.data || []
-    pagination.value.total = res.data.total || 0
+    consultations.value = res.data.records || []
+    pagination.value.total = res.data.totalRow || 0
   } catch (error) {
     console.error('加载咨询记录失败:', error)
   }

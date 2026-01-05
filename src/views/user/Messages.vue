@@ -57,8 +57,8 @@ const loadMessages = async () => {
       params.type = activeTab.value
     }
     const res = await fetchMessages(params)
-    messages.value = res.data.data || []
-    pagination.value.total = res.data.total || 0
+    messages.value = res.data.records || []
+    pagination.value.total = res.data.totalRow || 0
   } catch (error) {
     console.error('加载消息失败:', error)
   }

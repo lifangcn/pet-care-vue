@@ -19,7 +19,7 @@ export interface UserInfo {
   avatar?: string | null
   status?: 0 | 1
   address?: string | null
-  created_at?: string
+  createdAt?: string
 }
 
 

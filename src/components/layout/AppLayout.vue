@@ -58,6 +58,9 @@
       </el-aside>
 
       <el-main class="app-main">
+        <div class="notification-container">
+          <ReminderNotification />
+        </div>
         <slot />
       </el-main>
     </el-container>
@@ -86,10 +89,12 @@ import {
   Calendar,
   ChatLineRound,
   MagicStick,
+  Bell,
 } from '@element-plus/icons-vue'
 import { useLayoutStore } from '@/store/layout'
 import { useAuthStore } from '@/store/auth'
 import { getUserAvatar } from '@/utils/avatarUtils'
+import ReminderNotification from '@/components/ReminderNotification.vue'
 
 interface Props {
   showFooter?: boolean
@@ -120,6 +125,7 @@ const iconMap: Record<string, any> = {
   Calendar,
   ChatLineRound,
   MagicStick,
+  Bell,
 }
 
 const getIcon = (iconName: string) => {
@@ -278,6 +284,28 @@ onUnmounted(() => {
   background: #f6f7fb;
   overflow-y: auto;
   overflow-x: hidden;
+  position: relative;
+}
+
+.notification-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 400px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  z-index: 2000;
+  pointer-events: none;
+
+  :deep(.reminder-notification) {
+    pointer-events: auto;
+  }
+
+  @media (max-width: 768px) {
+    right: 12px;
+    width: calc(100vw - 24px);
+    max-width: 400px;
+  }
 }
 
 .app-footer {

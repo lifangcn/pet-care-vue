@@ -209,8 +209,8 @@ const loadProducts = async () => {
 
     // [API调用] GET /products - 获取商品列表
     const { data } = await fetchProducts(params)
-    products.value = data.data
-    total.value = data.total
+    products.value = data.records
+    total.value = data.totalRow
   } catch (error) {
     ElMessage.error('加载商品失败')
   } finally {

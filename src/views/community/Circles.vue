@@ -61,8 +61,8 @@ const loadCircles = async () => {
       params.keyword = keyword.value
     }
     const res = await fetchCircles(params)
-    circles.value = res.data.data || []
-    pagination.value.total = res.data.total || 0
+    circles.value = res.data.records || []
+    pagination.value.total = res.data.totalRow || 0
   } catch (error) {
     console.error('加载圈子列表失败:', error)
   }

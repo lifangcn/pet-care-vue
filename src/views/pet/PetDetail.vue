@@ -29,46 +29,129 @@
                   {{ editMode ? '取消编辑' : '编辑信息' }}
                 </el-button>
               </div>
-              <DynamicForm
+              <el-form
                 ref="basicFormRef"
-                :config="basicFormConfig"
-                :model-value="basicForm"
-                @update:model-value="(val) => Object.assign(basicForm, val)"
-                :disabled="!editMode"
+                :model="basicForm"
+                :rules="basicFormRules"
+                label-width="120px"
               >
-                <template #avatar-upload="{ field, value, update }">
-                  <div class="avatar-upload-wrapper">
-                    <el-avatar v-if="value || pet?.avatar" :size="80" :src="value || pet?.avatar" class="avatar-preview" />
-                    <el-upload
-                      class="avatar-uploader"
-                      action="#"
-                      :auto-upload="false"
-                      :show-file-list="false"
-                      :on-change="(file: any) => handleAvatarChange(file, update)"
-                      :before-upload="beforeAvatarUpload"
-                      accept="image/*"
-                      :disabled="!editMode"
-                    >
-                      <el-button type="primary" :icon="Plus" :disabled="!editMode">选择头像</el-button>
-                    </el-upload>
-                    <el-button
-                      v-if="(value || pet?.avatar) && editMode"
-                      type="danger"
-                      text
-                      size="small"
-                      @click="() => { update(''); basicForm.avatar = '' }"
-                    >
-                      移除
-                    </el-button>
-                  </div>
-                </template>
-                <template #gender-radio="{ value, update }">
-                  <el-radio-group :model-value="value" @update:model-value="update">
-                    <el-radio-button :value="1">公</el-radio-button>
-                    <el-radio-button :value="0">母</el-radio-button>
-                  </el-radio-group>
-                </template>
-              </DynamicForm>
+                <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="宠物头像">
+                      <div class="avatar-upload-wrapper">
+                        <el-avatar v-if="basicForm.avatar || pet?.avatar" :size="80" :src="basicForm.avatar || pet?.avatar" class="avatar-preview" />
+                        <el-upload
+                          class="avatar-uploader"
+                          action="#"
+                          :auto-upload="false"
+                          :show-file-list="false"
+                          :on-change="(file: any) => handleAvatarChange(file, (val: string) => { basicForm.avatar = val })"
+                          :before-upload="beforeAvatarUpload"
+                          accept="image/*"
+                          :disabled="!editMode"
+                        >
+                          <el-button type="primary" :icon="Plus" :disabled="!editMode">选择头像</el-button>
+                        </el-upload>
+                        <el-button
+                          v-if="(basicForm.avatar || pet?.avatar) && editMode"
+                          type="danger"
+                          text
+                          size="small"
+                          @click="() => { basicForm.avatar = '' }"
+                        >
+                          移除
+                        </el-button>
+                      </div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="宠物名称" prop="name">
+                      <el-input
+                        v-model="basicForm.name"
+                        placeholder="请输入宠物名称"
+                        :disabled="!editMode"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="类型" prop="type">
+                      <el-select
+                        v-model="basicForm.type"
+                        placeholder="请选择类型"
+                        :disabled="!editMode"
+                        style="width: 100%"
+                      >
+                        <el-option label="狗" value="dog" />
+                        <el-option label="猫" value="cat" />
+                        <el-option label="其他" value="other" />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="品种" prop="breed">
+                      <el-select
+                        v-model="basicForm.breed"
+                        placeholder="请选择品种"
+                        :disabled="!editMode"
+                        filterable
+                        style="width: 100%"
+                      >
+                        <el-option
+                          v-for="breed in breedOptions"
+                          :key="breed"
+                          :label="breed"
+                          :value="breed"
+                        />
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="性别" prop="gender">
+                      <el-radio-group v-if="editMode" v-model="basicForm.gender">
+                        <el-radio-button :value="1">公</el-radio-button>
+                        <el-radio-button :value="0">母</el-radio-button>
+                      </el-radio-group>
+                      <span v-else class="gender-display">{{ basicForm.gender === 1 ? '公' : '母' }}</span>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="生日" prop="birthday">
+                      <el-date-picker
+                        v-model="basicForm.birthday"
+                        type="date"
+                        placeholder="请选择生日"
+                        :disabled="!editMode"
+                        style="width: 100%"
+                        format="YYYY-MM-DD"
+                        value-format="YYYY-MM-DD"
+                        clearable
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="体重(kg)" prop="weight">
+                      <el-input-number
+                        v-model="basicForm.weight"
+                        :precision="2"
+                        :min="0"
+                        :disabled="!editMode"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="24">
+                    <el-form-item label="健康备注" prop="healthNotes">
+                      <el-input
+                        v-model="basicForm.healthNotes"
+                        type="textarea"
+                        :rows="3"
+                        placeholder="请输入健康备注信息（可选）"
+                        :disabled="!editMode"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-form>
               <div v-if="editMode" class="form-actions">
                 <el-button type="primary" @click="saveBasicInfo">保存</el-button>
                 <el-button @click="cancelEdit">取消</el-button>
@@ -80,76 +163,76 @@
             <div class="tab-content">
               <div class="tab-header">
                 <h3>健康记录</h3>
-                <el-button type="primary" :icon="Plus" @click="openHealthDialog">添加记录</el-button>
+                <div class="header-actions">
+                  <el-select v-model="healthRecordFilter" placeholder="筛选类型" clearable style="width: 150px; margin-right: 10px" @change="loadHealthRecords">
+                    <el-option label="全部" value="" />
+                    <el-option label="体重" value="WEIGHT" />
+                    <el-option label="体温" value="TEMPERATURE" />
+                    <el-option label="用药" value="MEDICAL" />
+                  </el-select>
+                  <el-button type="primary" :icon="Plus" @click="openHealthDialog">添加记录</el-button>
+                </div>
               </div>
-              <el-timeline>
-                <el-timeline-item
-                  v-for="record in healthRecords"
-                  :key="record.id"
-                  :timestamp="formatTime(record.record_time)"
-                  placement="top"
-                >
-                  <el-card shadow="hover" class="health-record-card">
-                    <div class="health-record-item">
-                      <div class="record-header">
-                        <div class="record-info">
-                          <p v-if="record.record_type === 'weight' && record.value !== null && record.value !== undefined" class="record-field">
-                            <el-icon><DataLine /></el-icon>
-                            体重：{{ record.value }}kg
-                          </p>
-                          <p v-if="record.record_type === 'temperature' && record.value !== null && record.value !== undefined" class="record-field">
-                            <el-icon><Sunny /></el-icon>
-                            体温：{{ record.value }}°C
-                          </p>
-                          <p v-if="record.record_type === 'medical' && record.medication_info" class="record-field">
-                            <el-icon><Warning /></el-icon>
-                            用药：{{ record.medication_info }}
-                          </p>
-                          <p v-if="record.record_type === 'reminder'" class="record-field">
-                            <el-icon><Bell /></el-icon>
-                            <el-tag v-if="record.is_completed" type="success" size="small">已完成</el-tag>
-                            <el-tag v-else type="warning" size="small">待办</el-tag>
-                          </p>
-                          <p v-if="record.title" class="record-title">{{ record.title }}</p>
-                          <p v-if="record.description" class="record-notes">{{ record.description }}</p>
-                          <p v-if="record.record_type === 'reminder' && record.schedule_time" class="record-meta">
-                            计划时间：{{ formatTime(record.schedule_time) }}
-                            <span v-if="record.remind_before_minutes"> | 提前{{ record.remind_before_minutes }}分钟提醒</span>
-                          </p>
-                        </div>
-                        <div class="record-actions">
-                          <el-button
-                            v-if="record.record_type === 'reminder' && !record.is_completed"
-                            type="success"
-                            size="small"
-                            text
-                            @click="completeRecord(record.id)"
-                          >
-                            完成
-                          </el-button>
-                          <el-button
-                            type="primary"
-                            size="small"
-                            text
-                            @click="editHealthRecord(record)"
-                          >
-                            编辑
-                          </el-button>
-                          <el-button
-                            type="danger"
-                            size="small"
-                            text
-                            @click="deleteRecord(record.id)"
-                          >
-                            删除
-                          </el-button>
-                        </div>
-                      </div>
-                    </div>
-                  </el-card>
-                </el-timeline-item>
-              </el-timeline>
-              <el-empty v-if="healthRecords.length === 0" description="暂无健康记录" />
+              <el-table :data="filteredHealthRecords" stripe style="width: 100%">
+                <el-table-column prop="recordTime" label="记录时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatTime(row.recordTime) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="recordType" label="类型" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="getRecordTypeTag(row.recordType)" size="small">
+                      {{ getRecordTypeLabel(row.recordType) }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="title" label="标题" min-width="120" show-overflow-tooltip />
+                <el-table-column label="数值" width="120">
+                  <template #default="{ row }">
+                    <span v-if="row.recordType === 'WEIGHT' && row.value !== null && row.value !== undefined">
+                      {{ row.value }}kg
+                    </span>
+                    <span v-else-if="row.recordType === 'TEMPERATURE' && row.value !== null && row.value !== undefined">
+                      {{ row.value }}°C
+                    </span>
+                    <span v-else>-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="symptom" label="症状" min-width="150" show-overflow-tooltip>
+                  <template #default="{ row }">
+                    {{ row.symptom || '-' }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="medicationInfo" label="用药" min-width="150" show-overflow-tooltip>
+                  <template #default="{ row }">
+                    {{ row.medicationInfo || '-' }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="description" label="备注" min-width="200" show-overflow-tooltip>
+                  <template #default="{ row }">
+                    {{ row.description || '-' }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="100" fixed="right">
+                  <template #default="{ row }">
+                    <el-button type="primary" :icon="Edit" size="small" circle @click="editHealthRecord(row)" />
+                    <el-button type="danger" :icon="Delete" size="small" circle @click="deleteRecord(row.id)" />
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-empty v-if="filteredHealthRecords.length === 0" description="暂无健康记录" />
+              
+              <div v-if="healthRecordPagination.totalRow > 0" class="pagination-wrapper">
+                <el-pagination
+                  v-model:current-page="healthRecordPagination.pageNumber"
+                  v-model:page-size="healthRecordPagination.pageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  :total="healthRecordPagination.totalRow"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  @size-change="handleHealthRecordSizeChange"
+                  @current-change="handleHealthRecordPageChange"
+                />
+              </div>
             </div>
           </el-tab-pane>
 
@@ -157,12 +240,15 @@
             <div class="tab-content">
               <div class="chart-container">
                 <div class="chart-item">
-                  <h3>体重变化曲线</h3>
-                  <v-chart class="chart" :option="weightChartOption" />
-                </div>
-                <div class="chart-item">
-                  <h3>体温趋势</h3>
-                  <v-chart class="chart" :option="temperatureChartOption" />
+                  <h3>健康趋势综合图表</h3>
+                  <v-chart 
+                    v-if="activeTab === 'chart'"
+                    :key="`combined-${healthRecords.length}`"
+                    class="chart" 
+                    :option="combinedChartOption"
+                    autoresize
+                  />
+                  <div v-else class="chart-placeholder">暂无数据</div>
                 </div>
               </div>
             </div>
@@ -174,40 +260,37 @@
     <!-- 健康记录对话框 -->
     <el-dialog v-model="healthDialogVisible" :title="editingRecordId ? '编辑健康记录' : '添加健康记录'" width="700px">
       <el-form ref="healthFormRef" :model="healthForm" :rules="healthRules" label-width="100px">
-        <el-form-item label="记录类型" prop="record_type">
-          <el-select v-model="healthForm.record_type" style="width: 100%">
-            <el-option label="体重" value="weight" />
-            <el-option label="体温" value="temperature" />
-            <el-option label="提醒" value="reminder" />
-            <el-option label="用药" value="medical" />
+        <el-form-item label="记录类型" prop="recordType">
+          <el-select v-model="healthForm.recordType" style="width: 100%">
+            <el-option label="体重" value="WEIGHT" />
+            <el-option label="体温" value="TEMPERATURE" />
+            <el-option label="用药" value="MEDICAL" />
           </el-select>
         </el-form-item>
-        <el-form-item label="记录时间" prop="record_time">
-          <el-date-picker v-model="healthForm.record_time" type="datetime" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
+        <el-form-item label="记录时间" prop="recordTime">
+          <el-date-picker
+            v-model="healthForm.recordTime"
+            type="datetime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD HH:mm"
+            placeholder="选择记录时间"
+            style="width: 100%"
+            :shortcuts="dateTimeShortcuts"
+            :default-time="new Date(2000, 1, 1, 9, 0, 0)"
+            clearable
+          />
         </el-form-item>
-        <el-form-item v-if="healthForm.record_type === 'weight'" label="体重(kg)" prop="value">
+        <el-form-item v-if="healthForm.recordType === 'WEIGHT'" label="体重(kg)" prop="value">
           <el-input-number v-model="healthForm.value" :precision="2" :min="0" style="width: 100%" />
         </el-form-item>
-        <el-form-item v-if="healthForm.record_type === 'temperature'" label="体温(°C)" prop="value">
+        <el-form-item v-if="healthForm.recordType === 'TEMPERATURE'" label="体温(°C)" prop="value">
           <el-input-number v-model="healthForm.value" :precision="1" :min="0" :max="50" style="width: 100%" />
         </el-form-item>
-        <el-form-item v-if="healthForm.record_type === 'medical'" label="药品名称" prop="medication_info">
-          <el-input v-model="healthForm.medication_info" />
+        <el-form-item v-if="healthForm.recordType === 'MEDICAL'" label="症状" prop="symptom">
+          <el-input v-model="healthForm.symptom" type="textarea" :rows="2" />
         </el-form-item>
-        <el-form-item v-if="healthForm.record_type === 'reminder'" label="计划时间" prop="schedule_time">
-          <el-date-picker v-model="healthForm.schedule_time" type="datetime" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
-        </el-form-item>
-        <el-form-item v-if="healthForm.record_type === 'reminder'" label="提前提醒(分钟)" prop="remind_before_minutes">
-          <el-input-number v-model="healthForm.remind_before_minutes" :min="0" style="width: 100%" />
-        </el-form-item>
-        <el-form-item v-if="healthForm.record_type === 'reminder'" label="重复" prop="repeat_type">
-          <el-select v-model="healthForm.repeat_type" style="width: 100%">
-            <el-option label="不重复" value="none" />
-            <el-option label="每天" value="daily" />
-            <el-option label="每周" value="weekly" />
-            <el-option label="每月" value="monthly" />
-            <el-option label="自定义" value="custom" />
-          </el-select>
+        <el-form-item v-if="healthForm.recordType === 'MEDICAL'" label="用药信息" prop="medicationInfo">
+          <el-input v-model="healthForm.medicationInfo" type="textarea" :rows="2" />
         </el-form-item>
         <el-form-item label="标题" prop="title">
           <el-input v-model="healthForm.title" />
@@ -226,11 +309,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { FormInstance, FormRules, UploadProps, UploadFile } from 'element-plus'
+import type { DatePickerShortcuts } from 'element-plus/es/components/date-picker/src/date-picker'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Edit, Plus, DataLine, Sunny, Warning, Bell } from '@element-plus/icons-vue'
+import { Edit, Plus, DataLine, Sunny, Warning, Delete } from '@element-plus/icons-vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
@@ -241,10 +325,8 @@ import {
   GridComponent,
 } from 'echarts/components'
 import VChart, { THEME_KEY } from 'vue-echarts'
-import { fetchPetById, savePet, fetchHealthRecords, createHealthRecord, updateHealthRecord, deleteHealthRecord, completeHealthRecord, uploadPetAvatar } from '@/services/petService'
+import { fetchPetById, savePet, fetchHealthRecords, createHealthRecord, updateHealthRecord, deleteHealthRecord, uploadPetAvatar } from '@/services/petService'
 import type { Pet, HealthRecord, CreateHealthRecordPayload, CreatePetPayload } from '@/types/pet'
-import DynamicForm from '@/components/shared/DynamicForm.vue'
-import type { DynamicFormConfig } from '@/types/form'
 
 use([
   CanvasRenderer,
@@ -264,10 +346,17 @@ const pet = ref<Pet | null>(null)
 const activeTab = ref('basic')
 const editMode = ref(false)
 
-const basicFormRef = ref<InstanceType<typeof DynamicForm>>()
+const basicFormRef = ref<FormInstance>()
 const healthFormRef = ref<FormInstance>()
 
 const healthRecords = ref<HealthRecord[]>([])
+const healthRecordFilter = ref<string>('')
+
+const healthRecordPagination = reactive({
+  pageNumber: 1,
+  pageSize: 10,
+  totalRow: 0,
+})
 
 const healthDialogVisible = ref(false)
 const editingRecordId = ref<string | number | null>(null)
@@ -283,102 +372,73 @@ const basicForm = reactive({
   avatar: '' as string,
 })
 
-const healthForm = reactive<CreateHealthRecordPayload>({
-  pet_id: '',
-  record_type: 'weight',
+const healthForm = reactive<CreateHealthRecordPayload & { symptom?: string }>({
+  petId: '',
+  recordType: 'WEIGHT',
   title: '',
   description: '',
-  record_time: '',
-  schedule_time: '',
-  remind_before_minutes: 0,
-  repeat_type: 'none',
+  recordTime: '',
   value: undefined,
-  medication_info: '',
+  symptom: '',
+  medicationInfo: '',
 })
 
 
 const breedOptions = ['中华田园犬', '金毛寻回犬', '布偶猫', '英短', '其他']
 
-const basicFormConfig: DynamicFormConfig = {
-  labelWidth: '120px',
-  fields: [
-    {
-      type: 'input',
-      label: '宠物头像',
-      prop: 'avatar',
-      slot: 'avatar-upload',
-      span: 24,
-    },
-    {
-      type: 'input',
-      label: '宠物名称',
-      prop: 'name',
-      placeholder: '请输入宠物名称',
-      rules: [{ required: true, message: '请输入宠物名称', trigger: 'blur' }],
-      span: 12,
-    },
-    {
-      type: 'select',
-      label: '类型',
-      prop: 'type',
-      placeholder: '请选择类型',
-      options: [
-        { label: '狗', value: 'dog' },
-        { label: '猫', value: 'cat' },
-        { label: '其他', value: 'other' },
-      ],
-      span: 12,
-    },
-    {
-      type: 'select',
-      label: '品种',
-      prop: 'breed',
-      placeholder: '请选择品种',
-      options: breedOptions.map((b) => ({ label: b, value: b })),
-      props: { filterable: true },
-      span: 12,
-    },
-    {
-      type: 'radio-group',
-      label: '性别',
-      prop: 'gender',
-      slot: 'gender-radio',
-      options: [
-        { label: '公', value: 1 },
-        { label: '母', value: 0 },
-      ],
-      span: 12,
-    },
-    {
-      type: 'date',
-      label: '生日',
-      prop: 'birthday',
-      placeholder: '请选择生日',
-      span: 12,
-    },
-    {
-      type: 'number',
-      label: '体重(kg)',
-      prop: 'weight',
-      placeholder: '请输入体重',
-      props: { precision: 2, min: 0, style: { width: '100%' } },
-      span: 12,
-    },
-    {
-      type: 'textarea',
-      label: '健康备注',
-      prop: 'healthNotes',
-      placeholder: '请输入健康备注信息（可选）',
-      props: { rows: 3 },
-      span: 24,
-    },
-  ],
+const getCurrentDateTime = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+const dateTimeShortcuts: DatePickerShortcuts = [
+  {
+    text: '今天',
+    value: () => {
+      const now = new Date()
+      return now
+    }
+  },
+  {
+    text: '昨天',
+    value: () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      return yesterday
+    }
+  },
+  {
+    text: '一周前',
+    value: () => {
+      const lastWeek = new Date()
+      lastWeek.setDate(lastWeek.getDate() - 7)
+      return lastWeek
+    }
+  },
+  {
+    text: '一个月前',
+    value: () => {
+      const lastMonth = new Date()
+      lastMonth.setMonth(lastMonth.getMonth() - 1)
+      return lastMonth
+    }
+  }
+]
+
+const basicFormRules: FormRules = {
+  name: [{ required: true, message: '请输入宠物名称', trigger: 'blur' }],
 }
 
 
 const genderLabel = (gender: any) => {
-  if (gender === 1 || gender === '1') return '公'
-  if (gender === 0 || gender === '0') return '母'
+  if (gender === 1) return '公'
+  if (gender === 0) return '母'
   return '-'
 }
 
@@ -389,33 +449,317 @@ const typeLabel = (type: any) => {
   return type || '未设置类型'
 }
 
+const getRecordTypeLabel = (type: string) => {
+  const map: Record<string, string> = {
+    WEIGHT: '体重',
+    TEMPERATURE: '体温',
+    MEDICAL: '用药',
+  }
+  return map[type] || type
+}
+
+const getRecordTypeTag = (type: string): 'primary' | 'warning' | 'danger' | 'success' | 'info' => {
+  const map: Record<string, 'primary' | 'warning' | 'danger' | 'success' | 'info'> = {
+    WEIGHT: 'primary',
+    TEMPERATURE: 'warning',
+    MEDICAL: 'danger',
+  }
+  return map[type] || 'info'
+}
+
+const filteredHealthRecords = computed(() => {
+  if (!healthRecordFilter.value) {
+    return healthRecords.value
+  }
+  return healthRecords.value.filter(record => record.recordType === healthRecordFilter.value)
+})
+
+const combinedChartOption = computed(() => {
+  const allRecords = healthRecords.value || []
+  
+  const weightRecords = allRecords
+    .filter((r: any) => {
+      const recordType = r.recordType
+      const value = r.value
+      return recordType === 'WEIGHT' && value !== null && value !== undefined && value !== ''
+    })
+    .sort((a: any, b: any) => {
+      const timeA = a.recordTime
+      const timeB = b.recordTime
+      return new Date(timeA).getTime() - new Date(timeB).getTime()
+    })
+  
+  const temperatureRecords = allRecords
+    .filter((r: any) => {
+      const recordType = r.recordType
+      const value = r.value
+      return recordType === 'TEMPERATURE' && value !== null && value !== undefined && value !== ''
+    })
+    .sort((a: any, b: any) => {
+      const timeA = a.recordTime
+      const timeB = b.recordTime
+      return new Date(timeA).getTime() - new Date(timeB).getTime()
+    })
+  
+  const allDates = new Set<string>()
+  weightRecords.forEach((r: any) => {
+    const time = r.recordTime
+    if (time) {
+      const date = new Date(time)
+      allDates.add(`${date.getMonth() + 1}/${date.getDate()}`)
+    }
+  })
+  temperatureRecords.forEach((r: any) => {
+    const time = r.recordTime
+    if (time) {
+      const date = new Date(time)
+      allDates.add(`${date.getMonth() + 1}/${date.getDate()}`)
+    }
+  })
+  
+  const sortedDates = Array.from(allDates).sort((a, b) => {
+    const [monthA, dayA] = a.split('/').map(Number)
+    const [monthB, dayB] = b.split('/').map(Number)
+    if (monthA !== monthB) return monthA - monthB
+    return dayA - dayB
+  })
+  
+  const weightData = sortedDates.map(date => {
+    const record = weightRecords.find((r: any) => {
+      const time = r.recordTime
+      if (!time) return false
+      const recordDate = new Date(time)
+      const recordDateStr = `${recordDate.getMonth() + 1}/${recordDate.getDate()}`
+      return recordDateStr === date
+    })
+    return record ? Number(record.value) : null
+  })
+  
+  const temperatureData = sortedDates.map(date => {
+    const record = temperatureRecords.find((r: any) => {
+      const time = r.recordTime
+      if (!time) return false
+      const recordDate = new Date(time)
+      const recordDateStr = `${recordDate.getMonth() + 1}/${recordDate.getDate()}`
+      return recordDateStr === date
+    })
+    return record ? Number(record.value) : null
+  })
+  
+  const series: any[] = []
+  
+  if (weightData.some(v => v !== null)) {
+    series.push({
+      name: '体重',
+      type: 'line',
+      yAxisIndex: 0,
+      data: weightData,
+      smooth: true,
+      connectNulls: true,
+      itemStyle: { color: '#54A0FF' },
+      lineStyle: { color: '#54A0FF', width: 2 },
+      symbol: 'circle',
+      symbolSize: 6,
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(84, 160, 255, 0.3)' },
+            { offset: 1, color: 'rgba(84, 160, 255, 0.1)' },
+          ],
+        },
+      },
+    })
+  }
+  
+  if (temperatureData.some(v => v !== null)) {
+    series.push({
+      name: '体温',
+      type: 'line',
+      yAxisIndex: 1,
+      data: temperatureData,
+      smooth: true,
+      connectNulls: true,
+      itemStyle: { color: '#FF9F43' },
+      lineStyle: { color: '#FF9F43', width: 2 },
+      symbol: 'circle',
+      symbolSize: 6,
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(255, 159, 67, 0.3)' },
+            { offset: 1, color: 'rgba(255, 159, 67, 0.1)' },
+          ],
+        },
+      },
+    })
+  }
+  
+  if (series.length === 0) {
+    return {
+      title: {
+        text: '健康趋势综合图表',
+        left: 'center',
+      },
+      graphic: {
+        type: 'text',
+        left: 'center',
+        top: 'middle',
+        style: {
+          text: '暂无数据',
+          fontSize: 16,
+          fill: '#999',
+        },
+      },
+    }
+  }
+  
+  return {
+    title: {
+      text: '健康趋势综合图表',
+      left: 'center',
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params: any) => {
+        let result = params[0].name + '<br/>'
+        params.forEach((param: any) => {
+          if (param.value !== null && param.value !== undefined) {
+            const unit = param.seriesName === '体重' ? 'kg' : '°C'
+            result += `${param.marker}${param.seriesName}: ${param.value}${unit}<br/>`
+          }
+        })
+        return result
+      },
+    },
+    legend: {
+      data: series.map(s => s.name),
+      top: 30,
+      selectedMode: 'multiple',
+    },
+    grid: {
+      left: '3%',
+      right: '8%',
+      bottom: '3%',
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      data: sortedDates,
+      boundaryGap: false,
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: '体重(kg)',
+        position: 'left',
+        axisLine: {
+          lineStyle: { color: '#54A0FF' },
+        },
+        axisLabel: {
+          formatter: '{value} kg',
+        },
+      },
+      {
+        type: 'value',
+        name: '体温(°C)',
+        position: 'right',
+        axisLine: {
+          lineStyle: { color: '#FF9F43' },
+        },
+        axisLabel: {
+          formatter: '{value} °C',
+        },
+      },
+    ],
+    series,
+  }
+})
+
 const healthRules: FormRules = {
-  record_type: [{ required: true, message: '请选择记录类型', trigger: 'change' }],
-  record_time: [{ required: true, message: '请选择记录时间', trigger: 'change' }],
+  recordType: [{ required: true, message: '请选择记录类型', trigger: 'change' }],
+  recordTime: [{ required: true, message: '请选择记录时间', trigger: 'change' }],
 }
 
 
 const weightChartOption = computed(() => {
-  const dates = healthRecords.value
-    .filter((r) => r.record_type === 'weight' && r.value !== null && r.value !== undefined)
-    .map((r) => r.record_time)
-    .reverse()
-  const weights = healthRecords.value
-    .filter((r) => r.record_type === 'weight' && r.value !== null && r.value !== undefined)
-    .map((r) => r.value as number)
-    .reverse()
+  const allRecords = healthRecords.value || []
+  
+  const weightRecords = allRecords
+    .filter((r: any) => {
+      const recordType = r.recordType
+      const value = r.value
+      return recordType === 'WEIGHT' && value !== null && value !== undefined && value !== ''
+    })
+    .sort((a: any, b: any) => {
+      const timeA = a.recordTime
+      const timeB = b.recordTime
+      return new Date(timeA).getTime() - new Date(timeB).getTime()
+    })
+  
+  const dates = weightRecords.map((r: any) => {
+    const time = r.recordTime
+    if (!time) return ''
+    try {
+      const date = new Date(time)
+      return `${date.getMonth() + 1}/${date.getDate()}`
+    } catch (e) {
+      return ''
+    }
+  })
+  
+  const weights = weightRecords.map((r: any) => Number(r.value))
 
-  return {
+  if (dates.length === 0 || weights.length === 0) {
+    return {
+      title: {
+        text: '体重变化',
+        left: 'center',
+      },
+      graphic: {
+        type: 'text',
+        left: 'center',
+        top: 'middle',
+        style: {
+          text: '暂无数据',
+          fontSize: 16,
+          fill: '#999',
+        },
+      },
+    }
+  }
+
+  const option = {
     title: {
       text: '体重变化',
       left: 'center',
     },
     tooltip: {
       trigger: 'axis',
+      formatter: (params: any) => {
+        const param = params[0]
+        return `${param.name}<br/>${param.seriesName}: ${param.value}kg`
+      },
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
       data: dates,
+      boundaryGap: false,
     },
     yAxis: {
       type: 'value',
@@ -428,32 +772,95 @@ const weightChartOption = computed(() => {
         data: weights,
         smooth: true,
         itemStyle: { color: '#54A0FF' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(84, 160, 255, 0.3)' },
+              { offset: 1, color: 'rgba(84, 160, 255, 0.1)' },
+            ],
+          },
+        },
       },
     ],
   }
+  
+  return option
 })
 
 const temperatureChartOption = computed(() => {
-  const dates = healthRecords.value
-    .filter((r) => r.record_type === 'temperature' && r.value !== null && r.value !== undefined)
-    .map((r) => r.record_time)
-    .reverse()
-  const temperatures = healthRecords.value
-    .filter((r) => r.record_type === 'temperature' && r.value !== null && r.value !== undefined)
-    .map((r) => r.value as number)
-    .reverse()
+  const allRecords = healthRecords.value || []
+  
+  const temperatureRecords = allRecords
+    .filter((r: any) => {
+      const recordType = r.record_type || r.recordType
+      const value = r.value
+      return recordType === 'TEMPERATURE' && value !== null && value !== undefined && value !== ''
+    })
+    .sort((a: any, b: any) => {
+      const timeA = a.record_time || a.recordTime
+      const timeB = b.record_time || b.recordTime
+      return new Date(timeA).getTime() - new Date(timeB).getTime()
+    })
+  
+  const dates = temperatureRecords.map((r: any) => {
+    const time = r.record_time || r.recordTime
+    if (!time) return ''
+    try {
+      const date = new Date(time)
+      return `${date.getMonth() + 1}/${date.getDate()}`
+    } catch (e) {
+      return ''
+    }
+  })
+  
+  const temperatures = temperatureRecords.map((r: any) => Number(r.value))
 
-  return {
+  if (dates.length === 0 || temperatures.length === 0) {
+    return {
+      title: {
+        text: '体温趋势',
+        left: 'center',
+      },
+      graphic: {
+        type: 'text',
+        left: 'center',
+        top: 'middle',
+        style: {
+          text: '暂无数据',
+          fontSize: 16,
+          fill: '#999',
+        },
+      },
+    }
+  }
+
+  const option = {
     title: {
       text: '体温趋势',
       left: 'center',
     },
     tooltip: {
       trigger: 'axis',
+      formatter: (params: any) => {
+        const param = params[0]
+        return `${param.name}<br/>${param.seriesName}: ${param.value}°C`
+      },
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
       data: dates,
+      boundaryGap: false,
     },
     yAxis: {
       type: 'value',
@@ -466,9 +873,24 @@ const temperatureChartOption = computed(() => {
         data: temperatures,
         smooth: true,
         itemStyle: { color: '#FF9F43' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(255, 159, 67, 0.3)' },
+              { offset: 1, color: 'rgba(255, 159, 67, 0.1)' },
+            ],
+          },
+        },
       },
     ],
   }
+  
+  return option
 })
 
 
@@ -477,7 +899,7 @@ const temperatureChartOption = computed(() => {
  */
 
 /**
- * [API调用] GET /pet/:id
+ * [API调用] GET /pet/info/:id
  * 加载宠物详情信息
  */
 const loadPet = async () => {
@@ -485,14 +907,15 @@ const loadPet = async () => {
     loading.value = true
     const { data } = await fetchPetById(petId)
     pet.value = data
+    const healthNotes = (data as any).healthNotes || ''
     Object.assign(basicForm, {
       name: data.name,
       type: data.type || '',
       breed: data.breed || '',
-      gender: (data.gender === 0 ? 0 : 1) as 0 | 1,
+      gender: data.gender === 0 ? 0 : 1 as 0 | 1,
       birthday: data.birthday || '',
       weight: data.weight,
-      healthNotes: data.health_notes || '',
+      healthNotes: healthNotes,
       avatar: data.avatar || '',
     })
   } catch (error) {
@@ -513,17 +936,16 @@ const saveBasicInfo = async () => {
   if (!valid) return
 
   try {
-    const formData = basicFormRef.value.getFormData() as any
     const payload: CreatePetPayload & { id?: string | number } = {
       id: petId,
-      name: formData.name,
-      type: formData.type || pet.value?.type || '',
-      breed: formData.breed || '',
-      gender: (formData.gender === 0 ? 0 : 1) as 0 | 1,
-      birthday: formData.birthday || null,
-      weight: formData.weight,
-      health_notes: formData.healthNotes || '',
-      avatar: formData.avatar || pet.value?.avatar || '',
+      name: basicForm.name,
+      type: basicForm.type || pet.value?.type || '',
+      breed: basicForm.breed || '',
+      gender: (basicForm.gender === 0 ? 0 : 1) as 0 | 1,
+      birthday: basicForm.birthday || null,
+      weight: basicForm.weight,
+      healthNotes: basicForm.healthNotes || '',
+      avatar: basicForm.avatar || pet.value?.avatar || '',
     }
     await savePet(payload)
     ElMessage.success('保存成功')
@@ -536,14 +958,15 @@ const saveBasicInfo = async () => {
 
 const cancelEdit = () => {
   if (pet.value) {
+    const healthNotes = (pet.value as any).healthNotes || ''
     Object.assign(basicForm, {
       name: pet.value.name,
       type: pet.value.type || '',
       breed: pet.value.breed || '',
-      gender: (pet.value.gender === 0 ? 0 : 1) as 0 | 1,
+      gender: pet.value.gender === 0 ? 0 : 1 as 0 | 1,
       birthday: pet.value.birthday || '',
       weight: pet.value.weight,
-      healthNotes: pet.value.health_notes || '',
+      healthNotes: healthNotes,
       avatar: pet.value.avatar || '',
     })
   }
@@ -583,14 +1006,35 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (file) => {
  */
 
 /**
- * [API调用] GET /healthRecord/:petId
+ * [API调用] GET /healthRecord/list
  * 加载健康记录列表
  */
 const loadHealthRecords = async () => {
   try {
-    const { data } = await fetchHealthRecords(petId)
-    const records = Array.isArray(data) ? data : (data?.list || [])
-    healthRecords.value = records.sort((a: any, b: any) => new Date(b.record_time).getTime() - new Date(a.record_time).getTime())
+    const params: any = {
+      pageNumber: healthRecordPagination.pageNumber,
+      pageSize: healthRecordPagination.pageSize,
+    }
+    if (healthRecordFilter.value) {
+      params.recordType = healthRecordFilter.value
+    }
+    const { data } = await fetchHealthRecords(petId, params)
+    healthRecordPagination.totalRow = data?.totalRow || 0
+    
+    const records = Array.isArray(data) ? data : (data?.records || [])
+    
+    healthRecords.value = records.map((record: any) => ({
+      ...record,
+      recordType: record.recordType,
+      recordTime: record.recordTime,
+      petId: record.petId,
+      medicationInfo: record.medicationInfo,
+      value: record.value !== undefined ? record.value : null,
+    })).sort((a: any, b: any) => {
+      const timeA = a.recordTime
+      const timeB = b.recordTime
+      return new Date(timeB).getTime() - new Date(timeA).getTime()
+    })
   } catch (error) {
     ElMessage.error('加载健康记录失败')
   }
@@ -598,31 +1042,42 @@ const loadHealthRecords = async () => {
 
 const openHealthDialog = () => {
   editingRecordId.value = null
-  healthForm.pet_id = petId
-  healthForm.record_type = 'weight'
+  healthForm.petId = petId
+  healthForm.recordType = 'WEIGHT'
   healthForm.title = ''
   healthForm.description = ''
-  healthForm.record_time = ''
-  healthForm.schedule_time = ''
-  healthForm.remind_before_minutes = 0
-  healthForm.repeat_type = 'none'
+  healthForm.recordTime = getCurrentDateTime()
   healthForm.value = undefined
-  healthForm.medication_info = ''
+  healthForm.symptom = ''
+  healthForm.medicationInfo = ''
   healthDialogVisible.value = true
+}
+
+const formatDateTime = (dateTime: string | null | undefined): string => {
+  if (!dateTime) return getCurrentDateTime()
+  if (dateTime.includes('T')) {
+    return dateTime.replace('T', ' ').substring(0, 19)
+  }
+  if (dateTime.length === 19 && dateTime.includes(' ')) {
+    return dateTime
+  }
+  if (dateTime.length === 16) {
+    return dateTime + ':00'
+  }
+  return dateTime
 }
 
 const editHealthRecord = (record: HealthRecord) => {
   editingRecordId.value = record.id
-  healthForm.pet_id = record.pet_id
-  healthForm.record_type = record.record_type
-  healthForm.title = record.title || ''
-  healthForm.description = record.description || ''
-  healthForm.record_time = record.record_time
-  healthForm.schedule_time = record.schedule_time || ''
-  healthForm.remind_before_minutes = record.remind_before_minutes || 0
-  healthForm.repeat_type = record.repeat_type || 'none'
-  healthForm.value = record.value || undefined
-  healthForm.medication_info = record.medication_info || ''
+  const recordData = record as any
+  healthForm.petId = Number(recordData.petId)
+  healthForm.recordType = recordData.recordType || 'WEIGHT'
+  healthForm.title = recordData.title || ''
+  healthForm.description = recordData.description || ''
+  healthForm.recordTime = formatDateTime(recordData.recordTime)
+  healthForm.value = (recordData.value !== null && recordData.value !== undefined) ? Number(recordData.value) : undefined
+  healthForm.symptom = recordData.symptom || ''
+  healthForm.medicationInfo = recordData.medicationInfo || ''
   healthDialogVisible.value = true
 }
 
@@ -637,26 +1092,16 @@ const saveHealthRecord = async () => {
 
   try {
     if (editingRecordId.value) {
-      await updateHealthRecord(editingRecordId.value, healthForm)
+      await updateHealthRecord(petId, editingRecordId.value, healthForm)
       ElMessage.success('更新成功')
     } else {
-      await createHealthRecord(healthForm)
+      await createHealthRecord(petId, healthForm)
       ElMessage.success('添加成功')
     }
     healthDialogVisible.value = false
     await loadHealthRecords()
   } catch (error) {
     ElMessage.error(editingRecordId.value ? '更新失败' : '添加失败')
-  }
-}
-
-const completeRecord = async (id: string | number) => {
-  try {
-    await completeHealthRecord(id)
-    ElMessage.success('标记完成成功')
-    await loadHealthRecords()
-  } catch (error) {
-    ElMessage.error('操作失败')
   }
 }
 
@@ -667,7 +1112,7 @@ const deleteRecord = async (id: string | number) => {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await deleteHealthRecord(id)
+    await deleteHealthRecord(petId, id)
     ElMessage.success('删除成功')
     await loadHealthRecords()
   } catch (error: any) {
@@ -677,6 +1122,39 @@ const deleteRecord = async (id: string | number) => {
   }
 }
 
+const formatTime = (time: string | null | undefined) => {
+  if (!time) return ''
+  const date = new Date(time)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const handleHealthRecordSizeChange = (size: number) => {
+  healthRecordPagination.pageSize = size
+  healthRecordPagination.pageNumber = 1
+  loadHealthRecords()
+}
+
+const handleHealthRecordPageChange = (page: number) => {
+  healthRecordPagination.pageNumber = page
+  loadHealthRecords()
+}
+
+watch(healthRecordFilter, () => {
+  healthRecordPagination.pageNumber = 1
+  loadHealthRecords()
+})
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'chart' && healthRecords.value.length === 0) {
+    loadHealthRecords()
+  }
+})
 
 onMounted(async () => {
   await loadPet()
@@ -734,6 +1212,11 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+  }
 
   h3 {
     margin: 0;
@@ -747,6 +1230,12 @@ onMounted(async () => {
   text-align: right;
 }
 
+.gender-display {
+  line-height: 32px;
+  font-size: 14px;
+  color: #606266;
+}
+
 .health-record-card {
   transition: all 0.3s ease;
   
@@ -754,6 +1243,12 @@ onMounted(async () => {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
+}
+
+.pagination-wrapper {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .health-record-item {
@@ -764,32 +1259,55 @@ onMounted(async () => {
     gap: 16px;
   }
   
+  .record-type-badge {
+    flex-shrink: 0;
+  }
+  
   .record-info {
     flex: 1;
-    
-    .record-field {
-      margin: 8px 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #606266;
-      font-size: 15px;
-    }
+    min-width: 0;
     
     .record-title {
-      margin: 8px 0 4px;
+      margin: 0 0 12px;
       font-size: 16px;
       font-weight: 600;
       color: #303133;
     }
+    
+    .record-content {
+      .record-field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        color: #606266;
+        font-size: 14px;
+        
+        .field-label {
+          font-weight: 500;
+          color: #909399;
+        }
+        
+        .field-value {
+          color: #303133;
+        }
+      }
+    }
 
     .record-notes {
-      margin-top: 8px;
+      margin-top: 12px;
       padding: 12px;
       background: #f5f7fa;
       border-radius: 6px;
       color: #606266;
       line-height: 1.6;
+      font-size: 14px;
+      
+      .field-label {
+        font-weight: 500;
+        color: #909399;
+        margin-right: 8px;
+      }
     }
     
     .record-meta {
@@ -823,6 +1341,17 @@ onMounted(async () => {
   .chart {
     height: 400px;
     width: 100%;
+    min-height: 400px;
+  }
+  
+  .chart-placeholder {
+    height: 400px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 16px;
   }
 }
 

@@ -210,6 +210,19 @@ const router = createRouter({
       meta: {
         title: '提醒管理 - 宠物关怀系统',
         menu: {
+          title: '提醒管理',
+          icon: 'Bell',
+          order: 7,
+        },
+      },
+    },
+    {
+      path: '/reminder/executions',
+      name: 'reminder-executions',
+      component: () => import('@/views/pet/ReminderExecutions.vue'),
+      meta: {
+        title: '提醒执行记录 - 宠物关怀系统',
+        menu: {
           hidden: true,
         },
       },

@@ -28,15 +28,22 @@ export const sendSmsCode = (phone: string) => {
 /**
  * [API调用] POST /auth/logout
  * 用户登出
+ * 根据JWT规范，logout应发送refreshToken给后端以便加入黑名单，防止token被盗用后继续使用
+ * @param {string} refreshToken - 刷新令牌（用于后端黑名单机制）
  * @returns {Promise} 返回登出结果
  */
-export const logout = () => {
-  // TODO: 后端接口地址 /auth/logout
-  return apiClient.post('/auth/logout')
+export const logout = (refreshToken?: string) => {
+  return apiClient.post('/auth/logout', refreshToken ? { refreshToken } : undefined)
 }
 
+/**
+ * [API调用] POST /auth/refresh
+ * 刷新访问令牌
+ * 根据JWT规范，refreshToken通过请求体传递（更安全，不会出现在URL或日志中）
+ * @param {string} refreshToken - 刷新令牌
+ * @returns {Promise} 返回新的accessToken和refreshToken
+ */
 export const refreshToken = (refreshToken: string) => {
-  // TODO: 后端接口地址 POST /auth/refresh
   return apiClient.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken })
 }
 

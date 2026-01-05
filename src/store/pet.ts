@@ -67,7 +67,7 @@ export const usePetStore = defineStore('pet', {
     normalizePetData(pet: any): Pet {
       return {
         id: pet.id,
-        user_id: pet.user_id ?? pet.userId,
+        userId: pet.userId,
         name: pet.name || '',
         type: this.convertType(pet.type),
         breed: pet.breed ?? '',
@@ -75,8 +75,8 @@ export const usePetStore = defineStore('pet', {
         birthday: pet.birthday ?? '',
         weight: pet.weight ?? null,
         avatar: pet.avatar ?? '',
-        health_notes: pet.health_notes ?? pet.healthNotes ?? '',
-        created_at: pet.created_at ?? pet.createdAt,
+        healthNotes: pet.healthNotes ?? '',
+        createdAt: pet.createdAt,
       }
     },
     /**

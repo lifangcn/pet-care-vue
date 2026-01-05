@@ -6,9 +6,9 @@
       </template>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="全部" name="all" />
-        <el-tab-pane label="待服务" name="pending" />
-        <el-tab-pane label="已确认" name="confirmed" />
-        <el-tab-pane label="已完成" name="completed" />
+        <el-tab-pane label="待服务" name="PENDING" />
+        <el-tab-pane label="已确认" name="CONFIRMED" />
+        <el-tab-pane label="已完成" name="COMPLETED" />
       </el-tabs>
       <div class="order-list">
         <el-empty v-if="bookings.length === 0" description="暂无服务订单" />
@@ -30,8 +30,8 @@
             <span class="order-time">下单时间：{{ formatTime(booking.createdAt) }}</span>
             <div class="order-actions">
               <span class="total-amount">¥{{ booking.services.reduce((sum, s) => sum + s.price, 0).toFixed(2) }}</span>
-              <el-button v-if="booking.status === 'pending'" @click="cancelBooking(booking.id)">取消预约</el-button>
-              <el-button v-if="booking.status === 'completed'" @click="showReview(booking)">评价</el-button>
+              <el-button v-if="booking.status === 'PENDING'" @click="cancelBooking(booking.id)">取消预约</el-button>
+              <el-button v-if="booking.status === 'COMPLETED'" @click="showReview(booking)">评价</el-button>
             </div>
           </div>
         </el-card>
@@ -66,8 +66,8 @@ const loadBookings = async () => {
       params.status = activeTab.value
     }
     const res = await fetchBookings(params)
-    bookings.value = res.data.data || []
-    pagination.value.total = res.data.total || 0
+    bookings.value = res.data.records || []
+    pagination.value.total = res.data.totalRow || 0
   } catch (error) {
     console.error('加载服务订单失败:', error)
   }
@@ -80,20 +80,20 @@ const handleTabChange = () => {
 
 const getStatusType = (status: string) => {
   const map: Record<string, string> = {
-    pending: 'warning',
-    confirmed: 'primary',
-    completed: 'success',
-    cancelled: 'info',
+    PENDING: 'warning',
+    CONFIRMED: 'primary',
+    COMPLETED: 'success',
+    CANCELLED: 'info',
   }
   return map[status] || 'info'
 }
 
 const getStatusText = (status: string) => {
   const map: Record<string, string> = {
-    pending: '待服务',
-    confirmed: '已确认',
-    completed: '已完成',
-    cancelled: '已取消',
+    PENDING: '待服务',
+    CONFIRMED: '已确认',
+    COMPLETED: '已完成',
+    CANCELLED: '已取消',
   }
   return map[status] || status
 }

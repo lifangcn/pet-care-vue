@@ -305,8 +305,8 @@ const loadReviews = async () => {
 
     // [API调用] GET /products/:id/reviews - 获取商品评价列表
     const { data } = await fetchProductReviews(reviewFilter)
-    reviews.value = data.data
-    reviewTotal.value = data.total
+    reviews.value = data.records
+    reviewTotal.value = data.totalRow
   } catch (error) {
     ElMessage.error('加载评价失败')
   } finally {

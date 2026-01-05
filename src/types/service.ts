@@ -1,4 +1,4 @@
-export type ServiceCategory = 'medical' | 'beauty' | 'accommodation' | 'training' | 'grooming'
+export type ServiceCategory = 'MEDICAL' | 'BEAUTY' | 'ACCOMMODATION' | 'TRAINING' | 'GROOMING'
 
 export interface ServiceProvider {
   id: string
@@ -43,7 +43,7 @@ export interface BookingRecord {
   petId: string
   petName: string
   notes?: string
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'
   createdAt: string
 }
 

@@ -77,7 +77,7 @@ const checkIns = ref<CheckIn[]>([])
 const loadActivities = async () => {
   try {
     const res = await fetchActivities()
-    activities.value = res.data.data || []
+    activities.value = res.data.records || []
   } catch (error) {
     console.error('加载活动列表失败:', error)
   }

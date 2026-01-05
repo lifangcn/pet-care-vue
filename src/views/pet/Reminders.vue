@@ -8,6 +8,7 @@
             <el-select v-model="selectedPetId" style="width: 220px" placeholder="选择宠物" @change="loadReminders">
               <el-option v-for="pet in pets" :key="pet.id" :label="pet.name" :value="pet.id" />
             </el-select>
+            <el-button :disabled="!selectedPetId" @click="goToExecutions">查看执行记录</el-button>
             <el-button type="primary" :disabled="!selectedPetId" @click="showAddDialog = true">添加提醒</el-button>
           </div>
         </div>
@@ -21,25 +22,37 @@
               <h4>{{ reminder.title || '未命名提醒' }}</h4>
               <p v-if="reminder.description">{{ reminder.description }}</p>
               <div class="reminder-meta">
-                <span>时间：{{ formatTime(reminder.schedule_time || reminder.record_time) }}</span>
-                <span>提前：{{ reminder.remind_before_minutes || 0 }} 分钟</span>
-                <span>重复：{{ getRepeatText(reminder.repeat_type) }}</span>
+                <span>记录时间：{{ formatTime(reminder.recordTime) }}</span>
+                <span v-if="reminder.scheduleTime">计划时间：{{ formatTime(reminder.scheduleTime) }}</span>
+                <span>提前：{{ reminder.remindBeforeMinutes || 0 }} 分钟</span>
+                <span>重复：{{ getRepeatText(reminder.repeatType) }}</span>
+                <span v-if="reminder.totalOccurrences">进度：{{ reminder.completedCount || 0 }}/{{ reminder.totalOccurrences }}</span>
               </div>
             </div>
             <div class="reminder-actions">
               <div class="reminder-status">
-                <el-tag v-if="reminder.is_completed" type="success" size="small">已完成</el-tag>
-                <el-tag v-else type="warning" size="small">待办</el-tag>
+                <el-tag v-if="!reminder.isActive" type="info" size="small">已停用</el-tag>
+                <el-tag v-else-if="reminder.completedCount && reminder.totalOccurrences && reminder.completedCount >= reminder.totalOccurrences" type="success" size="small">已完成</el-tag>
+                <el-tag v-else type="warning" size="small">进行中</el-tag>
               </div>
               <div class="action-buttons">
                 <el-button
-                  v-if="!reminder.is_completed"
+                  v-if="reminder.isActive"
+                  type="warning"
+                  size="small"
+                  text
+                  @click="deactivateReminderHandler(reminder.id)"
+                >
+                  停用
+                </el-button>
+                <el-button
+                  v-else
                   type="success"
                   size="small"
                   text
-                  @click="completeReminder(reminder.id)"
+                  @click="activateReminderHandler(reminder.id)"
                 >
-                  完成
+                  激活
                 </el-button>
                 <el-button
                   type="primary"
@@ -53,7 +66,7 @@
                   type="danger"
                   size="small"
                   text
-                  @click="deleteReminder(reminder.id)"
+                  @click="deleteReminderHandler(reminder.id)"
                 >
                   删除
                 </el-button>
@@ -61,6 +74,18 @@
             </div>
           </div>
         </el-card>
+      </div>
+
+      <div v-if="selectedPetId && pagination.totalRow > 0" class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pagination.pageNumber"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="pagination.totalRow"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
       </div>
     </el-card>
 
@@ -72,24 +97,47 @@
         <el-form-item label="描述">
           <el-input v-model="reminderForm.description" type="textarea" />
         </el-form-item>
-        <el-form-item label="计划时间">
-          <el-date-picker v-model="reminderForm.scheduleTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
+        <el-form-item label="记录时间">
+          <el-date-picker
+            v-model="reminderForm.recordTime"
+            type="datetime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD HH:mm"
+            placeholder="选择记录时间"
+            style="width: 100%"
+            :shortcuts="dateTimeShortcuts"
+            :default-time="new Date(2000, 1, 1, 9, 0, 0)"
+            clearable
+          />
         </el-form-item>
-        <el-form-item label="提前提醒">
+        <el-form-item label="计划时间">
+          <el-date-picker
+            v-model="reminderForm.scheduleTime"
+            type="datetime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD HH:mm"
+            placeholder="选择计划时间"
+            style="width: 100%"
+            :shortcuts="dateTimeShortcuts"
+            :default-time="new Date(2000, 1, 1, 9, 0, 0)"
+            clearable
+          />
+        </el-form-item>
+        <el-form-item label="提前提醒(分钟)">
           <el-input-number v-model="reminderForm.remindBeforeMinutes" :min="0" style="width: 100%" />
         </el-form-item>
         <el-form-item label="重复">
           <el-select v-model="reminderForm.repeatType" style="width: 100%">
-            <el-option label="不重复" value="none" />
-            <el-option label="每天" value="daily" />
-            <el-option label="每周" value="weekly" />
-            <el-option label="每月" value="monthly" />
-            <el-option label="自定义" value="custom" />
+            <el-option label="不重复" value="NONE" />
+            <el-option label="每天" value="DAILY" />
+            <el-option label="每周" value="WEEKLY" />
+            <el-option label="每月" value="MONTHLY" />
+            <el-option label="自定义" value="CUSTOM" />
           </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="() => { showAddDialog = false; editingReminderId = null; reminderForm.value = { title: '', description: '', scheduleTime: '', remindBeforeMinutes: 0, repeatType: 'none' } }">取消</el-button>
+        <el-button @click="cancelReminderEdit">取消</el-button>
         <el-button type="primary" @click="saveReminder">保存</el-button>
       </template>
     </el-dialog>
@@ -97,26 +145,80 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { createHealthRecord, updateHealthRecord, deleteHealthRecord, completeHealthRecord, fetchHealthRecords, fetchPets } from '@/services/petService'
-import type { HealthRecord, Pet, RepeatType } from '@/types/pet'
+import type { DatePickerShortcuts } from 'element-plus/es/components/date-picker/src/date-picker'
+import { fetchPets, fetchReminders, createReminder, updateReminder, deleteReminder, activateReminder, deactivateReminder } from '@/services/petService'
+import type { Reminder, Pet, RepeatType } from '@/types/pet'
+
+const router = useRouter()
+
+const getCurrentDateTime = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+const dateTimeShortcuts: DatePickerShortcuts = [
+  {
+    text: '今天',
+    value: () => {
+      const now = new Date()
+      return now
+    }
+  },
+  {
+    text: '明天',
+    value: () => {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      return tomorrow
+    }
+  },
+  {
+    text: '一周后',
+    value: () => {
+      const nextWeek = new Date()
+      nextWeek.setDate(nextWeek.getDate() + 7)
+      return nextWeek
+    }
+  },
+  {
+    text: '一个月后',
+    value: () => {
+      const nextMonth = new Date()
+      nextMonth.setMonth(nextMonth.getMonth() + 1)
+      return nextMonth
+    }
+  }
+]
 
 const pets = ref<Pet[]>([])
 const selectedPetId = ref<string | number>('')
-const records = ref<HealthRecord[]>([])
+const reminders = ref<Reminder[]>([])
 const showAddDialog = ref(false)
 const editingReminderId = ref<string | number | null>(null)
 
-const reminderForm = ref<{ title: string; description?: string; scheduleTime: string; remindBeforeMinutes: number; repeatType: RepeatType }>({
-  title: '',
-  description: '',
-  scheduleTime: '',
-  remindBeforeMinutes: 0,
-  repeatType: 'none',
+const pagination = reactive({
+  pageNumber: 1,
+  pageSize: 10,
+  totalRow: 0,
 })
 
-const reminders = computed(() => records.value.filter((r) => r.record_type === 'reminder'))
+const reminderForm = ref<{ title: string; description?: string; recordTime: string; scheduleTime: string; remindBeforeMinutes: number; repeatType: RepeatType }>({
+  title: '',
+  description: '',
+  recordTime: getCurrentDateTime(),
+  scheduleTime: getCurrentDateTime(),
+  remindBeforeMinutes: 0,
+  repeatType: 'NONE',
+})
 
 const loadPets = async () => {
   const res = await fetchPets()
@@ -130,83 +232,119 @@ const loadPets = async () => {
 const loadReminders = async () => {
   if (!selectedPetId.value) return
   try {
-    const res = await fetchHealthRecords(String(selectedPetId.value), { record_type: 'reminder' })
-    records.value = Array.isArray(res.data?.list) ? res.data.list : (Array.isArray(res.data) ? res.data : [])
+    const res = await fetchReminders({
+      petId: selectedPetId.value,
+      pageNumber: pagination.pageNumber,
+      pageSize: pagination.pageSize,
+    })
+    reminders.value = Array.isArray(res.data?.records) ? res.data.records : []
+    pagination.totalRow = res.data?.totalRow || 0
   } catch (error) {
     ElMessage.error('加载提醒失败')
   }
 }
 
+const cancelReminderEdit = () => {
+  showAddDialog.value = false
+  editingReminderId.value = null
+  reminderForm.value = { title: '', description: '', recordTime: getCurrentDateTime(), scheduleTime: getCurrentDateTime(), remindBeforeMinutes: 0, repeatType: 'NONE' }
+}
+
 const saveReminder = async () => {
-  if (!selectedPetId.value || !reminderForm.value.scheduleTime) {
+  if (!selectedPetId.value || !reminderForm.value.recordTime || !reminderForm.value.scheduleTime) {
     ElMessage.warning('请填写完整信息')
     return
   }
   try {
     if (editingReminderId.value) {
-      await updateHealthRecord(editingReminderId.value, {
-        pet_id: selectedPetId.value,
-        record_type: 'reminder',
+      await updateReminder(editingReminderId.value, {
+        petId: Number(selectedPetId.value),
+        sourceType: 'MANUAL',
         title: reminderForm.value.title,
         description: reminderForm.value.description,
-        record_time: reminderForm.value.scheduleTime,
-        schedule_time: reminderForm.value.scheduleTime,
-        remind_before_minutes: reminderForm.value.remindBeforeMinutes,
-        repeat_type: reminderForm.value.repeatType,
+        recordTime: reminderForm.value.recordTime,
+        scheduleTime: reminderForm.value.scheduleTime,
+        remindBeforeMinutes: reminderForm.value.remindBeforeMinutes,
+        repeatType: reminderForm.value.repeatType,
       })
       ElMessage.success('更新成功')
     } else {
-      await createHealthRecord({
-        pet_id: selectedPetId.value,
-        record_type: 'reminder',
+      await createReminder({
+        petId: Number(selectedPetId.value),
+        sourceType: 'MANUAL',
         title: reminderForm.value.title,
         description: reminderForm.value.description,
-        record_time: reminderForm.value.scheduleTime,
-        schedule_time: reminderForm.value.scheduleTime,
-        remind_before_minutes: reminderForm.value.remindBeforeMinutes,
-        repeat_type: reminderForm.value.repeatType,
+        recordTime: reminderForm.value.recordTime,
+        scheduleTime: reminderForm.value.scheduleTime,
+        remindBeforeMinutes: reminderForm.value.remindBeforeMinutes,
+        repeatType: reminderForm.value.repeatType,
       })
       ElMessage.success('添加成功')
     }
     showAddDialog.value = false
     editingReminderId.value = null
-    reminderForm.value = { title: '', description: '', scheduleTime: '', remindBeforeMinutes: 0, repeatType: 'none' }
+    reminderForm.value = { title: '', description: '', recordTime: getCurrentDateTime(), scheduleTime: getCurrentDateTime(), remindBeforeMinutes: 0, repeatType: 'NONE' }
     await loadReminders()
   } catch (error) {
     ElMessage.error(editingReminderId.value ? '更新失败' : '添加失败')
   }
 }
 
-const editReminder = (reminder: HealthRecord) => {
+const formatDateTime = (dateTime: string | null | undefined): string => {
+  if (!dateTime) return getCurrentDateTime()
+  if (dateTime.includes('T')) {
+    return dateTime.replace('T', ' ').substring(0, 19)
+  }
+  if (dateTime.length === 19 && dateTime.includes(' ')) {
+    return dateTime
+  }
+  if (dateTime.length === 16) {
+    return dateTime + ':00'
+  }
+  return dateTime
+}
+
+const editReminder = (reminder: Reminder) => {
   editingReminderId.value = reminder.id
   reminderForm.value = {
     title: reminder.title || '',
     description: reminder.description || '',
-    scheduleTime: reminder.schedule_time || reminder.record_time,
-    remindBeforeMinutes: reminder.remind_before_minutes || 0,
-    repeatType: reminder.repeat_type || 'none',
+    recordTime: formatDateTime(reminder.recordTime),
+    scheduleTime: formatDateTime(reminder.scheduleTime || reminder.recordTime),
+    remindBeforeMinutes: reminder.remindBeforeMinutes || 0,
+    repeatType: reminder.repeatType || 'NONE',
   }
   showAddDialog.value = true
 }
 
-const completeReminder = async (id: string | number) => {
+const activateReminderHandler = async (id: string | number) => {
   try {
-    await completeHealthRecord(id)
-    ElMessage.success('标记完成成功')
+    await activateReminder(id)
+    ElMessage.success('激活成功')
     await loadReminders()
   } catch (error) {
     ElMessage.error('操作失败')
   }
 }
 
-const deleteReminder = async (id: string | number) => {
+const deactivateReminderHandler = async (id: string | number) => {
+  try {
+    await deactivateReminder(id)
+    ElMessage.success('停用成功')
+    await loadReminders()
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
+const deleteReminderHandler = async (id: string | number) => {
   try {
     await ElMessageBox.confirm('确定要删除这条提醒吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await deleteHealthRecord(id)
+    await deleteReminder(id)
     ElMessage.success('删除成功')
     await loadReminders()
   } catch (error: any) {
@@ -218,18 +356,33 @@ const deleteReminder = async (id: string | number) => {
 
 const getRepeatText = (repeatType: any) => {
   const map: Record<string, string> = {
-    none: '不重复',
-    daily: '每天',
-    weekly: '每周',
-    monthly: '每月',
-    custom: '自定义',
+    NONE: '不重复',
+    DAILY: '每天',
+    WEEKLY: '每周',
+    MONTHLY: '每月',
+    CUSTOM: '自定义',
   }
-  return map[String(repeatType)] || String(repeatType || 'none')
+  return map[String(repeatType)] || String(repeatType || 'NONE')
 }
 
 const formatTime = (time: string) => {
   if (!time) return ''
   return new Date(time).toLocaleString('zh-CN')
+}
+
+const handleSizeChange = (size: number) => {
+  pagination.pageSize = size
+  pagination.pageNumber = 1
+  loadReminders()
+}
+
+const handlePageChange = (page: number) => {
+  pagination.pageNumber = page
+  loadReminders()
+}
+
+const goToExecutions = () => {
+  router.push('/reminder/executions')
 }
 
 onMounted(async () => {
@@ -298,6 +451,12 @@ onMounted(async () => {
     font-size: 12px;
     color: #999;
   }
+}
+
+.pagination-wrapper {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .reminder-status {

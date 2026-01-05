@@ -9,7 +9,7 @@ import type { CommunityPost, CreatePostPayload, PostFilter, PostComment } from '
  */
 export const fetchPosts = (params?: PostFilter) => {
   // TODO: 后端接口地址 GET /community/posts
-  return apiClient.get<{ data: CommunityPost[]; total: number; page: number; pageSize: number }>(
+  return apiClient.get<{ records: CommunityPost[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(
     '/community/posts',
     { params },
   )
@@ -46,7 +46,7 @@ export const toggleLike = (id: string) => {
  */
 export const fetchPostComments = (id: string, params?: { page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /community/posts/:id/comments
-  return apiClient.get<{ data: PostComment[]; total: number }>(`/community/posts/${id}/comments`, { params })
+  return apiClient.get<{ records: PostComment[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(`/community/posts/${id}/comments`, { params })
 }
 
 /**
@@ -73,7 +73,7 @@ export interface Circle {
 
 export const fetchCircles = (params?: { keyword?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /community/circles
-  return apiClient.get<{ data: Circle[]; total: number; page: number; pageSize: number }>('/community/circles', { params })
+  return apiClient.get<{ records: Circle[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/community/circles', { params })
 }
 
 export const joinCircle = (id: string) => {
@@ -118,7 +118,7 @@ export interface Answer {
 
 export const fetchQuestions = (params?: { category?: string; keyword?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /community/questions
-  return apiClient.get<{ data: Question[]; total: number; page: number; pageSize: number }>('/community/questions', { params })
+  return apiClient.get<{ records: Question[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/community/questions', { params })
 }
 
 export const fetchQuestionById = (id: string) => {
@@ -173,7 +173,7 @@ export interface CheckIn {
 
 export const fetchActivities = (params?: { type?: string; status?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /community/activities
-  return apiClient.get<{ data: Activity[]; total: number; page: number; pageSize: number }>('/community/activities', { params })
+  return apiClient.get<{ records: Activity[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/community/activities', { params })
 }
 
 export const fetchActivityById = (id: string) => {

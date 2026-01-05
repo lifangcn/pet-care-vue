@@ -31,7 +31,7 @@ export interface Message {
 
 export const fetchMessages = (params?: { type?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /messages
-  return apiClient.get<{ data: Message[]; total: number; page: number; pageSize: number }>('/messages', { params })
+  return apiClient.get<{ records: Message[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/messages', { params })
 }
 
 export const markMessageAsRead = (id: string) => {
@@ -74,11 +74,11 @@ export const recharge = (payload: { amount: number; paymentMethod: string }) => 
 
 export const fetchTransactions = (params?: { type?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /wallet/transactions
-  return apiClient.get<{ data: Transaction[]; total: number; page: number; pageSize: number }>('/wallet/transactions', { params })
+  return apiClient.get<{ records: Transaction[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/wallet/transactions', { params })
 }
 
 export const fetchPointsHistory = (params?: { page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /wallet/points/history
-  return apiClient.get<{ data: Transaction[]; total: number; page: number; pageSize: number }>('/wallet/points/history', { params })
+  return apiClient.get<{ records: Transaction[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/wallet/points/history', { params })
 }
 

@@ -46,13 +46,35 @@
             <el-icon class="is-loading"><Loading /></el-icon>
             加载症状列表...
           </div>
-          <DynamicForm
+          <el-form
             v-else
             ref="symptomFormRef"
-            :config="symptomFormConfig"
-            :model-value="form"
-            @update:model-value="(val) => Object.assign(form, val)"
-          />
+            :model="form"
+            :rules="symptomFormRules"
+            label-width="120px"
+          >
+            <el-form-item label="常见症状" prop="symptoms">
+              <el-checkbox-group v-model="form.symptoms">
+                <el-checkbox
+                  v-for="symptom in commonSymptoms"
+                  :key="symptom.id"
+                  :label="symptom.id"
+                >
+                  {{ symptom.name }}
+                </el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+            <el-form-item label="详细描述" prop="description">
+              <el-input
+                v-model="form.description"
+                type="textarea"
+                :rows="6"
+                :maxlength="500"
+                show-word-limit
+                placeholder="请详细描述宠物的症状、行为变化、持续时间等信息..."
+              />
+            </el-form-item>
+          </el-form>
           <div class="step-actions">
             <el-button @click="prevStep">上一步</el-button>
             <el-button
@@ -164,8 +186,6 @@ import { fetchCommonSymptoms, submitHealthCheck } from '@/services/aiService'
 import { usePetStore } from '@/store/pet'
 import type { HealthCheckForm, HealthCheckResult, CommonSymptom } from '@/types/ai'
 import type { Pet } from '@/types/pet'
-import DynamicForm from '@/components/shared/DynamicForm.vue'
-import type { DynamicFormConfig } from '@/types/form'
 
 const router = useRouter()
 const petStore = usePetStore()
@@ -176,7 +196,7 @@ const checkResult = ref<HealthCheckResult | null>(null)
 const analysisProgress = ref(0)
 const currentTipIndex = ref(0)
 
-const symptomFormRef = ref<InstanceType<typeof DynamicForm>>()
+const symptomFormRef = ref<FormInstance>()
 
 const form = reactive<HealthCheckForm>({
   petId: '',
@@ -204,57 +224,32 @@ const analysisTips = [
   '生成专业建议...',
 ]
 
-const symptomFormConfig = computed<DynamicFormConfig>(() => ({
-  labelWidth: '120px',
-  fields: [
+const symptomFormRules: FormRules = {
+  symptoms: [
     {
-      type: 'checkbox-group',
-      label: '常见症状',
-      prop: 'symptoms',
-      options: commonSymptoms.value.map((s) => ({
-        label: s.name,
-        value: s.id,
-      })),
-      rules: [
-        {
-          validator: (_rule, value, callback) => {
-            if (value.length === 0 && !form.description.trim()) {
-              callback(new Error('请至少选择一个症状或输入详细描述'))
-            } else {
-              callback()
-            }
-          },
-          trigger: 'change',
-        },
-      ],
-      span: 24,
-    },
-    {
-      type: 'textarea',
-      label: '详细描述',
-      prop: 'description',
-      placeholder: '请详细描述宠物的症状、行为变化、持续时间等信息...',
-      rules: [
-        {
-          validator: (_rule, value, callback) => {
-            if (form.symptoms.length === 0 && !value.trim()) {
-              callback(new Error('请至少选择一个症状或输入详细描述'))
-            } else {
-              callback()
-            }
-          },
-          trigger: 'blur',
-        },
-      ],
-      props: {
-        rows: 6,
-        maxlength: 500,
-        showWordLimit: true,
+      validator: (_rule, value, callback) => {
+        if (value.length === 0 && !form.description.trim()) {
+          callback(new Error('请至少选择一个症状或输入详细描述'))
+        } else {
+          callback()
+        }
       },
-      span: 24,
+      trigger: 'change',
     },
   ],
-}))
+  description: [
+    {
+      validator: (_rule, value, callback) => {
+        if (form.symptoms.length === 0 && !value.trim()) {
+          callback(new Error('请至少选择一个症状或输入详细描述'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+}
 
 /**
  * [API调用] GET /ai/symptoms
@@ -300,7 +295,6 @@ const handleSubmit = async () => {
   })
 
   try {
-    const formData = symptomFormRef.value.getFormData()
     // 进入分析步骤
     currentStep.value = 2
     analysisProgress.value = 0
@@ -321,7 +315,7 @@ const handleSubmit = async () => {
     }, 2000)
 
     // [API调用] POST /ai/health-check - 提交AI健康检查
-    const { data } = await submitHealthCheck(formData as HealthCheckForm)
+    const { data } = await submitHealthCheck(form)
 
     clearInterval(progressInterval)
     clearInterval(tipInterval)

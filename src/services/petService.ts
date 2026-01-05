@@ -4,6 +4,9 @@ import type {
   Pet,
   HealthRecord,
   CreateHealthRecordPayload,
+  Reminder,
+  CreateReminderPayload,
+  ReminderExecution,
 } from '@/types/pet'
 
 /**
@@ -20,13 +23,13 @@ export const fetchPets = () => {
 }
 
 /**
- * [API调用] GET /pet/:id
+ * [API调用] GET /pet/info
  * 根据ID获取宠物详情
  * @param {string} id - 宠物ID
  * @returns {Promise} 返回宠物详情数据
  */
 export const fetchPetById = (id: string) => {
-  return apiClient.get<Pet>(`/pet/${id}`)
+  return apiClient.get<Pet>(`/pet/info/${id}`)
 }
 
 /**
@@ -36,7 +39,11 @@ export const fetchPetById = (id: string) => {
  * @returns {Promise} 返回保存后的宠物数据
  */
 export const savePet = (payload: CreatePetPayload & { id?: string | number }) => {
-  return apiClient.post<Pet>('/pet/save', payload)
+  const requestPayload = {
+    ...payload,
+    id: payload.id ? Number(payload.id) : undefined,
+  }
+  return apiClient.post<Pet>('/pet/save', requestPayload)
 }
 
 /**
@@ -69,61 +76,77 @@ export const uploadPetAvatar = (petId: string | number, file: File) => {
  */
 
 /**
- * [API调用] GET /healthRecord/:petId
+ * [API调用] GET /pet/{petId}/health-record/page
  * 获取宠物的健康记录列表
- * @param {string} petId - 宠物ID
+ * @param {string | number} petId - 宠物ID
  * @param {object} params - 查询参数
  * @returns {Promise} 返回健康记录列表数据
  */
-export const fetchHealthRecords = (petId: string, params?: {
-  record_type?: string
-  page?: number
+export const fetchHealthRecords = (petId: string | number, params?: {
+  recordType?: string
+  pageNumber?: number
   pageSize?: number
   startDate?: string
   endDate?: string
 }) => {
-  return apiClient.get<{ list: HealthRecord[]; total: number; page: number; pageSize: number }>(`/healthRecord/${petId}`, { params })
+  const queryParams: Record<string, any> = {
+    pageNumber: params?.pageNumber || 1,
+    pageSize: params?.pageSize || 10,
+  }
+  if (params?.recordType) {
+    queryParams.recordType = params.recordType
+  }
+  if (params?.startDate) {
+    queryParams.startDate = params.startDate
+  }
+  if (params?.endDate) {
+    queryParams.endDate = params.endDate
+  }
+  return apiClient.get<{ records: HealthRecord[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(`/pet/${petId}/health-record/page`, {
+    params: queryParams
+  })
 }
 
 /**
- * [API调用] POST /healthRecord/save
+ * [API调用] POST /pet/{petId}/health-record
  * 创建健康记录
+ * @param {string | number} petId - 宠物ID
  * @param {CreateHealthRecordPayload} payload - 健康记录创建数据
  * @returns {Promise} 返回创建的健康记录数据
  */
-export const createHealthRecord = (payload: CreateHealthRecordPayload) => {
-  return apiClient.post<HealthRecord>('/healthRecord/save', payload)
+export const createHealthRecord = (petId: string | number, payload: CreateHealthRecordPayload) => {
+  const requestPayload = {
+    ...payload,
+    petId: Number(payload.petId),
+  }
+  return apiClient.post<HealthRecord>(`/pet/${petId}/health-record`, requestPayload)
 }
 
 /**
- * [API调用] PUT /healthRecord/update/:id
+ * [API调用] PUT /pet/{petId}/health-record/{id}
  * 更新健康记录
+ * @param {string | number} petId - 宠物ID
  * @param {string | number} id - 健康记录ID
- * @param {CreateHealthRecordPayload} payload - 健康记录更新数据
+ * @param {Partial<CreateHealthRecordPayload>} payload - 健康记录更新数据
  * @returns {Promise} 返回更新后的健康记录数据
  */
-export const updateHealthRecord = (id: string | number, payload: Partial<CreateHealthRecordPayload>) => {
-  return apiClient.put<HealthRecord>(`/healthRecord/update/${id}`, payload)
+export const updateHealthRecord = (petId: string | number, id: string | number, payload: Partial<CreateHealthRecordPayload>) => {
+  const requestPayload: any = { ...payload }
+  if (requestPayload.petId) {
+    requestPayload.petId = Number(requestPayload.petId)
+  }
+  return apiClient.put<HealthRecord>(`/pet/${petId}/health-record/${id}`, requestPayload)
 }
 
 /**
- * [API调用] DELETE /healthRecord/remove/:id
+ * [API调用] DELETE /pet/{petId}/health-record/{id}
  * 删除健康记录
+ * @param {string | number} petId - 宠物ID
  * @param {string | number} id - 健康记录ID
  * @returns {Promise} 返回删除结果
  */
-export const deleteHealthRecord = (id: string | number) => {
-  return apiClient.delete(`/healthRecord/remove/${id}`)
-}
-
-/**
- * [API调用] PUT /healthRecord/complete/:id
- * 标记提醒为已完成
- * @param {string | number} id - 健康记录ID
- * @returns {Promise} 返回更新后的健康记录数据
- */
-export const completeHealthRecord = (id: string | number) => {
-  return apiClient.put<HealthRecord>(`/healthRecord/complete/${id}`)
+export const deleteHealthRecord = (petId: string | number, id: string | number) => {
+  return apiClient.delete(`/pet/${petId}/health-record/${id}`)
 }
 
 /**
@@ -131,32 +154,148 @@ export const completeHealthRecord = (id: string | number) => {
  */
 
 /**
- * [API调用] GET /reminder
- * 获取用户待办提醒列表
+ * [API调用] GET /reminder/page
+ * 获取提醒列表
  * @param {object} params - 查询参数
  * @returns {Promise} 返回提醒列表数据
  */
-export const fetchReminder = (params?: {
+export const fetchReminders = (params?: {
   petId?: string | number
-  status?: 'pending' | 'completed' | 'all'
-  page?: number
+  sourceType?: string
+  startTime?: string
+  endTime?: string
+  pageNumber?: number
   pageSize?: number
 }) => {
-  return apiClient.get<{ list: HealthRecord[]; total: number; page: number; pageSize: number }>('/reminder', { params })
+  const queryParams: any = { ...params }
+  if (queryParams.petId) {
+    queryParams.petId = Number(queryParams.petId)
+  }
+  return apiClient.get<{ records: Reminder[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/page', { 
+    params: queryParams
+  })
 }
 
 /**
- * [API调用] GET /reminder/notifications
+ * [API调用] POST /reminder
+ * 创建提醒
+ * @param {CreateReminderPayload} payload - 提醒创建数据
+ * @returns {Promise} 返回创建的提醒数据
+ */
+export const createReminder = (payload: CreateReminderPayload) => {
+  const requestPayload = {
+    ...payload,
+    petId: Number(payload.petId),
+    sourceId: payload.sourceId ? Number(payload.sourceId) : undefined,
+  }
+  return apiClient.post<Reminder>('/reminder', requestPayload)
+}
+
+/**
+ * [API调用] PUT /reminder/{id}
+ * 更新提醒
+ * @param {string | number} id - 提醒ID
+ * @param {Partial<CreateReminderPayload>} payload - 提醒更新数据
+ * @returns {Promise} 返回更新后的提醒数据
+ */
+export const updateReminder = (id: string | number, payload: Partial<CreateReminderPayload>) => {
+  const requestPayload: any = { ...payload }
+  requestPayload.id = Number(id)
+  if (requestPayload.petId) {
+    requestPayload.petId = Number(requestPayload.petId)
+  }
+  if (requestPayload.sourceId) {
+    requestPayload.sourceId = Number(requestPayload.sourceId)
+  }
+  return apiClient.put<Reminder>(`/reminder/${id}`, requestPayload)
+}
+
+/**
+ * [API调用] DELETE /reminder/{id}
+ * 删除提醒
+ * @param {string | number} id - 提醒ID
+ * @returns {Promise} 返回删除结果
+ */
+export const deleteReminder = (id: string | number) => {
+  return apiClient.delete(`/reminder/${id}`)
+}
+
+/**
+ * [API调用] PUT /reminder/{id}/activate
+ * 激活提醒
+ * @param {string | number} id - 提醒ID
+ * @returns {Promise} 返回更新后的提醒数据
+ */
+export const activateReminder = (id: string | number) => {
+  return apiClient.put<Reminder>(`/reminder/${id}/activate`)
+}
+
+/**
+ * [API调用] PUT /reminder/{id}/deactivate
+ * 停用提醒
+ * @param {string | number} id - 提醒ID
+ * @returns {Promise} 返回更新后的提醒数据
+ */
+export const deactivateReminder = (id: string | number) => {
+  return apiClient.put<Reminder>(`/reminder/${id}/deactivate`)
+}
+
+/**
+ * [API调用] GET /reminder/execution/page
+ * 获取提醒执行记录列表
+ * @param {object} params - 查询参数
+ * @returns {Promise} 返回执行记录列表数据
+ */
+export const fetchReminderExecutions = (params?: {
+  petId?: string | number
+  status?: 'PENDING' | 'COMPLETED' | 'OVERDUE'
+  startTime?: string
+  endTime?: string
+  pageNumber?: number
+  pageSize?: number
+}) => {
+  const queryParams: any = { ...params }
+  if (queryParams.petId) {
+    queryParams.petId = Number(queryParams.petId)
+  }
+  return apiClient.get<{ records: ReminderExecution[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/execution/page', { 
+    params: queryParams
+  })
+}
+
+/**
+ * [API调用] PUT /reminder/execution/{id}/complete
+ * 完成提醒执行记录
+ * @param {string | number} id - 执行记录ID
+ * @param {object} payload - 完成数据
+ * @returns {Promise} 返回更新后的执行记录数据
+ */
+export const completeReminderExecution = (id: string | number, payload?: { completionNotes?: string }) => {
+  return apiClient.put<ReminderExecution>(`/reminder/execution/${id}/complete`, payload)
+}
+
+/**
+ * [API调用] PUT /reminder/execution/{id}/read
+ * 标记提醒执行记录为已读
+ * @param {string | number} id - 执行记录ID
+ * @returns {Promise} 返回结果
+ */
+export const markExecutionAsRead = (id: string | number) => {
+  return apiClient.put(`/reminder/execution/${id}/read`)
+}
+
+/**
+ * [API调用] GET /reminder/execution
  * 获取提醒通知列表
  * @param {object} params - 查询参数
  * @returns {Promise} 返回通知列表数据
  */
 export const fetchReminderNotifications = (params?: {
   isRead?: boolean
-  page?: number
+  pageNumber?: number
   pageSize?: number
 }) => {
-  return apiClient.get<{ list: any[]; total: number; page: number; pageSize: number }>('/reminder/notifications', { params })
+  return apiClient.get<{ records: ReminderExecution[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/notifications', { params })
 }
 
 /**

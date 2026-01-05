@@ -71,8 +71,8 @@ const loadCoupons = async () => {
       params.status = 'expired'
     }
     const res = await fetchCoupons(params)
-    coupons.value = res.data.data || []
-    pagination.value.total = res.data.total || 0
+    coupons.value = res.data.records || []
+    pagination.value.total = res.data.totalRow || 0
   } catch (error) {
     console.error('加载优惠券失败:', error)
   }

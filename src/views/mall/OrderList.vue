@@ -6,10 +6,10 @@
       </template>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="全部" name="all" />
-        <el-tab-pane label="待付款" name="pending_payment" />
-        <el-tab-pane label="待发货" name="pending_shipment" />
-        <el-tab-pane label="已发货" name="shipped" />
-        <el-tab-pane label="已完成" name="completed" />
+        <el-tab-pane label="待付款" name="PENDING_PAYMENT" />
+        <el-tab-pane label="待发货" name="PENDING_SHIPMENT" />
+        <el-tab-pane label="已发货" name="SHIPPED" />
+        <el-tab-pane label="已完成" name="COMPLETED" />
       </el-tabs>
       <div class="order-list">
         <el-empty v-if="orders.length === 0" description="暂无订单" />
@@ -31,10 +31,10 @@
             <span class="order-time">下单时间：{{ formatTime(order.createdAt) }}</span>
             <div class="order-actions">
               <span class="total-amount">合计：¥{{ order.totalAmount.toFixed(2) }}</span>
-              <el-button v-if="order.status === 'pending_payment'" @click="payOrder(order.id)">去付款</el-button>
-              <el-button v-if="order.status === 'pending_payment'" @click="cancelOrder(order.id)">取消订单</el-button>
-              <el-button v-if="order.status === 'shipped'" @click="confirmReceipt(order.id)">确认收货</el-button>
-              <el-button v-if="order.status === 'completed'" @click="$router.push(`/orders/${order.id}`)">查看详情</el-button>
+              <el-button v-if="order.status === 'PENDING_PAYMENT'" @click="payOrder(order.id)">去付款</el-button>
+              <el-button v-if="order.status === 'PENDING_PAYMENT'" @click="cancelOrder(order.id)">取消订单</el-button>
+              <el-button v-if="order.status === 'SHIPPED'" @click="confirmReceipt(order.id)">确认收货</el-button>
+              <el-button v-if="order.status === 'COMPLETED'" @click="$router.push(`/orders/${order.id}`)">查看详情</el-button>
             </div>
           </div>
         </el-card>
@@ -69,8 +69,8 @@ const loadOrders = async () => {
       params.status = activeTab.value
     }
     const res = await fetchOrders(params)
-    orders.value = res.data.data || []
-    pagination.value.total = res.data.total || 0
+    orders.value = res.data.records || []
+    pagination.value.total = res.data.totalRow || 0
   } catch (error) {
     console.error('加载订单失败:', error)
   }
@@ -83,23 +83,23 @@ const handleTabChange = () => {
 
 const getStatusType = (status: string) => {
   const map: Record<string, string> = {
-    pending_payment: 'warning',
-    pending_shipment: 'info',
-    shipped: 'primary',
-    completed: 'success',
-    cancelled: 'info',
+    PENDING_PAYMENT: 'warning',
+    PENDING_SHIPMENT: 'info',
+    SHIPPED: 'primary',
+    COMPLETED: 'success',
+    CANCELLED: 'info',
   }
   return map[status] || 'info'
 }
 
 const getStatusText = (status: string) => {
   const map: Record<string, string> = {
-    pending_payment: '待付款',
-    pending_shipment: '待发货',
-    shipped: '已发货',
-    completed: '已完成',
-    cancelled: '已取消',
-    refunding: '退款中',
+    PENDING_PAYMENT: '待付款',
+    PENDING_SHIPMENT: '待发货',
+    SHIPPED: '已发货',
+    COMPLETED: '已完成',
+    CANCELLED: '已取消',
+    REFUNDING: '退款中',
   }
   return map[status] || status
 }

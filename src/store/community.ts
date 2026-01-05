@@ -43,12 +43,12 @@ export const useCommunityStore = defineStore('community', {
         })
 
         if (refresh) {
-          this.posts = data.data
+          this.posts = data.records
         } else {
-          this.posts.push(...data.data)
+          this.posts.push(...data.records)
         }
 
-        this.hasMore = data.data.length === this.pageSize
+        this.hasMore = data.records.length === this.pageSize
         if (this.hasMore) {
           this.page += 1
         }
@@ -111,9 +111,9 @@ export const useCommunityStore = defineStore('community', {
         })
 
         if (loadMore && post.commentsList) {
-          post.commentsList.push(...data.data)
+          post.commentsList.push(...data.records)
         } else {
-          post.commentsList = data.data
+          post.commentsList = data.records
         }
       } catch (error) {
         ElMessage.error('加载评论失败')

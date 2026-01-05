@@ -2,7 +2,7 @@ export type PetGender = 0 | 1
 
 export interface Pet {
   id: string | number
-  user_id?: string | number
+  userId?: string | number
   name: string
   type?: string | null
   breed?: string | null
@@ -10,8 +10,8 @@ export interface Pet {
   birthday?: string | null
   weight?: number | null
   avatar?: string | null
-  health_notes?: string | null
-  created_at?: string
+  healthNotes?: string | null
+  createdAt?: string
 }
 
 export interface CreatePetPayload {
@@ -23,41 +23,88 @@ export interface CreatePetPayload {
   birthday?: string | null
   weight?: number | null
   avatar?: string | null
-  health_notes?: string | null
+  healthNotes?: string | null
 }
 
-export type HealthRecordType = 'weight' | 'temperature' | 'reminder' | 'medical'
-export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'custom'
+export type HealthRecordType = 'WEIGHT' | 'TEMPERATURE' | 'MEDICAL'
+export type RepeatType = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CUSTOM'
+export type ReminderSourceType = 'MANUAL' | 'HEALTH_RECORD' | 'SYSTEM'
+export type ReminderExecutionStatus = 'PENDING' | 'COMPLETED' | 'OVERDUE'
 
 export interface HealthRecord {
   id: string | number
-  pet_id: string | number
-  record_type: HealthRecordType
+  petId: string | number
+  userId?: string | number
+  recordType: HealthRecordType
   title?: string | null
   description?: string | null
-  record_time: string
-  schedule_time?: string | null
-  remind_before_minutes?: number | null
-  repeat_type?: RepeatType | null
-  repeat_config?: any
+  recordTime: string
   value?: number | null
-  medication_info?: string | null
-  is_completed?: boolean
-  completed_time?: string | null
-  created_at?: string
+  symptom?: string | null
+  medicationInfo?: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface CreateHealthRecordPayload {
-  pet_id: string | number
-  record_type: HealthRecordType
+  petId: string | number
+  recordType: HealthRecordType
   title?: string
   description?: string
-  record_time: string
-  schedule_time?: string
-  remind_before_minutes?: number
-  repeat_type?: RepeatType
-  repeat_config?: any
+  recordTime: string
   value?: number
-  medication_info?: string
+  symptom?: string
+  medicationInfo?: string
+}
+
+export interface Reminder {
+  id: string | number
+  petId: string | number
+  userId?: string | number
+  sourceType: ReminderSourceType
+  sourceId: string | number
+  title?: string | null
+  description?: string | null
+  recordTime: string
+  scheduleTime?: string | null
+  remindBeforeMinutes?: number
+  repeatType?: RepeatType
+  repeatConfig?: any
+  isActive?: boolean
+  totalOccurrences?: number
+  completedCount?: number
+  completedTime?: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface CreateReminderPayload {
+  petId: string | number
+  sourceType: ReminderSourceType
+  sourceId?: string | number
+  title?: string
+  description?: string
+  recordTime: string
+  scheduleTime?: string
+  remindBeforeMinutes?: number
+  repeatType?: RepeatType
+  repeatConfig?: any
+}
+
+export interface ReminderExecution {
+  id: string | number
+  reminderId: string | number
+  petId: string | number
+  userId?: string | number
+  scheduleTime: string
+  actualTime?: string | null
+  status: ReminderExecutionStatus
+  completionNotes?: string | null
+  notificationTime: string
+  isRead?: boolean
+  isSent?: boolean
+  sentAt?: string | null
+  readAt?: string | null
+  createdAt?: string
 }
 

@@ -3,6 +3,7 @@ import { login, logout, sendSmsCode, refreshToken } from '@/services/authService
 import { getCurrentUser } from '@/services/userService'
 import type { LoginForm, UserInfo } from '@/types/auth'
 import { ElMessage } from 'element-plus'
+import { wsService } from '@/services/websocket'
 
 const getStoredUser = (): UserInfo | null => {
   try {
@@ -56,6 +57,8 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('refreshToken', data.refreshToken)
         localStorage.setItem('user', JSON.stringify(this.user))
 
+        wsService.connect()
+
         ElMessage.success('登录成功')
         return data
       } catch (error: any) {
@@ -68,10 +71,11 @@ export const useAuthStore = defineStore('auth', {
     /**
      * [API调用] POST /auth/logout
      * 用户登出
+     * 根据JWT规范，将refreshToken发送给后端以便加入黑名单
      */
     async logout() {
       try {
-        await logout()
+        await logout(this.refreshToken || undefined)
       } catch (error) {
         console.error('[Auth Store] 退出登录失败:', error)
       } finally {
@@ -82,6 +86,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
+        wsService.disconnect()
       }
     },
 
@@ -95,6 +100,10 @@ export const useAuthStore = defineStore('auth', {
         this.refreshToken = data.refreshToken
         localStorage.setItem('accessToken', data.accessToken)
         localStorage.setItem('refreshToken', data.refreshToken)
+        
+        wsService.disconnect()
+        wsService.connect()
+        
         return data.accessToken
       } catch (error) {
         console.error('[Auth Store] 刷新token失败:', error)

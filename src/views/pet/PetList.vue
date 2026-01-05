@@ -50,7 +50,7 @@
             <ul>
               <li v-if="pet.birthday">生日：{{ pet.birthday }}</li>
               <li v-if="pet.weight !== null && pet.weight !== undefined">体重：{{ pet.weight }} kg</li>
-              <li v-if="pet.health_notes">健康备注：{{ pet.health_notes }}</li>
+              <li v-if="pet.healthNotes">健康备注：{{ pet.healthNotes }}</li>
             </ul>
           </div>
           <div class="pet-actions">
@@ -70,45 +70,99 @@
       width="640px"
       destroy-on-close
     >
-      <DynamicForm
+      <el-form
         ref="formRef"
-        :config="petFormConfig"
-        :model-value="formState"
-        @update:model-value="(val) => Object.assign(formState, val)"
-        @validate="handleValidate"
+        :model="formState"
+        :rules="petFormRules"
+        label-width="96px"
       >
-        <template #avatar-upload="{ field, value, update }">
+        <el-form-item label="宠物头像">
           <div class="avatar-upload-wrapper">
-            <el-avatar v-if="avatarPreview || value" :size="80" :src="avatarPreview || value" class="avatar-preview" />
+            <el-avatar v-if="avatarPreview || formState.avatar" :size="80" :src="avatarPreview || formState.avatar" class="avatar-preview" />
             <el-upload
               class="avatar-uploader"
               action="#"
               :auto-upload="false"
               :show-file-list="false"
-              :on-change="(file: any) => handleAvatarChange(file, update)"
+              :on-change="(file: any) => handleAvatarChange(file, (val: string) => { formState.avatar = val })"
               :before-upload="beforeAvatarUpload"
               accept="image/*"
             >
               <el-button type="primary" :icon="UploadFilled">选择头像</el-button>
             </el-upload>
             <el-button
-              v-if="avatarPreview || value"
+              v-if="avatarPreview || formState.avatar"
               type="danger"
               text
               size="small"
-              @click="handleRemoveAvatar(update)"
+              @click="handleRemoveAvatar((val: string) => { formState.avatar = val })"
             >
               移除
             </el-button>
           </div>
-        </template>
-        <template #gender-radio="{ field, value, update }">
-          <el-radio-group :model-value="value" @update:model-value="update">
-            <el-radio-button :value="1">公</el-radio-button>
-            <el-radio-button :value="0">母</el-radio-button>
-          </el-radio-group>
-        </template>
-      </DynamicForm>
+        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="宠物名称" prop="name">
+              <el-input v-model="formState.name" placeholder="请输入宠物名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="宠物类型" prop="type">
+              <el-select v-model="formState.type" placeholder="请选择宠物类型" style="width: 100%">
+                <el-option label="狗" value="dog" />
+                <el-option label="猫" value="cat" />
+                <el-option label="其他" value="other" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="品种" prop="breed">
+              <el-select v-model="formState.breed" placeholder="选择或输入品种" filterable style="width: 100%">
+                <el-option
+                  v-for="breed in breedOptions"
+                  :key="breed"
+                  :label="breed"
+                  :value="breed"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="性别" prop="gender">
+              <el-radio-group v-model="formState.gender">
+                <el-radio-button :value="0">未知</el-radio-button>
+                <el-radio-button :value="1">公</el-radio-button>
+                <el-radio-button :value="2">母</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="生日" prop="birthday">
+              <el-date-picker
+                v-model="formState.birthday"
+                type="date"
+                placeholder="选择生日"
+                style="width: 100%"
+                format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD"
+                :shortcuts="dateShortcuts"
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="体重(kg)" prop="weight">
+              <el-input-number v-model="formState.weight" :min="0" :precision="1" :step="0.5" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="健康备注" prop="healthNotes">
+              <el-input v-model="formState.healthNotes" type="textarea" :rows="2" placeholder="请输入健康备注信息（可选）" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitForm">保存</el-button>
@@ -120,13 +174,12 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Plus, ArrowDown, Search, UploadFilled } from '@element-plus/icons-vue'
-import type { FormInstance, UploadFile, UploadProps } from 'element-plus'
+import type { FormInstance, FormRules, UploadFile, UploadProps } from 'element-plus'
+import type { DatePickerShortcuts } from 'element-plus/es/components/date-picker/src/date-picker'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { usePetStore } from '@/store/pet'
 import type { CreatePetPayload, Pet } from '@/types/pet'
 import { useRouter } from 'vue-router'
-import DynamicForm from '@/components/shared/DynamicForm.vue'
-import type { DynamicFormConfig } from '@/types/form'
 import { uploadPetAvatar } from '@/services/petService'
 
 const petStore = usePetStore()
@@ -135,7 +188,7 @@ const router = useRouter()
 const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const searchValue = ref('')
-const formRef = ref<InstanceType<typeof DynamicForm>>()
+const formRef = ref<FormInstance>()
 const editingPetId = ref<string | number | null>(null)
 const pendingAvatarFile = ref<File | null>(null)
 const avatarPreview = ref<string>('')
@@ -148,85 +201,46 @@ const formState = reactive<Partial<CreatePetPayload>>({
   birthday: null,
   weight: null,
   avatar: '',
-  health_notes: '',
+  healthNotes: '',
 })
 
 const breedOptions = ['布偶猫', '英短', '金毛', '哈士奇', '柴犬', '兔子', '其他']
 
-// 表单配置
-const petFormConfig: DynamicFormConfig = {
-  labelWidth: '96px',
-  fields: [
-    {
-      type: 'input',
-      label: '宠物头像',
-      prop: 'avatar',
-      slot: 'avatar-upload',
-    },
-    {
-      type: 'input',
-      label: '宠物名称',
-      prop: 'name',
-      placeholder: '请输入宠物名称',
-      rules: [{ required: true, message: '请输入宠物名称', trigger: 'blur' }],
-      span: 12,
-    },
-    {
-      type: 'select',
-      label: '宠物类型',
-      prop: 'type',
-      options: [
-        { label: '狗', value: 'dog' },
-        { label: '猫', value: 'cat' },
-        { label: '其他', value: 'other' },
-      ],
-      rules: [{ required: true, message: '请选择宠物类型', trigger: 'change' }],
-      span: 12,
-    },
-    {
-      type: 'select',
-      label: '品种',
-      prop: 'breed',
-      placeholder: '选择或输入品种',
-      options: breedOptions.map((item) => ({ label: item, value: item })),
-      rules: [{ required: true, message: '请选择品种', trigger: 'change' }],
-      props: { filterable: true },
-      span: 12,
-    },
-    {
-      type: 'radio-group',
-      label: '性别',
-      prop: 'gender',
-      options: [
-        { label: '未知', value: 0 },
-        { label: '公', value: 1 },
-        { label: '母', value: 2 },
-      ],
-      span: 12,
-      slot: 'gender-radio',
-    },
-    {
-      type: 'date',
-      label: '生日',
-      prop: 'birthday',
-      placeholder: '选择生日',
-      span: 12,
-    },
-    {
-      type: 'number',
-      label: '体重(kg)',
-      prop: 'weight',
-      props: { min: 0, precision: 1, step: 0.5 },
-      span: 12,
-    },
-    {
-      type: 'textarea',
-      label: '健康备注',
-      prop: 'health_notes',
-      placeholder: '请输入健康备注信息（可选）',
-      props: { rows: 2 },
-    },
-  ],
+const dateShortcuts: DatePickerShortcuts = [
+  {
+    text: '今天',
+    value: () => new Date()
+  },
+  {
+    text: '一年前',
+    value: () => {
+      const date = new Date()
+      date.setFullYear(date.getFullYear() - 1)
+      return date
+    }
+  },
+  {
+    text: '两年前',
+    value: () => {
+      const date = new Date()
+      date.setFullYear(date.getFullYear() - 2)
+      return date
+    }
+  },
+  {
+    text: '三年前',
+    value: () => {
+      const date = new Date()
+      date.setFullYear(date.getFullYear() - 3)
+      return date
+    }
+  }
+]
+
+const petFormRules: FormRules = {
+  name: [{ required: true, message: '请输入宠物名称', trigger: 'blur' }],
+  type: [{ required: true, message: '请选择宠物类型', trigger: 'change' }],
+  breed: [{ required: true, message: '请选择品种', trigger: 'change' }],
 }
 
 const genderLabel = (gender: Pet['gender']) => {
@@ -264,7 +278,7 @@ const openEditDialog = (pet: Pet) => {
     birthday: pet.birthday || null,
     weight: pet.weight,
     avatar: pet.avatar || '',
-    health_notes: pet.health_notes || '',
+    healthNotes: pet.healthNotes || '',
   })
   dialogVisible.value = true
 }
@@ -281,33 +295,28 @@ const resetForm = () => {
     birthday: null,
     weight: null,
     avatar: '',
-    health_notes: '',
+    healthNotes: '',
   })
   formRef.value?.clearValidate()
 }
 
 const buildPayload = (): CreatePetPayload => {
-  const data = formRef.value?.getFormData() || formState
   return {
-    id: editingPetId.value || undefined, // 有id则为更新
-    name: data.name,
-    breed: data.breed || '',
-    type: data.type || 'dog',
-    gender: (data.gender === 0 ? 0 : 1) as 0 | 1,
-    birthday: data.birthday || null,
-    weight: data.weight,
-    avatar: data.avatar,
-    health_notes: data.health_notes || '',
+    id: editingPetId.value || undefined,
+    name: formState.name,
+    breed: formState.breed || '',
+    type: formState.type || 'dog',
+    gender: (formState.gender === 0 ? 0 : 1) as 0 | 1,
+    birthday: formState.birthday || null,
+    weight: formState.weight,
+    avatar: formState.avatar,
+    healthNotes: formState.healthNotes || '',
   }
-}
-
-const handleValidate = (isValid: boolean) => {
-  // 表单验证回调
 }
 
 const submitForm = async () => {
   if (!formRef.value) return
-  const valid = await formRef.value.validate()
+  const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
   
   const payload = buildPayload()

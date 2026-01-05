@@ -53,7 +53,7 @@ export const createBooking = (payload: BookingForm) => {
  */
 export const fetchBookings = (params?: { status?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /services/bookings
-  return apiClient.get<{ data: BookingRecord[]; total: number; page: number; pageSize: number }>(
+  return apiClient.get<{ records: BookingRecord[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(
     '/services/bookings',
     { params },
   )
@@ -67,7 +67,7 @@ export interface Consultation {
   expertAvatar: string
   petId: string
   petName: string
-  status: 'pending' | 'active' | 'completed'
+  status: 'PENDING' | 'ACTIVE' | 'COMPLETED'
   messages: ConsultationMessage[]
   createdAt: string
   completedAt?: string
@@ -89,7 +89,7 @@ export const createConsultation = (payload: { expertId: string; petId: string; t
 
 export const fetchConsultations = (params?: { status?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /consultations
-  return apiClient.get<{ data: Consultation[]; total: number; page: number; pageSize: number }>('/consultations', { params })
+  return apiClient.get<{ records: Consultation[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/consultations', { params })
 }
 
 export const fetchConsultationById = (id: string) => {
@@ -122,7 +122,7 @@ export interface Expert {
 
 export const fetchExperts = (params?: { category?: string; keyword?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /experts
-  return apiClient.get<{ data: Expert[]; total: number; page: number; pageSize: number }>('/experts', { params })
+  return apiClient.get<{ records: Expert[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/experts', { params })
 }
 
 export const fetchExpertById = (id: string) => {

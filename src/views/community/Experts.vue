@@ -86,8 +86,8 @@ const loadExperts = async () => {
       params.keyword = keyword.value
     }
     const res = await fetchExperts(params)
-    experts.value = res.data.data || []
-    pagination.value.total = res.data.total || 0
+    experts.value = res.data.records || []
+    pagination.value.total = res.data.totalRow || 0
   } catch (error) {
     console.error('加载专家列表失败:', error)
   }

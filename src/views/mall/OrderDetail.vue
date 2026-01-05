@@ -46,11 +46,11 @@
         </div>
       </div>
       <div class="order-actions">
-        <el-button v-if="order.status === 'pending_payment'" type="primary" @click="payOrder">去付款</el-button>
-        <el-button v-if="order.status === 'pending_payment'" @click="cancelOrder">取消订单</el-button>
-        <el-button v-if="order.status === 'shipped'" type="primary" @click="confirmReceipt">确认收货</el-button>
-        <el-button v-if="order.status === 'completed'" @click="applyRefund">申请退款</el-button>
-        <el-button v-if="order.status === 'completed'" @click="showReview = true">评价</el-button>
+        <el-button v-if="order.status === 'PENDING_PAYMENT'" type="primary" @click="payOrder">去付款</el-button>
+        <el-button v-if="order.status === 'PENDING_PAYMENT'" @click="cancelOrder">取消订单</el-button>
+        <el-button v-if="order.status === 'SHIPPED'" type="primary" @click="confirmReceipt">确认收货</el-button>
+        <el-button v-if="order.status === 'COMPLETED'" @click="applyRefund">申请退款</el-button>
+        <el-button v-if="order.status === 'COMPLETED'" @click="showReview = true">评价</el-button>
       </div>
     </el-card>
 
@@ -82,7 +82,7 @@ const router = useRouter()
 const order = ref<Order>({
   id: '',
   orderNo: '',
-  status: 'pending_payment',
+  status: 'PENDING_PAYMENT',
   totalAmount: 0,
   items: [],
   address: { name: '', phone: '', address: '' },
@@ -106,20 +106,20 @@ const loadOrder = async () => {
 
 const getStatusType = (status: string) => {
   const map: Record<string, string> = {
-    pending_payment: 'warning',
-    pending_shipment: 'info',
-    shipped: 'primary',
-    completed: 'success',
+    PENDING_PAYMENT: 'warning',
+    PENDING_SHIPMENT: 'info',
+    SHIPPED: 'primary',
+    COMPLETED: 'success',
   }
   return map[status] || 'info'
 }
 
 const getStatusText = (status: string) => {
   const map: Record<string, string> = {
-    pending_payment: '待付款',
-    pending_shipment: '待发货',
-    shipped: '已发货',
-    completed: '已完成',
+    PENDING_PAYMENT: '待付款',
+    PENDING_SHIPMENT: '待发货',
+    SHIPPED: '已发货',
+    COMPLETED: '已完成',
   }
   return map[status] || status
 }

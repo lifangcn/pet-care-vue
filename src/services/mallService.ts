@@ -26,7 +26,7 @@ export const fetchCategories = () => {
  */
 export const fetchProducts = (params?: ProductFilter) => {
   // TODO: 后端接口地址 GET /products
-  return apiClient.get<{ data: Product[]; total: number; page: number; pageSize: number }>('/products', { params })
+  return apiClient.get<{ records: Product[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/products', { params })
 }
 
 /**
@@ -48,7 +48,7 @@ export const fetchProductById = (id: string) => {
  */
 export const fetchProductReviews = (params: ReviewFilter) => {
   // TODO: 后端接口地址 GET /products/:id/reviews
-  return apiClient.get<{ data: ProductReview[]; total: number; page: number; pageSize: number }>(
+  return apiClient.get<{ records: ProductReview[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(
     `/products/${params.productId}/reviews`,
     { params },
   )
@@ -103,7 +103,7 @@ export const clearCart = () => {
 export interface Order {
   id: string
   orderNo: string
-  status: 'pending_payment' | 'pending_shipment' | 'shipped' | 'completed' | 'cancelled' | 'refunding'
+  status: 'PENDING_PAYMENT' | 'PENDING_SHIPMENT' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED' | 'REFUNDING'
   totalAmount: number
   items: OrderItem[]
   address: { name: string; phone: string; address: string }
@@ -130,7 +130,7 @@ export const createOrder = (payload: { items: any[]; paymentMethod: string; coup
 
 export const fetchOrders = (params?: { status?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /orders
-  return apiClient.get<{ data: Order[]; total: number; page: number; pageSize: number }>('/orders', { params })
+  return apiClient.get<{ records: Order[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/orders', { params })
 }
 
 export const fetchOrderById = (id: string) => {
@@ -177,7 +177,7 @@ export interface Coupon {
 
 export const fetchCoupons = (params?: { status?: string; page?: number; pageSize?: number }) => {
   // TODO: 后端接口地址 GET /coupons
-  return apiClient.get<{ data: Coupon[]; total: number; page: number; pageSize: number }>('/coupons', { params })
+  return apiClient.get<{ records: Coupon[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/coupons', { params })
 }
 
 export const receiveCoupon = (id: string) => {

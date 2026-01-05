@@ -32,10 +32,11 @@
 
 ### 后端表结构
 
-#### user 表
+#### tb_user 表
 ```sql
-CREATE TABLE `user` (
+CREATE TABLE `tb_user` (
   `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+  `username` VARCHAR(50) COMMENT '用户名',
   `phone` VARCHAR(20) NOT NULL UNIQUE COMMENT '手机号',
   `nickname` VARCHAR(50) COMMENT '昵称',
   `avatar` VARCHAR(500) COMMENT '头像URL',
@@ -173,9 +174,9 @@ Content-Type: multipart/form-data
 
 ### 后端表结构
 
-#### pet 表
+#### tb_pet 表
 ```sql
-CREATE TABLE `pet` (
+CREATE TABLE `tb_pet` (
   `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
   `name` VARCHAR(50) NOT NULL COMMENT '宠物名称',
@@ -189,7 +190,7 @@ CREATE TABLE `pet` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   INDEX `idx_user_id` (`user_id`),
-  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`user_id`) REFERENCES `tb_user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='宠物表';
 ```
 
@@ -223,7 +224,7 @@ POST /pet/list
 
 #### 2. 获取宠物详情
 ```
-GET /pet/{id}
+GET /pet/info/{id}
 
 响应:
 {
@@ -328,7 +329,7 @@ Content-Type: multipart/form-data
 ## 健康记录功能
 
 ### 功能概述
-- 支持记录类型：体重(weight)、体温(temperature)、用药(medical)、提醒(reminder)
+- 支持记录类型：体重(WEIGHT)、体温(TEMPERATURE)、用药(MEDICAL)
 - 支持添加、编辑、删除健康记录
 - 支持时间线展示
 - 支持图表展示（体重、体温趋势）
@@ -340,10 +341,9 @@ Content-Type: multipart/form-data
 
 **功能**:
 - 时间线展示健康记录
-- 添加健康记录（支持4种类型）
+- 添加健康记录（支持3种类型：体重、体温、用药）
 - 编辑健康记录
 - 删除健康记录
-- 标记提醒为已完成
 - 图表展示（体重、体温趋势）
 
 **主要组件**:
@@ -353,44 +353,40 @@ Content-Type: multipart/form-data
 
 ### 后端表结构
 
-#### health_record 表
+#### tb_health_record 表
 ```sql
-CREATE TABLE `health_record` (
-  `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
-  `pet_id` BIGINT NOT NULL COMMENT '宠物ID',
-  `user_id` BIGINT NOT NULL COMMENT '用户ID',
-  `record_type` VARCHAR(20) NOT NULL COMMENT '记录类型: weight(体重), temperature(体温), medical(用药), reminder(提醒)',
-  `title` VARCHAR(200) COMMENT '标题',
-  `description` TEXT COMMENT '描述',
-  `record_time` DATETIME NOT NULL COMMENT '记录时间',
-  `schedule_time` DATETIME COMMENT '计划时间(用于提醒)',
-  `remind_before_minutes` INT DEFAULT 0 COMMENT '提前提醒时间(分钟)',
-  `repeat_type` VARCHAR(20) DEFAULT 'none' COMMENT '重复类型: none(不重复), daily(每天), weekly(每周), monthly(每月), custom(自定义)',
-  `repeat_config` JSON COMMENT '重复配置(自定义重复规则)',
-  `value` DECIMAL(10,2) COMMENT '数值(体重/体温等)',
-  `medication_info` VARCHAR(500) COMMENT '用药信息',
-  `is_completed` TINYINT(1) DEFAULT 0 COMMENT '是否完成(用于提醒)',
-  `completed_time` DATETIME COMMENT '完成时间',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  INDEX `idx_pet_id` (`pet_id`),
-  INDEX `idx_user_id` (`user_id`),
-  INDEX `idx_record_type` (`record_type`),
-  INDEX `idx_schedule_time` (`schedule_time`),
-  INDEX `idx_record_time` (`record_time`),
-  FOREIGN KEY (`pet_id`) REFERENCES `pet`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='健康记录表';
+CREATE TABLE `tb_health_record` (
+    `id`                    BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    `pet_id`                BIGINT      NOT NULL COMMENT '宠物ID',
+    `user_id`               BIGINT      NOT NULL COMMENT '用户ID',
+    `record_type`           VARCHAR(20) NOT NULL COMMENT '记录类型: 体重(WEIGHT)、体温(TEMPERATURE)、用药(MEDICAL)',
+    `title`                 VARCHAR(200) COMMENT '标题',
+    `description`           TEXT COMMENT '描述',
+    `record_time`           DATETIME    NOT NULL COMMENT '记录时间',
+    `value`                 DECIMAL(10, 2) COMMENT '数值(体重/体温等)',
+    `symptom`               VARCHAR(500) COMMENT '症状信息',
+    `medication_info`       VARCHAR(500) COMMENT '用药信息',
+    `created_at`            DATETIME    DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at`            DATETIME    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_pet_id` (`pet_id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_record_type` (`record_type`),
+    INDEX `idx_record_time` (`record_time`),
+    FOREIGN KEY (`pet_id`) REFERENCES `tb_pet`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `tb_user`(`id`) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='健康记录表';
 ```
 
 ### 后端接口
 
 #### 1. 获取宠物健康记录列表
 ```
-GET /healthRecord/{petId}
+GET /healthRecord/list
 Query参数:
-  - record_type: 记录类型(可选): weight, temperature, medical, reminder
-  - page: 页码(默认1)
+  - petId: 宠物ID
+  - record_type: 记录类型(可选): WEIGHT、TEMPERATURE、MEDICAL
+  - pageNumber: 页码(默认1)
   - pageSize: 每页数量(默认20)
   - startDate: 开始日期(可选)
   - endDate: 结束日期(可选)
@@ -404,23 +400,20 @@ Query参数:
       {
         "id": 1,
         "pet_id": 1,
+        "user_id": 1,
         "record_type": "weight",
         "title": "体重记录",
         "description": "定期测量",
         "record_time": "2025-01-15 10:00:00",
-        "schedule_time": null,
-        "remind_before_minutes": 0,
-        "repeat_type": "none",
-        "repeat_config": null,
         "value": 12.5,
+        "symptom": null,
         "medication_info": null,
-        "is_completed": false,
-        "completed_time": null,
-        "created_at": "2025-01-15 10:00:00"
+        "created_at": "2025-01-15 10:00:00",
+        "updated_at": "2025-01-15 10:00:00"
       }
     ],
     "total": 100,
-    "page": 1,
+    "pageNumber": 1,
     "pageSize": 20
   }
 }
@@ -436,11 +429,8 @@ POST /healthRecord/save
   "title": "体重记录",
   "description": "定期测量",
   "record_time": "2025-01-15 10:00:00",
-  "schedule_time": null,
-  "remind_before_minutes": 0,
-  "repeat_type": "none",
-  "repeat_config": null,
   "value": 12.5,
+  "symptom": null,
   "medication_info": null
 }
 
@@ -459,7 +449,7 @@ POST /healthRecord/save
 
 #### 3. 更新健康记录
 ```
-PUT /healthRecord/update/{id}
+PUT /healthRecord/update
 请求体: 同创建接口
 
 响应:
@@ -481,21 +471,6 @@ DELETE /healthRecord/remove/{id}
 }
 ```
 
-#### 5. 标记提醒为已完成
-```
-PUT /healthRecord/complete/{id}
-
-响应:
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "id": 1,
-    "is_completed": true,
-    "completed_time": "2025-01-15 10:00:00"
-  }
-}
-```
 
 ### 前端服务方法
 
@@ -506,14 +481,13 @@ PUT /healthRecord/complete/{id}
 - `createHealthRecord()` - 创建健康记录
 - `updateHealthRecord()` - 更新健康记录
 - `deleteHealthRecord()` - 删除健康记录
-- `completeHealthRecord()` - 完成提醒
 
 ### 类型定义
 
 **文件**: `src/types/pet.ts`
 
 已定义的类型:
-- `HealthRecordType`: 'weight' | 'temperature' | 'reminder' | 'medical'
+- `HealthRecordType`: 'WEIGHT' | 'temperature' | 'medical'
 - `HealthRecord`: 健康记录接口
 - `CreateHealthRecordPayload`: 创建健康记录载荷
 
@@ -542,27 +516,63 @@ PUT /healthRecord/complete/{id}
 
 ### 后端表结构
 
-#### reminder_notification 表
+#### tb_reminder 表
 ```sql
-CREATE TABLE `reminder_notification` (
-  `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
-  `health_record_id` BIGINT NOT NULL COMMENT '健康记录ID',
-  `pet_id` BIGINT NOT NULL COMMENT '宠物ID',
-  `user_id` BIGINT NOT NULL COMMENT '用户ID',
-  `notification_time` DATETIME NOT NULL COMMENT '通知时间',
-  `is_read` TINYINT(1) DEFAULT 0 COMMENT '是否已读',
-  `is_sent` TINYINT(1) DEFAULT 0 COMMENT '是否已发送',
-  `sent_at` DATETIME COMMENT '发送时间',
-  `read_at` DATETIME COMMENT '阅读时间',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  INDEX `idx_health_record_id` (`health_record_id`),
-  INDEX `idx_user_id` (`user_id`),
-  INDEX `idx_notification_time` (`notification_time`),
-  INDEX `idx_is_read` (`is_read`),
-  FOREIGN KEY (`health_record_id`) REFERENCES `health_record`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`pet_id`) REFERENCES `pet`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='提醒通知表';
+CREATE TABLE `tb_reminder` (
+    `id`                    BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    `pet_id`                BIGINT      NOT NULL COMMENT '宠物ID',
+    `user_id`               BIGINT      NOT NULL COMMENT '用户ID',
+    `source_type`           VARCHAR(20) NOT NULL COMMENT '记录来源：manual, health_record, system',
+    `source_id`             BIGINT COMMENT '来源ID（如健康记录ID）',
+    `title`                 VARCHAR(200) COMMENT '标题',
+    `description`           TEXT COMMENT '描述',
+    `record_time`           DATETIME    NOT NULL COMMENT '记录时间',
+    `next_trigger_time`     DATETIME COMMENT '下一次触发时间（内部调度使用，用户不可见）',
+    `schedule_time`         DATETIME COMMENT '计划时间(用于提醒)',
+    `remind_before_minutes` INT         DEFAULT 0 COMMENT '提前提醒时间(分钟)',
+    `repeat_type`           VARCHAR(20) DEFAULT 'none' COMMENT '重复类型: none(不重复), daily(每天), weekly(每周), monthly(每月), custom(自定义)',
+    `repeat_config`         JSON COMMENT '重复配置(自定义重复规则)',
+    `is_active`             BOOLEAN     DEFAULT TRUE COMMENT '是否激活',
+    `reminder_execution_id` BIGINT COMMENT '提醒执行记录ID，当前提醒和执行记录关联,标识当前最新的一条记录信息',
+    `created_at`            DATETIME    DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at`            DATETIME    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_pet_id` (`pet_id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_schedule_time` (`schedule_time`),
+    INDEX `idx_is_active` (`is_active`),
+    FOREIGN KEY (`pet_id`) REFERENCES `tb_pet`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `tb_user`(`id`) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='提醒事件表';
+
+#### tb_reminder_execution 表
+```sql
+CREATE TABLE `tb_reminder_execution` (
+    `id`                BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    `reminder_id`       BIGINT   NOT NULL COMMENT '提醒ID',
+    `pet_id`            BIGINT   NOT NULL COMMENT '宠物ID',
+    `user_id`           BIGINT   NOT NULL COMMENT '用户ID',
+    `schedule_time`    DATETIME NOT NULL COMMENT '计划执行时间',
+    `actual_time`       DATETIME COMMENT '实际执行时间',
+    `status`            ENUM('pending', 'completed', 'overdue') DEFAULT 'pending' COMMENT '执行状态',
+    `completion_notes`  TEXT COMMENT '完成说明',
+    `notification_time` DATETIME NOT NULL COMMENT '通知时间',
+    `is_read`           TINYINT(1) DEFAULT 0 COMMENT '是否已读',
+    `is_sent`           TINYINT(1) DEFAULT 0 COMMENT '是否已发送',
+    `sent_at`           DATETIME COMMENT '发送时间',
+    `read_at`           DATETIME COMMENT '阅读时间',
+    `created_at`        DATETIME   DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX `idx_reminder_id` (`reminder_id`),
+    INDEX `idx_pet_id` (`pet_id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_schedule_time` (`schedule_time`),
+    INDEX `idx_status` (`status`),
+    INDEX `idx_notification_time` (`notification_time`),
+    FOREIGN KEY (`reminder_id`) REFERENCES `tb_reminder`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`pet_id`) REFERENCES `tb_pet`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `tb_user`(`id`) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='提醒执行记录表';
 ```
 
 ### 后端接口
@@ -573,7 +583,7 @@ GET /reminder
 Query参数:
   - petId: 宠物ID(可选)
   - status: 状态(可选): pending(待办), completed(已完成), all(全部)
-  - page: 页码(默认1)
+  - pageNumber: 页码(默认1)
   - pageSize: 每页数量(默认20)
 
 响应:
@@ -586,18 +596,22 @@ Query参数:
         "id": 1,
         "pet_id": 1,
         "pet_name": "憨憨",
-        "record_type": "reminder",
+        "source_type": "manual",
+        "source_id": 0,
         "title": "打疫苗",
         "description": "第三针疫苗",
+        "record_time": "2025-01-20 14:00:00",
         "schedule_time": "2025-01-20 14:00:00",
         "remind_before_minutes": 30,
         "repeat_type": "none",
-        "is_completed": false,
-        "notification_time": "2025-01-20 13:30:00"
+        "is_active": true,
+        "total_occurrences": 0,
+        "completed_count": 0,
+        "completed_time": null
       }
     ],
     "total": 10,
-    "page": 1,
+    "pageNumber": 1,
     "pageSize": 20
   }
 }
@@ -608,7 +622,7 @@ Query参数:
 GET /reminder/notifications
 Query参数:
   - isRead: 是否已读(可选): true, false
-  - page: 页码(默认1)
+  - pageNumber: 页码(默认1)
   - pageSize: 每页数量(默认20)
 
 响应:
@@ -619,18 +633,22 @@ Query参数:
     "list": [
       {
         "id": 1,
-        "health_record_id": 1,
+        "reminder_id": 1,
         "pet_id": 1,
         "pet_name": "憨憨",
         "title": "打疫苗",
+        "schedule_time": "2025-01-20 14:00:00",
+        "actual_time": null,
+        "status": "pending",
         "notification_time": "2025-01-20 13:30:00",
         "is_read": false,
         "is_sent": true,
-        "sent_at": "2025-01-20 13:30:00"
+        "sent_at": "2025-01-20 13:30:00",
+        "read_at": null
       }
     ],
     "total": 5,
-    "page": 1,
+    "pageNumber": 1,
     "pageSize": 20
   }
 }
@@ -674,6 +692,11 @@ PUT /reminder/notifications/read-all
 
 已定义的类型:
 - `RepeatType`: 'none' | 'daily' | 'weekly' | 'monthly' | 'custom'
+- `ReminderSourceType`: 'manual' | 'health_record' | 'system'
+- `ReminderExecutionStatus`: 'pending' | 'completed' | 'overdue'
+- `Reminder`: 提醒接口
+- `CreateReminderPayload`: 创建提醒载荷
+- `ReminderExecution`: 提醒执行记录接口
 
 ---
 
@@ -713,7 +736,7 @@ PUT /reminder/notifications/read-all
 1. 进入宠物详情页
 2. 点击"健康记录"标签
 3. 点击"添加记录"按钮
-4. 选择记录类型（体重/体温/用药/提醒）
+4. 选择记录类型（体重/体温/用药）
 5. 填写相关信息
 6. 保存
 

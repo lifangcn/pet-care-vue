@@ -154,9 +154,9 @@ export const deleteHealthRecord = (petId: string | number, id: string | number) 
  */
 
 /**
- * [API调用] GET /reminder/page
+ * [API调用] POST /reminder/page
  * 获取提醒列表
- * @param {object} params - 查询参数
+ * @param {object} params - 查询参数（分页参数通过URL传递，其他参数通过请求体传递）
  * @returns {Promise} 返回提醒列表数据
  */
 export const fetchReminders = (params?: {
@@ -167,11 +167,21 @@ export const fetchReminders = (params?: {
   pageNumber?: number
   pageSize?: number
 }) => {
-  const queryParams: any = { ...params }
-  if (queryParams.petId) {
-    queryParams.petId = Number(queryParams.petId)
+  const { pageNumber, pageSize, ...requestBody } = params || {}
+  const queryParams: any = {}
+  
+  if (pageNumber !== undefined) {
+    queryParams.pageNumber = Number(pageNumber)
   }
-  return apiClient.get<{ records: Reminder[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/page', { 
+  if (pageSize !== undefined) {
+    queryParams.pageSize = Number(pageSize)
+  }
+  
+  if (requestBody.petId) {
+    requestBody.petId = Number(requestBody.petId)
+  }
+  
+  return apiClient.post<{ records: Reminder[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/page', requestBody, {
     params: queryParams
   })
 }
@@ -241,9 +251,9 @@ export const deactivateReminder = (id: string | number) => {
 }
 
 /**
- * [API调用] GET /reminder/execution/page
+ * [API调用] POST /reminder/execution/page
  * 获取提醒执行记录列表
- * @param {object} params - 查询参数
+ * @param {object} params - 查询参数（分页参数通过URL传递，其他参数通过请求体传递）
  * @returns {Promise} 返回执行记录列表数据
  */
 export const fetchReminderExecutions = (params?: {
@@ -254,11 +264,21 @@ export const fetchReminderExecutions = (params?: {
   pageNumber?: number
   pageSize?: number
 }) => {
-  const queryParams: any = { ...params }
-  if (queryParams.petId) {
-    queryParams.petId = Number(queryParams.petId)
+  const { pageNumber, pageSize, ...requestBody } = params || {}
+  const queryParams: any = {}
+  
+  if (pageNumber !== undefined) {
+    queryParams.pageNumber = Number(pageNumber)
   }
-  return apiClient.get<{ records: ReminderExecution[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/execution/page', { 
+  if (pageSize !== undefined) {
+    queryParams.pageSize = Number(pageSize)
+  }
+  
+  if (requestBody.petId) {
+    requestBody.petId = Number(requestBody.petId)
+  }
+  
+  return apiClient.post<{ records: ReminderExecution[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/execution/page', requestBody, {
     params: queryParams
   })
 }
@@ -316,3 +336,4 @@ export const markNotificationAsRead = (id: string | number) => {
 export const markAllNotificationsAsRead = () => {
   return apiClient.put('/reminder/notifications/read-all')
 }
+

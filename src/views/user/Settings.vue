@@ -13,9 +13,6 @@
             <el-form-item label="订单通知">
               <el-switch v-model="settings.orderNotification" />
             </el-form-item>
-            <el-form-item label="社区互动">
-              <el-switch v-model="settings.communityNotification" />
-            </el-form-item>
           </el-form>
         </el-tab-pane>
         <el-tab-pane label="隐私设置" name="privacy">
@@ -74,7 +71,6 @@ const showFeedback = ref(false)
 const settings = ref({
   systemNotification: true,
   orderNotification: true,
-  communityNotification: true,
   profileVisible: 'public',
   allowSearch: true,
 })

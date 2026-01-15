@@ -1,15 +1,15 @@
 {
   "name": "pet-care-vue",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "vite build --mode development",
+    "build": "vite build --mode production",
+    "preview": "vite preview --mode development"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",

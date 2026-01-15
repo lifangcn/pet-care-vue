@@ -11,7 +11,6 @@
         <el-tab-pane label="全部" name="all" />
         <el-tab-pane label="系统通知" name="system" />
         <el-tab-pane label="订单通知" name="order" />
-        <el-tab-pane label="社区互动" name="community" />
       </el-tabs>
       <div class="message-list">
         <el-empty v-if="messages.length === 0" description="暂无消息" />

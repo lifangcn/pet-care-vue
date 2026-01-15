@@ -10,7 +10,7 @@
         <div class="points-section">
           <h3>积分</h3>
           <p class="amount">{{ wallet.points }}</p>
-          <el-button type="text" @click="$router.push('/coupons')">积分商城</el-button>
+          <el-button type="text" disabled>积分商城</el-button>
         </div>
       </div>
     </el-card>

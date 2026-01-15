@@ -85,9 +85,7 @@ import { Fold, Menu, Close, User } from '@element-plus/icons-vue'
 import {
   DataBoard,
   Avatar,
-  ShoppingCart,
   Calendar,
-  ChatLineRound,
   MagicStick,
   Bell,
 } from '@element-plus/icons-vue'
@@ -120,10 +118,7 @@ const iconMap: Record<string, any> = {
   Odometer: DataBoard,
   DataBoard,
   Avatar,
-  ShoppingBag: ShoppingCart,
-  ShoppingCart,
   Calendar,
-  ChatLineRound,
   MagicStick,
   Bell,
 }
@@ -209,6 +204,11 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.app-layout :deep(> .el-container) {
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
 .app-header {
   display: flex;
   align-items: center;
@@ -282,6 +282,7 @@ onUnmounted(() => {
 .app-main {
   padding: 20px;
   background: #f6f7fb;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;

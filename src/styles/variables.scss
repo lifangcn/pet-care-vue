@@ -24,3 +24,14 @@ $--color-info: $el-color-info;
 $--font-family: $font-family-base;
 $--font-family-pet: $font-family-pet;
 
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+

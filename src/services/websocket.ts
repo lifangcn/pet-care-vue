@@ -23,7 +23,13 @@ class WebSocketService {
 
   private getWebSocketURL(): string {
     const env = import.meta.env
-    const baseURL = env.VITE_API_BASE_URL || window.location.origin
+    if (env.VITE_WS_BASE_URL) {
+      return `${env.VITE_WS_BASE_URL}/ws/reminders`
+    }
+    if (!env.VITE_API_BASE_URL) {
+      throw new Error('VITE_API_BASE_URL 或 VITE_WS_BASE_URL 环境变量未配置，请设置后端地址')
+    }
+    const baseURL = env.VITE_API_BASE_URL
     const wsProtocol = baseURL.startsWith('https') ? 'wss' : 'ws'
     const wsHost = baseURL.replace(/^https?:\/\//, '').replace(/\/api$/, '')
     return `${wsProtocol}://${wsHost}/ws/reminders`

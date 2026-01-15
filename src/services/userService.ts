@@ -82,3 +82,41 @@ export const fetchPointsHistory = (params?: { page?: number; pageSize?: number }
   return apiClient.get<{ records: Transaction[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/wallet/points/history', { params })
 }
 
+/**
+ * 打卡相关接口
+ */
+
+export interface CheckinPayload {
+  checkinDate?: string
+}
+
+export interface CheckinStats {
+  monthCheckinCount: number
+  continuousDays: number
+  lastCheckinDate: string | null
+  checkinDates: string[]
+}
+
+/**
+ * [API调用] POST /user/checkin
+ * 用户签到
+ * @param {CheckinPayload} payload - 打卡数据
+ * @returns {Promise} 返回结果
+ */
+export const userCheckin = (payload?: CheckinPayload) => {
+  return apiClient.post('/user/checkin', payload || {})
+}
+
+/**
+ * [API调用] GET /user/checkin/stats
+ * 查询签到记录
+ * @param {object} params - 查询参数（年、月等）
+ * @returns {Promise} 返回签到统计信息
+ */
+export const fetchCheckinStats = (params?: {
+  year?: number
+  month?: number
+}) => {
+  return apiClient.get<CheckinStats>('/user/checkin/stats', { params })
+}
+

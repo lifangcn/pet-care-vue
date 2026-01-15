@@ -1,11 +1,34 @@
 <template>
   <div class="reminders-page">
+    <el-card class="checkin-stats-card">
+      <div class="checkin-stats">
+        <div class="stat-item">
+          <div class="stat-value">{{ checkinStats?.monthCheckinCount ?? '-' }}</div>
+          <div class="stat-label">本月打卡</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-value highlight">{{ checkinStats?.continuousDays ?? '-' }}</div>
+          <div class="stat-label">连续打卡</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-value">{{ lastCheckinText }}</div>
+          <div class="stat-label">上次打卡</div>
+        </div>
+        <div class="checkin-action">
+          <el-button type="primary" :icon="Calendar" @click="handleCheckin" :loading="checkinLoading">今日打卡</el-button>
+          <el-button @click="showCheckinDialog = true" :disabled="!checkinStats">签到记录</el-button>
+        </div>
+      </div>
+    </el-card>
+
     <el-card>
       <template #header>
         <div class="header">
           <h2>提醒管理</h2>
           <div class="header-actions">
-            <el-select v-model="selectedPetId" style="width: 220px" placeholder="选择宠物" @change="loadReminders">
+            <el-select v-model="selectedPetId" style="width: 220px" placeholder="选择宠物" @change="handlePetChange">
               <el-option v-for="pet in pets" :key="pet.id" :label="pet.name" :value="pet.id" />
             </el-select>
             <el-button :disabled="!selectedPetId" @click="goToExecutions">查看执行记录</el-button>
@@ -141,15 +164,35 @@
         <el-button type="primary" @click="saveReminder">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="showCheckinDialog" title="签到记录" width="640px">
+      <div class="checkin-dialog">
+        <div class="checkin-dialog-header">
+          <el-date-picker
+            v-model="checkinMonth"
+            type="month"
+            format="YYYY年MM月"
+            value-format="YYYY-MM"
+            style="width: 180px"
+            @change="loadCheckinStats"
+          />
+        </div>
+        <div class="checkin-dates" v-if="checkinStats?.checkinDates?.length">
+          <el-tag v-for="d in checkinStats.checkinDates" :key="d" type="success" effect="light">{{ d }}</el-tag>
+        </div>
+        <el-empty v-else description="暂无签到记录" :image-size="80" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { DatePickerShortcuts } from 'element-plus/es/components/date-picker/src/date-picker'
+import { Calendar } from '@element-plus/icons-vue'
 import { fetchPets, fetchReminders, createReminder, updateReminder, deleteReminder, activateReminder, deactivateReminder } from '@/services/petService'
+import { userCheckin, fetchCheckinStats, type CheckinStats } from '@/services/userService'
 import type { Reminder, Pet, RepeatType } from '@/types/pet'
 
 const router = useRouter()
@@ -165,7 +208,7 @@ const getCurrentDateTime = () => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
-const dateTimeShortcuts: DatePickerShortcuts = [
+const dateTimeShortcuts = [
   {
     text: '今天',
     value: () => {
@@ -204,11 +247,26 @@ const selectedPetId = ref<string | number>('')
 const reminders = ref<Reminder[]>([])
 const showAddDialog = ref(false)
 const editingReminderId = ref<string | number | null>(null)
+const checkinStats = ref<CheckinStats | null>(null)
+const showCheckinDialog = ref(false)
+const checkinMonth = ref('')
+const checkinLoading = ref(false)
 
 const pagination = reactive({
   pageNumber: 1,
   pageSize: 10,
   totalRow: 0,
+})
+
+const lastCheckinText = computed(() => {
+  if (!checkinStats.value?.lastCheckinDate) return '暂无'
+  const date = new Date(checkinStats.value.lastCheckinDate)
+  const today = new Date()
+  const diff = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+  if (diff === 0) return '今天'
+  if (diff === 1) return '昨天'
+  if (diff < 7) return `${diff}天前`
+  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 })
 
 const reminderForm = ref<{ title: string; description?: string; recordTime: string; scheduleTime: string; remindBeforeMinutes: number; repeatType: RepeatType }>({
@@ -242,6 +300,42 @@ const loadReminders = async () => {
   } catch (error) {
     ElMessage.error('加载提醒失败')
   }
+}
+
+const loadCheckinStats = async () => {
+  try {
+    const now = new Date()
+    if (!checkinMonth.value) {
+      checkinMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    }
+    const [year, month] = checkinMonth.value.split('-').map((n) => Number(n))
+    const res = await fetchCheckinStats({
+      year,
+      month,
+    })
+    checkinStats.value = res.data
+  } catch (error) {
+    console.error('加载打卡统计失败', error)
+    checkinStats.value = null
+  }
+}
+
+const handleCheckin = async () => {
+  checkinLoading.value = true
+  try {
+    await userCheckin()
+    ElMessage.success('打卡成功')
+    await loadCheckinStats()
+  } catch (error: any) {
+    const message = error?.message || error?.response?.data?.message || '打卡失败'
+    ElMessage.error(message)
+  } finally {
+    checkinLoading.value = false
+  }
+}
+
+const handlePetChange = () => {
+  loadReminders()
 }
 
 const cancelReminderEdit = () => {
@@ -386,7 +480,11 @@ const goToExecutions = () => {
 }
 
 onMounted(async () => {
-  await loadPets()
+  try {
+    await loadPets()
+  } finally {
+    await loadCheckinStats()
+  }
 })
 </script>
 
@@ -462,5 +560,67 @@ onMounted(async () => {
 .reminder-status {
   display: flex;
   align-items: center;
+}
+
+.checkin-stats-card {
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+
+  :deep(.el-card__body) {
+    padding: 24px;
+  }
+}
+
+.checkin-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  color: #fff;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 8px;
+
+  &.highlight {
+    color: #ffd700;
+  }
+}
+
+.stat-label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.checkin-action {
+  margin-left: 24px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.checkin-dialog {
+  .checkin-dialog-header {
+    margin-bottom: 16px;
+  }
+
+  .checkin-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 </style>

@@ -2,10 +2,10 @@ import axios from 'axios'
 
 const env = import.meta.env
 const getBaseURL = () => {
-  if (env.VITE_API_BASE_URL) {
-    return env.VITE_API_BASE_URL
+  if (!env.VITE_API_BASE_URL) {
+    throw new Error('VITE_API_BASE_URL 环境变量未配置，请设置后端API地址')
   }
-  return '/api'
+  return env.VITE_API_BASE_URL
 }
 
 const apiClient = axios.create({

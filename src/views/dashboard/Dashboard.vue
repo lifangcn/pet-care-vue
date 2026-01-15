@@ -12,12 +12,10 @@
             <h1>欢迎回来，{{ userName }}</h1>
           </div>
           <p class="hero-desc">
-            今日已为 <strong>{{ stats.todos }}</strong> 项任务设定提醒，<strong>{{ stats.community }}</strong> 条社区互动待查收。
-            保持宠物健康，从当下开始。
+            今日已为 <strong>{{ stats.todos }}</strong> 项任务设定提醒。保持宠物健康，从当下开始。
           </p>
           <div class="hero-tags">
             <el-tag type="success" round effect="dark">健康指数 {{ stats.healthScore }} 分</el-tag>
-            <el-tag type="warning" round effect="dark">商城福利 {{ stats.coupons }} 张</el-tag>
           </div>
         </div>
         <div class="hero-cards">
@@ -66,25 +64,11 @@
             <el-col :xs="24" :sm="12" :lg="6">
               <el-card shadow="hover">
                 <div class="card-title">
-                  <span>社区消息</span>
-                  <el-icon :size="18"><ChatDotRound /></el-icon>
-                </div>
-                <div class="badge-wrapper">
-                  <el-badge :value="stats.community" type="danger">
-                    <el-button link>查看通知</el-button>
-                  </el-badge>
-                </div>
-                <p class="card-desc">社群互动热度上升</p>
-              </el-card>
-            </el-col>
-            <el-col :xs="24" :sm="12" :lg="6">
-              <el-card shadow="hover">
-                <div class="card-title">
-                  <span>优惠券</span>
+                  <span>服务预约</span>
                   <el-icon :size="18"><Tickets /></el-icon>
                 </div>
-                <el-statistic :value="stats.coupons" suffix="张" />
-                <p class="card-desc">商城限时福利已更新</p>
+                <el-statistic :value="stats.bookings" suffix="项" />
+                <p class="card-desc">按需安排护理服务</p>
               </el-card>
             </el-col>
           </el-row>
@@ -155,7 +139,8 @@
             <h3>待办提醒</h3>
             <span>按时间排序</span>
           </div>
-          <el-timeline>
+          <el-empty v-if="timelines.length === 0" description="暂无待办提醒" :image-size="80" />
+          <el-timeline v-else>
             <el-timeline-item
               v-for="item in timelines"
               :key="item.id"
@@ -164,10 +149,17 @@
             >
               <div class="timeline-item">
                 <div class="timeline-content">
-                  <p class="title">{{ item.title }}</p>
-                  <p class="desc">{{ item.desc }}</p>
+                  <div class="timeline-header">
+                    <el-avatar v-if="item.petAvatar" :src="item.petAvatar" :size="32" class="pet-avatar" />
+                    <el-avatar v-else :size="32" class="pet-avatar">{{ item.petName?.charAt(0) || '?' }}</el-avatar>
+                    <div class="timeline-text">
+                      <p class="title">{{ item.title }}</p>
+                      <p class="desc">{{ item.desc }}</p>
+                      <p v-if="item.petName" class="pet-name">{{ item.petName }}</p>
+                    </div>
+                  </div>
                 </div>
-                <el-checkbox v-model="item.completed">完成</el-checkbox>
+                <el-checkbox :model-value="item.completed" :disabled="item.completed" @change="() => handleComplete(item)">完成</el-checkbox>
               </div>
             </el-timeline-item>
           </el-timeline>
@@ -178,16 +170,15 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
+import { reactive, computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
   BellFilled,
   Medal,
-  ChatDotRound,
   Tickets,
   EditPen,
   FirstAidKit,
-  Share,
   MagicStick,
   Clock,
   Sunny,
@@ -195,6 +186,8 @@ import {
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/store/auth'
 import { getUserAvatar } from '@/utils/avatarUtils'
+import { fetchReminderExecutions, completeReminderExecution } from '@/services/petService'
+import type { ReminderExecution } from '@/types/pet'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -209,11 +202,22 @@ const userAvatar = computed(() => {
 })
 
 const stats = reactive({
-  todos: 4,
+  todos: 0,
   healthScore: 86,
-  community: 12,
-  coupons: 3,
+  bookings: 4,
 })
+
+const timelines = ref<Array<{
+  id: string | number
+  time: string
+  title: string
+  desc: string
+  petName?: string | null
+  petAvatar?: string | null
+  type: 'primary' | 'success' | 'warning' | 'info' | 'danger'
+  completed: boolean
+  execution: ReminderExecution
+}>>([])
 
 const vars = {
   petBlue: '#54A0FF',
@@ -236,13 +240,6 @@ const quickActions = [
     route: '/service/booking',
     color: vars.petGreen,
     bg: 'rgba(29, 209, 161, 0.15)',
-  },
-  {
-    label: '发布社区动态',
-    icon: Share,
-    route: '/community/post',
-    color: vars.petPink,
-    bg: 'rgba(255, 107, 156, 0.15)',
   },
   {
     label: 'AI健康检查',
@@ -272,12 +269,75 @@ const pets = [
   },
 ]
 
-const timelines = reactive([
-  { id: 1, time: '09:00', title: '给Milo喂药', desc: '免疫增强剂', type: 'primary', completed: false },
-  { id: 2, time: '11:30', title: 'Lucky遛弯', desc: '公园30分钟', type: 'success', completed: false },
-  { id: 3, time: '15:00', title: '社区活动', desc: '分享宠物护理经验', type: 'warning', completed: false },
-  { id: 4, time: '18:00', title: '商城优惠', desc: '领取洗护套餐券', type: 'info', completed: false },
-])
+const formatTime = (dateTime: string): string => {
+  const date = new Date(dateTime)
+  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
+const formatDateTime = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+const getTimelineType = (status: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => {
+  if (status === 'COMPLETED') return 'success'
+  if (status === 'OVERDUE') return 'danger'
+  return 'primary'
+}
+
+const loadReminderExecutions = async () => {
+  try {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    const res = await fetchReminderExecutions({
+      status: 'PENDING',
+      startTime: formatDateTime(today),
+      endTime: formatDateTime(tomorrow),
+      pageNumber: 1,
+      pageSize: 10,
+    })
+
+    const executions = res.data?.records || []
+    stats.todos = executions.length
+
+    timelines.value = executions.map((execution) => ({
+      id: execution.id,
+      time: formatTime(execution.scheduleTime),
+      title: execution.reminderTitle || `提醒执行 #${execution.id}`,
+      desc: execution.reminderDescription || execution.completionNotes || '待处理提醒事项',
+      petName: execution.petName,
+      petAvatar: execution.petAvatar,
+      type: getTimelineType(execution.status),
+      completed: execution.status === 'COMPLETED',
+      execution,
+    })).sort((a, b) => {
+      return new Date(a.execution.scheduleTime).getTime() - new Date(b.execution.scheduleTime).getTime()
+    })
+  } catch (error) {
+    console.error('加载待办提醒失败:', error)
+  }
+}
+
+const handleComplete = async (item: typeof timelines.value[0]) => {
+  if (item.completed) return
+  try {
+    await completeReminderExecution(item.id)
+    item.completed = true
+    item.type = 'success'
+    stats.todos = Math.max(0, stats.todos - 1)
+    ElMessage.success('已完成')
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
 
 const heroHighlights = [
   {
@@ -317,6 +377,10 @@ const handleAction = (action: { route: string }) => {
 const openPet = (pet: { id: number }) => {
   router.push(`/pet/${pet.id}`)
 }
+
+onMounted(() => {
+  loadReminderExecutions()
+})
 </script>
 
 <style scoped lang="scss">
@@ -633,14 +697,40 @@ const openPet = (pet: { id: number }) => {
 }
 
 .timeline-content {
+  flex: 1;
+  
+  .timeline-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .pet-avatar {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  
+  .timeline-text {
+    flex: 1;
+    min-width: 0;
+  }
+  
   .title {
     margin: 0;
     font-weight: 600;
+    font-size: 14px;
   }
   .desc {
     margin: 4px 0 0;
     color: #909399;
     font-size: 13px;
+    line-height: 1.4;
+  }
+  .pet-name {
+    margin: 6px 0 0;
+    color: #606266;
+    font-size: 12px;
+    font-weight: 500;
   }
 }
 

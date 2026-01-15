@@ -64,28 +64,10 @@ const router = createRouter({
       },
     },
     {
+      // 商城模块已移除
       path: '/mall',
-      name: 'mall',
-      component: () => import('@/views/mall/ProductList.vue'),
-      meta: {
-        title: '商城 - 宠物关怀系统',
-        menu: {
-          title: '商城',
-          icon: 'ShoppingCart',
-          order: 3,
-        },
-      },
-    },
-    {
-      path: '/mall/products/:id',
-      name: 'product-detail',
-      component: () => import('@/views/mall/ProductDetail.vue'),
-      meta: {
-        title: '商品详情 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
       path: '/service/booking',
@@ -101,17 +83,10 @@ const router = createRouter({
       },
     },
     {
+      // 社区模块已移除
       path: '/community',
-      name: 'community',
-      component: () => import('@/views/community/CommunityHome.vue'),
-      meta: {
-        title: '社区 - 宠物关怀系统',
-        menu: {
-          title: '社区',
-          icon: 'ChatLineRound',
-          order: 5,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
       path: '/ai/health-check',
@@ -120,9 +95,33 @@ const router = createRouter({
       meta: {
         title: 'AI健康检查 - 宠物关怀系统',
         menu: {
-          title: 'AI健康检查',
-          icon: 'MagicStick',
-          order: 6,
+          hidden: true,
+        },
+      },
+    },
+    {
+      path: '/ai/documents',
+      name: 'ai-documents',
+      component: () => import('@/views/ai/DocumentManagement.vue'),
+      meta: {
+        title: '文档管理 - 宠物关怀系统',
+        menu: {
+          title: '文档管理',
+          icon: 'Document',
+          order: 7,
+        },
+      },
+    },
+    {
+      path: '/ai/rag-chat',
+      name: 'ai-rag-chat',
+      component: () => import('@/views/ai/RAGChat.vue'),
+      meta: {
+        title: 'RAG智能问答 - 宠物关怀系统',
+        menu: {
+          title: 'RAG智能问答',
+          icon: 'ChatDotRound',
+          order: 8,
         },
       },
     },
@@ -160,48 +159,28 @@ const router = createRouter({
       },
     },
     {
+      // 商城模块已移除
       path: '/cart',
-      name: 'cart',
-      component: () => import('@/views/mall/Cart.vue'),
-      meta: {
-        title: '购物车 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
+      // 商城模块已移除
       path: '/orders',
-      name: 'orders',
-      component: () => import('@/views/mall/OrderList.vue'),
-      meta: {
-        title: '我的订单 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
+      // 商城模块已移除
       path: '/orders/:id',
-      name: 'order-detail',
-      component: () => import('@/views/mall/OrderDetail.vue'),
-      meta: {
-        title: '订单详情 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
+      // 商城模块已移除
       path: '/coupons',
-      name: 'coupons',
-      component: () => import('@/views/mall/Coupons.vue'),
-      meta: {
-        title: '优惠券 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
       path: '/reminder',
@@ -226,6 +205,12 @@ const router = createRouter({
           hidden: true,
         },
       },
+    },
+    {
+      // 打卡日历页面已移除（保留提醒管理中的签到）
+      path: '/checkin',
+      redirect: '/reminder',
+      meta: { menu: { hidden: true } },
     },
     {
       path: '/consultations',
@@ -261,70 +246,40 @@ const router = createRouter({
       },
     },
     {
+      // 社区模块已移除
       path: '/experts',
-      name: 'experts',
-      component: () => import('@/views/community/Experts.vue'),
-      meta: {
-        title: '专家与达人 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
+      // 社区模块已移除
       path: '/experts/:id',
-      name: 'expert-detail',
-      component: () => import('@/views/community/ExpertDetail.vue'),
-      meta: {
-        title: '专家详情 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
+      // 社区模块已移除
       path: '/circles',
-      name: 'circles',
-      component: () => import('@/views/community/Circles.vue'),
-      meta: {
-        title: '兴趣圈子 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
+      // 社区模块已移除
       path: '/questions',
-      name: 'questions',
-      component: () => import('@/views/community/Questions.vue'),
-      meta: {
-        title: '问答求助 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
+      // 社区模块已移除
       path: '/questions/:id',
-      name: 'question-detail',
-      component: () => import('@/views/community/QuestionDetail.vue'),
-      meta: {
-        title: '问题详情 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
     {
+      // 社区模块已移除
       path: '/activities',
-      name: 'activities',
-      component: () => import('@/views/community/Activities.vue'),
-      meta: {
-        title: '活动与打卡 - 宠物关怀系统',
-        menu: {
-          hidden: true,
-        },
-      },
+      redirect: '/dashboard',
+      meta: { menu: { hidden: true } },
     },
   ],
 })

@@ -23,3 +23,23 @@ export interface CommonSymptom {
   category: string
 }
 
+export interface KnowledgeDocument {
+  id: number
+  name: string
+  fileUrl: string
+  fileType: string
+  fileSize: number
+  version: number
+  status: number
+  chunkCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ChatMessage {
+  id?: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp?: string
+}
+

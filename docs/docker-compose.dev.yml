@@ -226,11 +226,20 @@ services:
       - ETCD_AUTO_COMPACTION_RETENTION=1000
       - ETCD_QUOTA_BACKEND_BYTES=4294967296
       - ETCD_SNAPSHOT_COUNT=50000
+      - ETCD_HEARTBEAT_INTERVAL=500  # 心跳间隔（毫秒）
+      - ETCD_ELECTION_TIMEOUT=2500  # 选举超时（毫秒）
     volumes:
       - ./milvus/etcd:/etcd
     networks:
       - petcare-network
     command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
   standalone:
     image: milvusdb/milvus:v2.6.7
@@ -245,14 +254,35 @@ services:
       ETCD_ENDPOINTS: etcd:2379
       MINIO_ADDRESS: minio:9000
       MQ_TYPE: woodpecker
+      # 增加超时配置，防止待机后连接超时
+      ETCD_USE_EMBED: false
+      ETCD_USE_SSL: false
+      ETCD_TLS_ENABLED: false
+      COMMON_RETENTIONDURATION: 432000  # 5天数据保留
     volumes:
       - ./milvus/data:/var/lib/milvus
       - ./milvus/conf/user.yaml:/milvus/configs/user.yaml
     networks:
       - petcare-network
     depends_on:
-      - "etcd"
-      - "minio"
+      etcd:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    restart: unless-stopped
+    # macOS 待机后可能资源受限，增加资源限制
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
 
 
 networks:

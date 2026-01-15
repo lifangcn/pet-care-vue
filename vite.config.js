@@ -1,17 +1,27 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(async ({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  console.log(`构建模式: ${mode}`)
+  console.log(`API地址: ${env.VITE_API_BASE_URL || '未配置'}`)
+  console.log(`WebSocket地址: ${env.VITE_WS_BASE_URL || '未配置'}`)
+  
+  const plugins = [vue()]
+  if (mode === 'development') {
+    const { default: vueDevTools } = await import('vite-plugin-vue-devtools')
+    plugins.push(vueDevTools())
+  }
+  
+  return {
   plugins: [
-    vue(),
-    vueDevTools(),
+    ...plugins,
     // Element Plus 按需导入
     AutoImport({
       resolvers: [ElementPlusResolver()],
@@ -26,14 +36,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
-    },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:18080',
-        changeOrigin: true,
-      },
     },
   },
   build: {
@@ -88,4 +90,5 @@ export default defineConfig({
     // 调整 chunk 大小警告限制（可选，如果仍想看到警告可以保留默认值）
     chunkSizeWarningLimit: 1000,
   },
+  }
 })

@@ -208,7 +208,7 @@ const handleSubmit = async () => {
   padding: 40px 20px;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   font-family: vars.$font-family-base;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -359,7 +359,11 @@ section {
 .form-actions {
   display: flex;
   justify-content: center;
-  padding-top: 8px;
+  padding: 24px 0;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  margin-top: 24px;
   
   :deep(.el-button) {
     min-width: 200px;

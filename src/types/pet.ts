@@ -106,5 +106,9 @@ export interface ReminderExecution {
   sentAt?: string | null
   readAt?: string | null
   createdAt?: string
+  reminderTitle?: string | null
+  reminderDescription?: string | null
+  petName?: string | null
+  petAvatar?: string | null
 }
 

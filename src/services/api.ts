@@ -14,7 +14,7 @@ const apiClient = axios.create({
 })
 
 apiClient.interceptors.request.use((config) => {
-  const publicEndpoints = ['/auth/code', '/auth/login', '/auth/refresh']
+  const publicEndpoints = ['/auth/code', '/auth/login', '/auth/refresh', '/auth/wechat']
   const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint))
   
   if (!isPublicEndpoint) {
@@ -59,7 +59,7 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config
 
     if (error.response?.status === 401) {
-      const publicEndpoints = ['/auth/code', '/auth/login', '/auth/logout', '/auth/refresh']
+      const publicEndpoints = ['/auth/code', '/auth/login', '/auth/logout', '/auth/refresh', '/auth/wechat']
       const isPublicEndpoint = publicEndpoints.some(endpoint => originalRequest?.url?.includes(endpoint))
       
       if (isPublicEndpoint) {

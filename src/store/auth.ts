@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
-import { login, logout, sendSmsCode, refreshToken } from '@/services/authService'
+import { login, logout, sendSmsCode, refreshToken, getWechatQRCode, checkWechatScanStatus } from '@/services/authService'
 import { getCurrentUser } from '@/services/userService'
-import type { LoginForm, UserInfo } from '@/types/auth'
+import type { LoginForm, UserInfo, LoginResponse } from '@/types/auth'
 import { ElMessage } from 'element-plus'
 import { wsService } from '@/services/websocket'
 
@@ -149,6 +149,56 @@ export const useAuthStore = defineStore('auth', {
         })
         ElMessage.error(errorMsg)
         throw error
+      }
+    },
+
+    /**
+     * [API调用] POST /auth/wechat/qrcode
+     * 获取微信登录二维码
+     */
+    async getWechatQRCode() {
+      try {
+        const { data } = await getWechatQRCode()
+        return data
+      } catch (error: any) {
+        const errorMsg = error.response?.data?.message || '获取二维码失败'
+        ElMessage.error(errorMsg)
+        throw error
+      }
+    },
+
+    /**
+     * [API调用] GET /auth/wechat/scan-status
+     * 检查微信扫码状态并处理登录
+     */
+    async checkWechatScanStatus(ticket: string) {
+      try {
+        const { data } = await checkWechatScanStatus(ticket)
+        const status = data.status?.toUpperCase() === 'CONFIRMED'
+        const loginInfo = data.loginInfo || data.loginData
+        
+        if (status && loginInfo) {
+          this.accessToken = loginInfo.accessToken
+          this.refreshToken = loginInfo.refreshToken
+          this.isAuthenticated = true
+
+          this.user = {
+            phone: loginInfo.username || undefined,
+            nickname: loginInfo.nickname || loginInfo.username || undefined,
+            avatar: loginInfo.avatar || undefined,
+          }
+          
+          localStorage.setItem('accessToken', loginInfo.accessToken)
+          localStorage.setItem('refreshToken', loginInfo.refreshToken)
+          localStorage.setItem('user', JSON.stringify(this.user))
+
+          wsService.connect()
+          ElMessage.success('登录成功')
+        }
+        return data
+      } catch (error: any) {
+        const errorMsg = error.response?.data?.message || '检查扫码状态失败'
+        throw new Error(errorMsg)
       }
     },
 

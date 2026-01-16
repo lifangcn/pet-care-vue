@@ -1,5 +1,5 @@
 import apiClient from './api'
-import type { LoginForm, LoginResponse } from '@/types/auth'
+import type { LoginForm, LoginResponse, WechatQRCodeResponse, WechatScanStatus } from '@/types/auth'
 
 /**
  * [API调用] POST /auth/login
@@ -45,5 +45,26 @@ export const logout = (refreshToken?: string) => {
  */
 export const refreshToken = (refreshToken: string) => {
   return apiClient.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken })
+}
+
+/**
+ * [API调用] POST /auth/wechat/qrcode
+ * 获取微信登录二维码
+ * @returns {Promise} 返回二维码URL和ticket
+ */
+export const getWechatQRCode = () => {
+  return apiClient.post<WechatQRCodeResponse>('/auth/wechat/qrcode')
+}
+
+/**
+ * [API调用] GET /auth/wechat/scan-status
+ * 检查微信扫码状态
+ * @param {string} ticket - 二维码ticket
+ * @returns {Promise} 返回扫码状态
+ */
+export const checkWechatScanStatus = (ticket: string) => {
+  return apiClient.get<WechatScanStatus>('/auth/wechat/scan-status', {
+    params: { ticket }
+  })
 }
 

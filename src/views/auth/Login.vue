@@ -14,34 +14,59 @@
             <h3>欢迎回来</h3>
             <p>请登录您的宠物关怀账户</p>
           </div>
-          <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent>
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model.trim="form.phone" placeholder="请输入手机号">
-                <template #prefix>
-                  <el-icon><Message /></el-icon>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item label="验证码" prop="code">
-              <el-input v-model="form.code" placeholder="请输入验证码">
-                <template #prefix>
-                  <el-icon><Lock /></el-icon>
-                </template>
-                <template #append>
-                  <el-button
-                    :disabled="countdown > 0 || sending"
-                    :loading="sending"
-                    type="primary"
-                    link
-                    @click="sendCode"
-                  >
-                    {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
-                  </el-button>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-button type="primary" class="login-btn" @click="handleLogin">登 录</el-button>
-          </el-form>
+          <el-tabs v-model="activeTab" class="login-tabs">
+            <el-tab-pane label="手机登录" name="phone">
+              <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent>
+                <el-form-item label="手机号" prop="phone">
+                  <el-input v-model.trim="form.phone" placeholder="请输入手机号">
+                    <template #prefix>
+                      <el-icon><Message /></el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
+                <el-form-item label="验证码" prop="code">
+                  <el-input v-model="form.code" placeholder="请输入验证码">
+                    <template #prefix>
+                      <el-icon><Lock /></el-icon>
+                    </template>
+                    <template #append>
+                      <el-button
+                        :disabled="countdown > 0 || sending"
+                        :loading="sending"
+                        type="primary"
+                        link
+                        @click="sendCode"
+                      >
+                        {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+                      </el-button>
+                    </template>
+                  </el-input>
+                </el-form-item>
+                <el-button type="primary" class="login-btn" @click="handleLogin">登 录</el-button>
+              </el-form>
+            </el-tab-pane>
+            <el-tab-pane label="微信登录" name="wechat">
+              <div class="wechat-login">
+                <div v-if="qrCodeUrl" class="qrcode-container">
+                  <div class="qrcode-wrapper">
+                    <img :src="qrCodeUrl" alt="微信登录二维码" class="qrcode-image" />
+                    <div v-if="scanStatus === 'SCANNED'" class="qrcode-overlay">
+                      <div class="scan-tip">请在手机上确认登录</div>
+                    </div>
+                    <div v-if="scanStatus === 'EXPIRED'" class="qrcode-overlay expired">
+                      <div class="expired-tip">二维码已过期</div>
+                      <el-button type="primary" size="small" @click="generateQRCode">刷新二维码</el-button>
+                    </div>
+                  </div>
+                  <p class="qrcode-tip">使用微信扫一扫登录</p>
+                </div>
+                <div v-else class="qrcode-loading">
+                  <el-icon class="is-loading"><Loading /></el-icon>
+                  <p>正在生成二维码...</p>
+                </div>
+              </div>
+            </el-tab-pane>
+          </el-tabs>
         </el-card>
       </el-main>
     </el-container>
@@ -49,10 +74,10 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { Lock, Message } from '@element-plus/icons-vue'
+import { Lock, Message, Loading } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import type { LoginForm } from '@/types/auth'
@@ -69,6 +94,12 @@ const phonePattern = /^1[3-9]\d{9}$/
 const countdown = ref(0)
 const sending = ref(false)
 let timer: number | null = null
+
+const activeTab = ref('phone')
+const qrCodeUrl = ref('')
+const ticket = ref('')
+const scanStatus = ref<'WAITING' | 'SCANNED' | 'CONFIRMED' | 'EXPIRED'>('WAITING')
+let scanTimer: number | null = null
 
 const validatePhone = (_: unknown, value: string, callback: (error?: Error) => void) => {
   const phone = value?.trim()
@@ -129,8 +160,71 @@ const sendCode = async () => {
   }
 }
 
+const generateQRCode = async () => {
+  try {
+    qrCodeUrl.value = ''
+    scanStatus.value = 'WAITING'
+    const data = await authStore.getWechatQRCode()
+    qrCodeUrl.value = data.qrcodeUrl
+    ticket.value = data.ticket
+    startScanPolling()
+  } catch (error) {
+    // 错误已在 store 中处理
+  }
+}
+
+const startScanPolling = () => {
+  if (scanTimer) {
+    clearInterval(scanTimer)
+  }
+  scanTimer = window.setInterval(async () => {
+    if (!ticket.value) return
+    try {
+      const data = await authStore.checkWechatScanStatus(ticket.value)
+      const status = data.status?.toUpperCase() || data.status
+      scanStatus.value = status as any
+      if (status === 'CONFIRMED') {
+        if (scanTimer) {
+          clearInterval(scanTimer)
+          scanTimer = null
+        }
+        router.push({ name: 'dashboard' })
+      } else if (status === 'EXPIRED') {
+        if (scanTimer) {
+          clearInterval(scanTimer)
+          scanTimer = null
+        }
+      }
+    } catch (error: any) {
+      if (error.message?.includes('过期') || error.message?.includes('expired') || error.message?.includes('EXPIRED')) {
+        scanStatus.value = 'EXPIRED'
+        if (scanTimer) {
+          clearInterval(scanTimer)
+          scanTimer = null
+        }
+      }
+    }
+  }, 2000)
+}
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'wechat' && !qrCodeUrl.value) {
+    generateQRCode()
+  } else if (newTab === 'phone' && scanTimer) {
+    clearInterval(scanTimer)
+    scanTimer = null
+  }
+})
+
+onMounted(() => {
+  if (activeTab.value === 'wechat') {
+    generateQRCode()
+  }
+})
+
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
+  if (scanTimer) clearInterval(scanTimer)
 })
 
 /**
@@ -301,6 +395,88 @@ watch(
   text-align: center;
   font-size: 14px;
   color: #606266;
+}
+
+.login-tabs {
+  :deep(.el-tabs__header) {
+    margin-bottom: 24px;
+  }
+}
+
+.wechat-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.qrcode-container {
+  text-align: center;
+}
+
+.qrcode-wrapper {
+  position: relative;
+  display: inline-block;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.qrcode-image {
+  width: 200px;
+  height: 200px;
+  display: block;
+}
+
+.qrcode-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.qrcode-overlay.expired {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.scan-tip {
+  color: #409eff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.expired-tip {
+  color: #f56c6c;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.qrcode-tip {
+  margin-top: 16px;
+  color: #909399;
+  font-size: 14px;
+}
+
+.qrcode-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #909399;
+}
+
+.qrcode-loading .el-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
 }
 
 @media (max-width: 768px) {

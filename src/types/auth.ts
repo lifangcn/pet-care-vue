@@ -22,4 +22,23 @@ export interface UserInfo {
   createdAt?: string
 }
 
+export interface WechatQRCodeResponse {
+  qrcodeUrl: string
+  ticket: string
+  expireTime?: number
+  expireSeconds?: number
+}
+
+export interface WechatScanStatus {
+  status: 'WAITING' | 'SCANNED' | 'CONFIRMED' | 'EXPIRED'
+  loginData?: LoginResponse
+  loginInfo?: {
+    accessToken: string
+    refreshToken: string
+    username: string
+    nickname?: string | null
+    avatar?: string | null
+  }
+}
+
 

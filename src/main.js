@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import { wsService } from './services/websocket'
+import { sseService } from './services/sse'
 
 // Element Plus 样式（按需导入时仍需要基础样式）
 import 'element-plus/dist/index.css'
@@ -19,5 +19,5 @@ app.mount('#app')
 
 const token = localStorage.getItem('accessToken')
 if (token) {
-  wsService.connect()
+  sseService.connect()
 }

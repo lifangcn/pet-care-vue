@@ -3,7 +3,7 @@ import { login, logout, sendSmsCode, refreshToken, getWechatQRCode, checkWechatS
 import { getCurrentUser } from '@/services/userService'
 import type { LoginForm, UserInfo, LoginResponse } from '@/types/auth'
 import { ElMessage } from 'element-plus'
-import { wsService } from '@/services/websocket'
+import { sseService } from '@/services/sse'
 
 const getStoredUser = (): UserInfo | null => {
   try {
@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('refreshToken', data.refreshToken)
         localStorage.setItem('user', JSON.stringify(this.user))
 
-        wsService.connect()
+        sseService.connect()
 
         ElMessage.success('登录成功')
         return data
@@ -86,7 +86,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
-        wsService.disconnect()
+        sseService.disconnect()
       }
     },
 
@@ -101,8 +101,8 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('accessToken', data.accessToken)
         localStorage.setItem('refreshToken', data.refreshToken)
         
-        wsService.disconnect()
-        wsService.connect()
+        sseService.disconnect()
+        sseService.connect()
         
         return data.accessToken
       } catch (error) {
@@ -138,8 +138,8 @@ export const useAuthStore = defineStore('auth', {
     async sendCode(phone: string) {
       try {
         // [API调用] POST /auth/code - 发送短信验证码
-        await sendSmsCode(phone)
-        ElMessage.success('验证码已发送')
+        const { data } = await sendSmsCode(phone)
+        ElMessage.success('验证码已发送:' + data)
       } catch (error: any) {
         const errorMsg = error.response?.data?.message || '发送验证码失败'
         console.error('[Auth Store] 发送验证码失败:', {
@@ -192,7 +192,7 @@ export const useAuthStore = defineStore('auth', {
           localStorage.setItem('refreshToken', loginInfo.refreshToken)
           localStorage.setItem('user', JSON.stringify(this.user))
 
-          wsService.connect()
+          sseService.connect()
           ElMessage.success('登录成功')
         }
         return data

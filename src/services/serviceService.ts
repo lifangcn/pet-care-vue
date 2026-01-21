@@ -52,10 +52,20 @@ export const createBooking = (payload: BookingForm) => {
  * @returns {Promise} 返回预约记录列表数据
  */
 export const fetchBookings = (params?: { status?: string; page?: number; pageSize?: number }) => {
-  // TODO: 后端接口地址 GET /services/bookings
-  return apiClient.get<{ records: BookingRecord[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(
-    '/services/bookings',
-    { params },
+  const { page, pageSize, ...requestBody } = params || {}
+  const queryParams: any = {}
+  
+  if (page !== undefined) {
+    queryParams.pageNumber = Number(page)
+  }
+  if (pageSize !== undefined) {
+    queryParams.pageSize = Number(pageSize)
+  }
+  
+  return apiClient.post<{ records: BookingRecord[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(
+    '/services/bookings/page',
+    requestBody,
+    { params: queryParams }
   )
 }
 
@@ -88,8 +98,19 @@ export const createConsultation = (payload: { expertId: string; petId: string; t
 }
 
 export const fetchConsultations = (params?: { status?: string; page?: number; pageSize?: number }) => {
-  // TODO: 后端接口地址 GET /consultations
-  return apiClient.get<{ records: Consultation[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/consultations', { params })
+  const { page, pageSize, ...requestBody } = params || {}
+  const queryParams: any = {}
+  
+  if (page !== undefined) {
+    queryParams.pageNumber = Number(page)
+  }
+  if (pageSize !== undefined) {
+    queryParams.pageSize = Number(pageSize)
+  }
+  
+  return apiClient.post<{ records: Consultation[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/consultations/page', requestBody, {
+    params: queryParams
+  })
 }
 
 export const fetchConsultationById = (id: string) => {
@@ -121,8 +142,19 @@ export interface Expert {
 }
 
 export const fetchExperts = (params?: { category?: string; keyword?: string; page?: number; pageSize?: number }) => {
-  // TODO: 后端接口地址 GET /experts
-  return apiClient.get<{ records: Expert[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/experts', { params })
+  const { page, pageSize, ...requestBody } = params || {}
+  const queryParams: any = {}
+  
+  if (page !== undefined) {
+    queryParams.pageNumber = Number(page)
+  }
+  if (pageSize !== undefined) {
+    queryParams.pageSize = Number(pageSize)
+  }
+  
+  return apiClient.post<{ records: Expert[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/experts/page', requestBody, {
+    params: queryParams
+  })
 }
 
 export const fetchExpertById = (id: string) => {

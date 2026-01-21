@@ -246,13 +246,119 @@ GET /api/reminder/page?petId=1&pageNumber=1&pageSize=10
 **字段说明**:
 - `completionNotes` (String, 可选): 完成备注
 
+**请求示例**:
+
+1. **带备注的请求**:
+```http
+PUT /api/reminder/execution/123/complete
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+  "completionNotes": "已完成喂食"
+}
+```
+
+2. **不带备注的请求**（请求体可为空或 null）:
+```http
+PUT /api/reminder/execution/123/complete
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{}
+```
+
+或者直接不传请求体（前端可能发送 `null` 或 `undefined`）。
+
 **响应示例**:
 ```json
 {
   "code": "200",
   "message": "success",
-  "data": true,
+  "data": {
+    "id": 123,
+    "reminderId": 456,
+    "petId": 789,
+    "scheduleTime": "2025-01-15T10:00:00",
+    "actualTime": "2025-01-15T10:05:00",
+    "status": "COMPLETED",
+    "completionNotes": "已完成喂食",
+    "notificationTime": "2025-01-15T09:30:00",
+    "isRead": false,
+    "createdAt": "2025-01-15T09:00:00"
+  },
   "timestamp": 1234567890
+}
+```
+
+**后端实现要点**:
+
+1. **Spring Boot Controller 实现**:
+```java
+@PutMapping("/execution/{id}/complete")
+public Result<ReminderExecution> completeExecution(
+        @PathVariable Long id,
+        @RequestBody(required = false) CompleteExecutionRequest request) {
+    // 获取当前用户ID（从Token中解析）
+    Long userId = getCurrentUserId();
+    
+    // 如果请求体为null，创建空对象
+    if (request == null) {
+        request = new CompleteExecutionRequest();
+    }
+    
+    // 更新执行记录
+    ReminderExecution execution = reminderExecutionService.completeExecution(
+        id, 
+        userId, 
+        request.getCompletionNotes()
+    );
+    
+    return Result.success(execution);
+}
+```
+
+2. **请求DTO类**:
+```java
+public class CompleteExecutionRequest {
+    private String completionNotes;
+    
+    // getter 和 setter
+    public String getCompletionNotes() {
+        return completionNotes;
+    }
+    
+    public void setCompletionNotes(String completionNotes) {
+        this.completionNotes = completionNotes;
+    }
+}
+```
+
+3. **关键点**:
+   - `@RequestBody(required = false)`: 允许请求体为空
+   - 如果请求体为 `null`，需要手动创建空对象或使用 `Optional`
+   - `completionNotes` 可以为 `null` 或空字符串
+   - 更新时设置 `status = "COMPLETED"`，`actualTime` 为当前时间
+
+4. **Service 层实现示例**:
+```java
+public ReminderExecution completeExecution(Long id, Long userId, String completionNotes) {
+    ReminderExecution execution = reminderExecutionRepository.findById(id)
+        .orElseThrow(() -> new BusinessException("执行记录不存在"));
+    
+    // 验证权限（只能完成自己的提醒）
+    if (!execution.getUserId().equals(userId)) {
+        throw new BusinessException("无权操作此记录");
+    }
+    
+    // 更新状态
+    execution.setStatus(ReminderExecutionStatus.COMPLETED);
+    execution.setActualTime(LocalDateTime.now());
+    if (completionNotes != null && !completionNotes.trim().isEmpty()) {
+        execution.setCompletionNotes(completionNotes.trim());
+    }
+    
+    return reminderExecutionRepository.save(execution);
 }
 ```
 

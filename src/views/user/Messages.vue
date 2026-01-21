@@ -10,7 +10,7 @@
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="全部" name="all" />
         <el-tab-pane label="系统通知" name="system" />
-        <el-tab-pane label="订单通知" name="order" />
+        <el-tab-pane label="提醒通知" name="reminder" />
       </el-tabs>
       <div class="message-list">
         <el-empty v-if="messages.length === 0" description="暂无消息" />
@@ -18,9 +18,13 @@
           <div class="message-content">
             <h4>{{ msg.title }}</h4>
             <p>{{ msg.content }}</p>
-            <span class="time">{{ formatTime(msg.createdAt) }}</span>
+            <div class="message-meta">
+              <span class="time">{{ formatTime(msg.createdAt) }}</span>
+              <span v-if="msg.petName" class="pet-name">宠物：{{ msg.petName }}</span>
+            </div>
           </div>
           <div class="message-actions">
+            <el-button v-if="msg.type === 'reminder' && msg.petId" type="text" @click="viewPetDetail(msg)">查看详情</el-button>
             <el-button v-if="!msg.read" type="text" @click="markAsRead(msg.id)">标记已读</el-button>
             <el-button type="text" @click="deleteMsg(msg.id)">删除</el-button>
           </div>
@@ -39,8 +43,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { fetchMessages, markMessageAsRead, markAllAsRead, deleteMessage } from '@/services/userService'
 import type { Message } from '@/services/userService'
+
+const router = useRouter()
 
 const activeTab = ref('all')
 const messages = ref<Message[]>([])
@@ -77,7 +84,7 @@ const markAsRead = async (id: string) => {
   }
 }
 
-const markAllAsReadHandler = async () => {
+const markAllAsRead = async () => {
   try {
     await markAllAsRead()
     loadMessages()
@@ -92,6 +99,12 @@ const deleteMsg = async (id: string) => {
     loadMessages()
   } catch (error) {
     console.error('删除消息失败:', error)
+  }
+}
+
+const viewPetDetail = (msg: Message) => {
+  if (msg.petId) {
+    router.push(`/pet/${msg.petId}`)
   }
 }
 
@@ -152,9 +165,18 @@ onMounted(() => {
     margin: 0 0 8px;
     color: #666;
   }
+  .message-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
   .time {
     font-size: 12px;
     color: #999;
+  }
+  .pet-name {
+    font-size: 12px;
+    color: #409eff;
   }
 }
 

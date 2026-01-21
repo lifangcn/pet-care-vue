@@ -19,8 +19,10 @@ export const login = (payload: LoginForm) => {
  * @returns {Promise} 返回验证码
  */
 export const sendSmsCode = (phone: string) => {
-  // TODO: 后端接口地址 /auth/code
-  return apiClient.post<{ code: string }>('/auth/code', null, {
+  // 后端接口地址 /auth/code
+  // 返回值: {code: "200", message: "success", data: "901668", timestamp: 1768867169311}
+  // 经过拦截器处理后，直接返回验证码字符串
+  return apiClient.post<string>('/auth/code', null, {
     params: { phone }
   })
 }

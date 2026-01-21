@@ -3,22 +3,22 @@
     <el-card class="checkin-stats-card">
       <div class="checkin-stats">
         <div class="stat-item">
-          <div class="stat-value">{{ checkinStats?.monthCheckinCount ?? '-' }}</div>
+          <div class="stat-value">{{ checkInStats?.monthCheckInCount ?? '-' }}</div>
           <div class="stat-label">本月打卡</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <div class="stat-value highlight">{{ checkinStats?.continuousDays ?? '-' }}</div>
+          <div class="stat-value highlight">{{ checkInStats?.continuousDays ?? '-' }}</div>
           <div class="stat-label">连续打卡</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <div class="stat-value">{{ lastCheckinText }}</div>
+          <div class="stat-value">{{ lastCheckInText }}</div>
           <div class="stat-label">上次打卡</div>
         </div>
         <div class="checkin-action">
-          <el-button type="primary" :icon="Calendar" @click="handleCheckin" :loading="checkinLoading">今日打卡</el-button>
-          <el-button @click="showCheckinDialog = true" :disabled="!checkinStats">签到记录</el-button>
+          <el-button type="primary" :icon="Calendar" @click="handleCheckIn" :loading="checkInLoading">今日打卡</el-button>
+          <el-button @click="showCheckInDialog = true" :disabled="!checkInStats">签到记录</el-button>
         </div>
       </div>
     </el-card>
@@ -165,20 +165,20 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="showCheckinDialog" title="签到记录" width="640px">
+    <el-dialog v-model="showCheckInDialog" title="签到记录" width="640px">
       <div class="checkin-dialog">
         <div class="checkin-dialog-header">
           <el-date-picker
-            v-model="checkinMonth"
+            v-model="checkInMonth"
             type="month"
             format="YYYY年MM月"
             value-format="YYYY-MM"
             style="width: 180px"
-            @change="loadCheckinStats"
+            @change="loadCheckInStats"
           />
         </div>
-        <div class="checkin-dates" v-if="checkinStats?.checkinDates?.length">
-          <el-tag v-for="d in checkinStats.checkinDates" :key="d" type="success" effect="light">{{ d }}</el-tag>
+        <div class="checkin-dates" v-if="checkInStats?.checkInDates?.length">
+          <el-tag v-for="d in checkInStats.checkInDates" :key="d" type="success" effect="light">{{ d }}</el-tag>
         </div>
         <el-empty v-else description="暂无签到记录" :image-size="80" />
       </div>
@@ -192,7 +192,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Calendar } from '@element-plus/icons-vue'
 import { fetchPets, fetchReminders, createReminder, updateReminder, deleteReminder, activateReminder, deactivateReminder } from '@/services/petService'
-import { userCheckin, fetchCheckinStats, type CheckinStats } from '@/services/userService'
+import { userCheckIn, fetchCheckInStats, type CheckInStats } from '@/services/userService'
 import type { Reminder, Pet, RepeatType } from '@/types/pet'
 
 const router = useRouter()
@@ -247,10 +247,10 @@ const selectedPetId = ref<string | number>('')
 const reminders = ref<Reminder[]>([])
 const showAddDialog = ref(false)
 const editingReminderId = ref<string | number | null>(null)
-const checkinStats = ref<CheckinStats | null>(null)
-const showCheckinDialog = ref(false)
-const checkinMonth = ref('')
-const checkinLoading = ref(false)
+const checkInStats = ref<CheckInStats | null>(null)
+const showCheckInDialog = ref(false)
+const checkInMonth = ref('')
+const checkInLoading = ref(false)
 
 const pagination = reactive({
   pageNumber: 1,
@@ -258,9 +258,9 @@ const pagination = reactive({
   totalRow: 0,
 })
 
-const lastCheckinText = computed(() => {
-  if (!checkinStats.value?.lastCheckinDate) return '暂无'
-  const date = new Date(checkinStats.value.lastCheckinDate)
+const lastCheckInText = computed(() => {
+  if (!checkInStats.value?.lastCheckInDate) return '暂无'
+  const date = new Date(checkInStats.value.lastCheckInDate)
   const today = new Date()
   const diff = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
   if (diff === 0) return '今天'
@@ -302,35 +302,35 @@ const loadReminders = async () => {
   }
 }
 
-const loadCheckinStats = async () => {
+const loadCheckInStats = async () => {
   try {
     const now = new Date()
-    if (!checkinMonth.value) {
-      checkinMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    if (!checkInMonth.value) {
+      checkInMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
     }
-    const [year, month] = checkinMonth.value.split('-').map((n) => Number(n))
-    const res = await fetchCheckinStats({
+    const [year, month] = checkInMonth.value.split('-').map((n) => Number(n))
+    const res = await fetchCheckInStats({
       year,
       month,
     })
-    checkinStats.value = res.data
+    checkInStats.value = res.data
   } catch (error) {
     console.error('加载打卡统计失败', error)
-    checkinStats.value = null
+    checkInStats.value = null
   }
 }
 
-const handleCheckin = async () => {
-  checkinLoading.value = true
+const handleCheckIn = async () => {
+  checkInLoading.value = true
   try {
-    await userCheckin()
+    await userCheckIn()
     ElMessage.success('打卡成功')
-    await loadCheckinStats()
+    await loadCheckInStats()
   } catch (error: any) {
     const message = error?.message || error?.response?.data?.message || '打卡失败'
     ElMessage.error(message)
   } finally {
-    checkinLoading.value = false
+    checkInLoading.value = false
   }
 }
 
@@ -483,7 +483,7 @@ onMounted(async () => {
   try {
     await loadPets()
   } finally {
-    await loadCheckinStats()
+    await loadCheckInStats()
   }
 })
 </script>

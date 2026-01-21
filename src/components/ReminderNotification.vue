@@ -1,8 +1,8 @@
 <template>
   <div class="notification-wrapper">
     <div v-if="showDebug" class="debug-info">
-      <el-tag :type="wsConnected ? 'success' : 'danger'" size="small">
-        WebSocket: {{ wsConnected ? '已连接' : '未连接' }}
+      <el-tag :type="sseConnected ? 'success' : 'danger'" size="small">
+        SSE: {{ sseConnected ? '已连接' : '未连接' }}
       </el-tag>
       <el-tag type="info" size="small">通知数: {{ notifications.length }}</el-tag>
     </div>
@@ -34,8 +34,8 @@
         <span v-if="notification.scheduleTime">时间：{{ formatTime(notification.scheduleTime) }}</span>
       </div>
       <div class="notification-actions">
-        <el-button v-if="notification.id" size="small" type="primary" @click="handleComplete(notification)">
-          已完成
+        <el-button v-if="notification.id" size="small" type="primary" @click="handleMarkAsRead(notification)">
+          已读
         </el-button>
         <el-button v-if="notification.petId" size="small" @click="handleView(notification)">查看详情</el-button>
       </div>
@@ -50,13 +50,13 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Bell, Close } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { wsService, type ReminderNotification } from '@/services/websocket'
-import { completeReminderExecution } from '@/services/petService'
+import { sseService, type ReminderNotification } from '@/services/sse'
+import { markExecutionAsRead } from '@/services/petService'
 
 const router = useRouter()
 const notifications = ref<ReminderNotification[]>([])
 const showDebug = ref(import.meta.env.DEV)
-const wsConnected = computed(() => wsService.isConnected())
+const sseConnected = computed(() => sseService.isConnected())
 
 const handleReminder = (data: ReminderNotification) => {
   // 生成唯一ID（如果后端没有提供）
@@ -91,14 +91,14 @@ const removeNotification = (id: string | number) => {
   }
 }
 
-const handleComplete = async (notification: ReminderNotification) => {
+const handleMarkAsRead = async (notification: ReminderNotification) => {
   if (!notification.id) {
-    ElMessage.warning('无法完成：缺少提醒ID')
+    ElMessage.warning('无法标记已读：缺少提醒ID')
     return
   }
   try {
-    await completeReminderExecution(notification.id)
-    ElMessage.success('已标记为完成')
+    await markExecutionAsRead(notification.id)
+    ElMessage.success('已标记为已读')
     removeNotification(notification.id)
   } catch (error) {
     ElMessage.error('操作失败')
@@ -126,14 +126,14 @@ const formatTime = (time: string | undefined) => {
 }
 
 onMounted(() => {
-  wsService.on('reminder', handleReminder)
-  if (!wsService.isConnected()) {
-    wsService.connect()
+  sseService.on('reminder', handleReminder)
+  if (!sseService.isConnected()) {
+    sseService.connect()
   }
 })
 
 onUnmounted(() => {
-  wsService.off('reminder', handleReminder)
+  sseService.off('reminder', handleReminder)
 })
 </script>
 

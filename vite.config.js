@@ -11,7 +11,6 @@ export default defineConfig(async ({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   console.log(`构建模式: ${mode}`)
   console.log(`API地址: ${env.VITE_API_BASE_URL || '未配置'}`)
-  console.log(`WebSocket地址: ${env.VITE_WS_BASE_URL || '未配置'}`)
   
   const plugins = [vue()]
   if (mode === 'development') {

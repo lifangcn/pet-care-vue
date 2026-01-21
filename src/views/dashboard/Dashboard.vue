@@ -235,13 +235,6 @@ const quickActions = [
     bg: 'rgba(255, 159, 67, 0.15)',
   },
   {
-    label: '预约服务',
-    icon: FirstAidKit,
-    route: '/service/booking',
-    color: vars.petGreen,
-    bg: 'rgba(29, 209, 161, 0.15)',
-  },
-  {
     label: 'AI健康检查',
     icon: MagicStick,
     route: '/pet/ai-check',

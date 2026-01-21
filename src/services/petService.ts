@@ -76,10 +76,10 @@ export const uploadPetAvatar = (petId: string | number, file: File) => {
  */
 
 /**
- * [API调用] GET /pet/{petId}/health-record/page
+ * [API调用] POST /pet/{petId}/health-record/page
  * 获取宠物的健康记录列表
  * @param {string | number} petId - 宠物ID
- * @param {object} params - 查询参数
+ * @param {object} params - 查询参数（分页参数通过URL传递，其他参数通过请求体传递）
  * @returns {Promise} 返回健康记录列表数据
  */
 export const fetchHealthRecords = (petId: string | number, params?: {
@@ -89,20 +89,17 @@ export const fetchHealthRecords = (petId: string | number, params?: {
   startDate?: string
   endDate?: string
 }) => {
-  const queryParams: Record<string, any> = {
-    pageNumber: params?.pageNumber || 1,
-    pageSize: params?.pageSize || 10,
+  const { pageNumber, pageSize, ...requestBody } = params || {}
+  const queryParams: any = {}
+  
+  if (pageNumber !== undefined) {
+    queryParams.pageNumber = Number(pageNumber)
   }
-  if (params?.recordType) {
-    queryParams.recordType = params.recordType
+  if (pageSize !== undefined) {
+    queryParams.pageSize = Number(pageSize)
   }
-  if (params?.startDate) {
-    queryParams.startDate = params.startDate
-  }
-  if (params?.endDate) {
-    queryParams.endDate = params.endDate
-  }
-  return apiClient.get<{ records: HealthRecord[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(`/pet/${petId}/health-record/page`, {
+  
+  return apiClient.post<{ records: HealthRecord[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>(`/pet/${petId}/health-record/page`, requestBody, {
     params: queryParams
   })
 }
@@ -305,9 +302,9 @@ export const markExecutionAsRead = (id: string | number) => {
 }
 
 /**
- * [API调用] GET /reminder/execution
+ * [API调用] POST /reminder/notifications/page
  * 获取提醒通知列表
- * @param {object} params - 查询参数
+ * @param {object} params - 查询参数（分页参数通过URL传递，其他参数通过请求体传递）
  * @returns {Promise} 返回通知列表数据
  */
 export const fetchReminderNotifications = (params?: {
@@ -315,7 +312,19 @@ export const fetchReminderNotifications = (params?: {
   pageNumber?: number
   pageSize?: number
 }) => {
-  return apiClient.get<{ records: ReminderExecution[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/notifications', { params })
+  const { pageNumber, pageSize, ...requestBody } = params || {}
+  const queryParams: any = {}
+  
+  if (pageNumber !== undefined) {
+    queryParams.pageNumber = Number(pageNumber)
+  }
+  if (pageSize !== undefined) {
+    queryParams.pageSize = Number(pageSize)
+  }
+  
+  return apiClient.post<{ records: ReminderExecution[]; pageNumber: number; pageSize: number; totalPage: number; totalRow: number }>('/reminder/notifications/page', requestBody, {
+    params: queryParams
+  })
 }
 
 /**

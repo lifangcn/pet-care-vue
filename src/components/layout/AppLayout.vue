@@ -20,7 +20,6 @@
             <el-dropdown-menu>
               <el-dropdown-item @click="goToProfile">完善个人信息</el-dropdown-item>
               <el-dropdown-item @click="goToMessages">消息中心</el-dropdown-item>
-              <el-dropdown-item @click="goToWallet">我的钱包</el-dropdown-item>
               <el-dropdown-item @click="goToSettings">设置</el-dropdown-item>
               <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -85,7 +84,6 @@ import { Fold, Menu, Close, User } from '@element-plus/icons-vue'
 import {
   DataBoard,
   Avatar,
-  Calendar,
   MagicStick,
   Bell,
 } from '@element-plus/icons-vue'
@@ -118,7 +116,6 @@ const iconMap: Record<string, any> = {
   Odometer: DataBoard,
   DataBoard,
   Avatar,
-  Calendar,
   MagicStick,
   Bell,
 }
@@ -163,10 +160,6 @@ const goToProfile = () => {
 
 const goToMessages = () => {
   router.push('/messages')
-}
-
-const goToWallet = () => {
-  router.push('/wallet')
 }
 
 const goToSettings = () => {

@@ -1,42 +1,5 @@
 <template>
   <div class="dashboard-page">
-    <div class="hero-panel">
-      <div class="hero-gradient"></div>
-      <div class="hero-content">
-        <div class="hero-text">
-          <p class="hero-subtitle">温暖守护 · 贴心陪伴</p>
-          <div class="hero-welcome">
-            <el-avatar :size="64" :src="userAvatar" class="hero-avatar">
-              <el-icon><User /></el-icon>
-            </el-avatar>
-            <h1>欢迎回来，{{ userName }}</h1>
-          </div>
-          <p class="hero-desc">
-            今日已为 <strong>{{ stats.todos }}</strong> 项任务设定提醒。保持宠物健康，从当下开始。
-          </p>
-          <div class="hero-tags">
-            <el-tag type="success" round effect="dark">健康指数 {{ stats.healthScore }} 分</el-tag>
-          </div>
-        </div>
-        <div class="hero-cards">
-          <el-card
-            v-for="item in heroHighlights"
-            :key="item.title"
-            shadow="hover"
-            class="hero-card"
-          >
-            <div class="hero-card-icon" :style="{ background: item.bg, color: item.color }">
-              <el-icon :size="22"><component :is="item.icon" /></el-icon>
-            </div>
-            <div>
-              <p class="label">{{ item.title }}</p>
-              <p class="value">{{ item.value }}</p>
-            </div>
-          </el-card>
-        </div>
-      </div>
-    </div>
-
     <el-container class="content-shell">
       <el-main>
         <section class="overview-section">
@@ -49,26 +12,6 @@
                 </div>
                 <el-statistic :value="stats.todos" suffix="项" />
                 <p class="card-desc">记得按时完成护理任务</p>
-              </el-card>
-            </el-col>
-            <el-col :xs="24" :sm="12" :lg="6">
-              <el-card shadow="hover">
-                <div class="card-title">
-                  <span>健康评分</span>
-                  <el-icon :size="18"><Medal /></el-icon>
-                </div>
-                <el-progress type="circle" :percentage="stats.healthScore" :color="vars.petBlue" />
-                <p class="card-desc">整体状态良好</p>
-              </el-card>
-            </el-col>
-            <el-col :xs="24" :sm="12" :lg="6">
-              <el-card shadow="hover">
-                <div class="card-title">
-                  <span>服务预约</span>
-                  <el-icon :size="18"><Tickets /></el-icon>
-                </div>
-                <el-statistic :value="stats.bookings" suffix="项" />
-                <p class="card-desc">按需安排护理服务</p>
               </el-card>
             </el-col>
           </el-row>
@@ -97,35 +40,6 @@
                     </div>
                     <p>{{ action.label }}</p>
                   </div>
-                </div>
-              </el-card>
-            </el-col>
-            <el-col :xs="24" :lg="12">
-              <el-card class="pet-status-card" shadow="hover">
-                <div class="section-title">
-                  <h3>宠物状态</h3>
-                  <span>关注每一位伙伴</span>
-                </div>
-                <div class="pet-list">
-                  <el-card
-                    v-for="pet in pets"
-                    :key="pet.id"
-                    class="pet-item"
-                    shadow="never"
-                    @click="openPet(pet)"
-                  >
-                    <div class="pet-header">
-                      <el-avatar :src="pet.avatar" :size="48" />
-                      <div>
-                        <p class="pet-name">{{ pet.name }} <small>{{ pet.breed }}</small></p>
-                        <p class="pet-info">最近活动：{{ pet.lastActivity }}</p>
-                      </div>
-                    </div>
-                    <div class="pet-health">
-                      <span>健康评分</span>
-                      <el-progress :percentage="pet.health" :color="pet.health > 80 ? vars.petGreen : vars.petOrange" />
-                    </div>
-                  </el-card>
                 </div>
               </el-card>
             </el-col>
@@ -175,14 +89,11 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   BellFilled,
-  Medal,
-  Tickets,
   EditPen,
   FirstAidKit,
   MagicStick,
   Clock,
   Sunny,
-  User,
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/store/auth'
 import { getUserAvatar } from '@/utils/avatarUtils'
@@ -203,8 +114,6 @@ const userAvatar = computed(() => {
 
 const stats = reactive({
   todos: 0,
-  healthScore: 86,
-  bookings: 4,
 })
 
 const timelines = ref<Array<{
@@ -240,25 +149,6 @@ const quickActions = [
     route: '/pet/ai-check',
     color: vars.petBlue,
     bg: 'rgba(84, 160, 255, 0.15)',
-  },
-]
-
-const pets = [
-  {
-    id: 1,
-    name: 'Milo',
-    breed: '布偶猫',
-    avatar: '', // 使用默认头像，避免外部资源加载
-    health: 92,
-    lastActivity: '今早完成体检',
-  },
-  {
-    id: 2,
-    name: 'Lucky',
-    breed: '金毛犬',
-    avatar: '', // 使用默认头像，避免外部资源加载
-    health: 75,
-    lastActivity: '昨日完成洗护',
   },
 ]
 
@@ -332,43 +222,9 @@ const handleComplete = async (item: typeof timelines.value[0]) => {
   }
 }
 
-const heroHighlights = [
-  {
-    title: '下一次护理',
-    value: '今日 16:30',
-    icon: FirstAidKit,
-    bg: 'rgba(255, 159, 67, 0.15)',
-    color: vars.petOrange,
-  },
-  {
-    title: 'AI健康检查',
-    value: '待启动',
-    icon: MagicStick,
-    bg: 'rgba(84, 160, 255, 0.15)',
-    color: vars.petBlue,
-  },
-  {
-    title: '今日阳光指数',
-    value: '良好 · 22℃',
-    icon: Sunny,
-    bg: 'rgba(255, 107, 156, 0.15)',
-    color: vars.petPink,
-  },
-  {
-    title: '本周行程',
-    value: '4 个预约',
-    icon: Clock,
-    bg: 'rgba(29, 209, 161, 0.15)',
-    color: vars.petGreen,
-  },
-]
 
 const handleAction = (action: { route: string }) => {
   router.push(action.route)
-}
-
-const openPet = (pet: { id: number }) => {
-  router.push(`/pet/${pet.id}`)
 }
 
 onMounted(() => {

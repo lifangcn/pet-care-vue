@@ -248,7 +248,6 @@
                     :option="combinedChartOption"
                     autoresize
                   />
-                  <div v-else class="chart-placeholder">暂无数据</div>
                 </div>
               </div>
             </div>

@@ -300,15 +300,7 @@ const handleSubmit = async () => {
     analysisProgress.value = 0
     currentTipIndex.value = 0
 
-    // 模拟分析进度
-    const progressInterval = setInterval(() => {
-      if (analysisProgress.value < 90) {
-        analysisProgress.value += Math.random() * 15
-        if (analysisProgress.value > 90) {
-          analysisProgress.value = 90
-        }
-      }
-    }, 500)
+    analysisProgress.value = 30
 
     const tipInterval = setInterval(() => {
       currentTipIndex.value = (currentTipIndex.value + 1) % analysisTips.length
@@ -317,13 +309,9 @@ const handleSubmit = async () => {
     // [API调用] POST /ai/health-check - 提交AI健康检查
     const { data } = await submitHealthCheck(form)
 
-    clearInterval(progressInterval)
     clearInterval(tipInterval)
     analysisProgress.value = 100
     currentTipIndex.value = analysisTips.length - 1
-
-    // 等待一下让进度条完成
-    await new Promise((resolve) => setTimeout(resolve, 500))
 
     checkResult.value = data
     currentStep.value = 3

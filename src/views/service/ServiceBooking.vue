@@ -79,28 +79,6 @@
       <el-empty v-if="!loading && filteredProviders.length === 0" description="暂无服务商" />
     </div>
 
-    <div v-else class="map-container">
-      <div id="map-container" class="map-wrapper">
-        <!-- 地图占位，后续可集成百度地图等 -->
-        <div class="map-placeholder">
-          <el-icon :size="64"><MapLocation /></el-icon>
-          <p>地图模式</p>
-          <p class="map-hint">点击服务商卡片查看位置</p>
-          <div class="map-markers">
-            <div
-              v-for="provider in filteredProviders"
-              :key="provider.id"
-              class="map-marker"
-              @click="openBookingDialog(provider)"
-            >
-              <el-avatar :size="32" :src="provider.avatar" />
-              <span class="marker-name">{{ provider.name }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- 预约表单对话框 -->
     <el-dialog
       v-model="bookingDialogVisible"

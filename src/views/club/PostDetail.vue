@@ -129,6 +129,7 @@ const load = async () => {
   try {
     const { data } = await fetchPostById(id)
     post.value = data
+    myRating.value = Number((data as any)?.userRatingValue ?? 0) || 0
     
     // 如果评分数据缺失，单独获取评分
     if (!post.value?.ratingAvg && !post.value?.ratingCount) {

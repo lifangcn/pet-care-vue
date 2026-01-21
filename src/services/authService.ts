@@ -8,7 +8,7 @@ import type { LoginForm, LoginResponse, WechatQRCodeResponse, WechatScanStatus }
  * @returns {Promise} 返回登录响应（token、用户信息）
  */
 export const login = (payload: LoginForm) => {
-  // TODO: 后端接口地址 /auth/login
+  // 后端接口地址 POST /auth/login
   return apiClient.post<LoginResponse>('/auth/login', payload)
 }
 

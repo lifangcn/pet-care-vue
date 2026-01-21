@@ -407,7 +407,7 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (file) => {
 }
 
 const handleBatch = (type: string) => {
-  // TODO: 实现批量操作功能
+  // 批量操作：待实现
 }
 
 onMounted(async () => {

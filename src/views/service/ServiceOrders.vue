@@ -99,12 +99,12 @@ const getStatusText = (status: string) => {
 }
 
 const cancelBooking = async (id: string) => {
-  // TODO: 调用取消预约接口
+  // [API调用] PUT /services/bookings/{id}/cancel - 取消预约（待后端提供）
   loadBookings()
 }
 
 const showReview = (booking: BookingRecord) => {
-  // TODO: 显示评价对话框
+  // [API调用] POST /services/bookings/{id}/review - 提交评价（待后端提供）
 }
 
 const formatTime = (time: string) => {

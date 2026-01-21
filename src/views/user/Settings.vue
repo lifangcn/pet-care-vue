@@ -80,7 +80,7 @@ const feedbackForm = ref({
 })
 
 const saveSettings = () => {
-  // TODO: 调用后端接口保存设置
+  // [API调用] PUT /user/settings - 保存用户设置（待后端提供）
   ElMessage.success('设置已保存')
 }
 
@@ -91,14 +91,14 @@ const clearCache = () => {
 }
 
 const submitFeedback = () => {
-  // TODO: 调用后端接口提交反馈
+  // [API调用] POST /feedback - 提交用户反馈（待后端提供）
   ElMessage.success('反馈已提交')
   showFeedback.value = false
   feedbackForm.value = { content: '', contact: '' }
 }
 
 onMounted(() => {
-  // TODO: 加载用户设置
+  // [API调用] GET /user/settings - 加载用户设置（待后端提供）
 })
 </script>
 

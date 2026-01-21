@@ -34,6 +34,7 @@ export interface Post {
   locationInfo?: LocationInfo | string
   priceRange?: string
   likeCount?: number
+  userRatingValue?: number
   ratingCount?: number
   ratingTotal?: number
   ratingAvg?: number

@@ -2,7 +2,7 @@ import apiClient from './api'
 import type { Label, PageResult, Post } from '@/types/club'
 
 /**
- * 俱乐部-标签(label)相关接口
+ * 社区-标签(label)相关接口
  */
 
 export const fetchLabels = (params?: { type?: number }) => {

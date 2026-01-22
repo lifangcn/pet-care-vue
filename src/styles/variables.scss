@@ -1,8 +1,8 @@
-$el-color-primary: #409eff;
-$el-color-success: #67c23a;
-$el-color-warning: #e6a23c;
-$el-color-danger: #f56c6c;
-$el-color-info: #909399;
+$el-color-primary: #ff8a4c;
+$el-color-success: #1dd1a1;
+$el-color-warning: #f6b93b;
+$el-color-danger: #ff6b6b;
+$el-color-info: #6c7a89;
 
 $pet-color-orange: #ff9f43;
 $pet-color-green: #1dd1a1;
@@ -24,6 +24,19 @@ $--color-info: $el-color-info;
 $--font-family: $font-family-base;
 $--font-family-pet: $font-family-pet;
 
+// ============================================
+// 手绘插画风格扩展
+// @date 2026-01-21
+// @author Michael
+// ============================================
+$pet-bg-paper: #FFFBF7;     // 纸质背景
+$pet-bg-card: #FFFEFA;      // 卡片背景
+$pet-border-sketchy: 2px solid #2C3E50;  // 手绘边框
+$pet-pastel-pink: #FFB3BA;  // 粉彩粉
+$pet-pastel-green: #B8E6D4; // 粉彩绿
+$pet-pastel-blue: #B8D4E6;  // 粉彩蓝
+$pet-pastel-yellow: #FFF3B8;// 粉彩黄
+
 html,
 body,
 #app {
@@ -33,5 +46,75 @@ body,
 body {
   margin: 0;
   overflow: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --pc-radius-lg: 20px;
+  --pc-radius-md: 16px;
+  --pc-radius-sm: 12px;
+  --pc-space-1: 8px;
+  --pc-space-2: 12px;
+  --pc-space-3: 16px;
+  --pc-space-4: 24px;
+  --pc-font-xs: clamp(12px, 2.8vw, 13px);
+  --pc-font-sm: clamp(13px, 3vw, 14px);
+  --pc-font-md: clamp(14px, 3.3vw, 16px);
+  --pc-font-lg: clamp(16px, 3.8vw, 18px);
+  --pc-font-xl: clamp(18px, 4.6vw, 22px);
+}
+
+body {
+  font-family: $font-family-base;
+  font-size: var(--pc-font-md);
+  background:
+    radial-gradient(900px 420px at 10% 8%, rgba(255, 209, 166, 0.55), transparent 60%),
+    radial-gradient(860px 520px at 92% 12%, rgba(191, 217, 242, 0.45), transparent 60%),
+    radial-gradient(900px 520px at 30% 92%, rgba(191, 235, 215, 0.45), transparent 65%),
+    linear-gradient(180deg, rgba(255, 251, 247, 1), rgba(255, 248, 240, 1));
+  color: #2c3e50;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cg fill='none' stroke='%23FF8A4C' stroke-opacity='.08' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M50 80c12-8 28-8 40 0s28 8 40 0 28-8 40 0 28 8 40 0 28-8 40 0 28 8 40 0'/%3E%3Cpath d='M30 180c15-12 32-12 47 0s32 12 47 0 32-12 47 0 32 12 47 0 32-12 47 0 32 12 47 0'/%3E%3Cpath d='M60 280c10-10 24-10 34 0s24 10 34 0 24-10 34 0 24 10 34 0 24-10 34 0 24 10 34 0'/%3E%3C/g%3E%3Cg fill='%23FF8A4C' fill-opacity='.06'%3E%3Cpath d='M120 120c8-8 20-8 28 0s8 20 0 28-20 8-28 0-8-20 0-28z'/%3E%3Cpath d='M150 100c5-5 13-5 18 0s5 13 0 18-13 5-18 0-5-13 0-18z'/%3E%3Cpath d='M130 90c5-5 13-5 18 0s5 13 0 18-13 5-18 0-5-13 0-18z'/%3E%3Cpath d='M280 150c10-10 26-10 36 0s10 26 0 36-26 10-36 0-10-26 0-36z'/%3E%3Cpath d='M250 200c6-6 16-6 22 0s6 16 0 22-16 6-22 0-6-16 0-22z'/%3E%3Cpath d='M320 250c8-8 20-8 28 0s8 20 0 28-20 8-28 0-8-20 0-28z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23FFD1A6' stroke-opacity='.12' stroke-width='2'%3E%3Cpath d='M100 50 Q120 40 140 50 T180 50'/%3E%3Cpath d='M200 60 Q220 50 240 60 T280 60'/%3E%3Cpath d='M80 320 Q100 310 120 320 T160 320'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cg fill='%23FFB3BA' fill-opacity='.05'%3E%3Ccircle cx='80' cy='80' r='12'/%3E%3Ccircle cx='220' cy='100' r='10'/%3E%3Ccircle cx='150' cy='250' r='14'/%3E%3Ccircle cx='250' cy='200' r='8'/%3E%3C/g%3E%3Cg fill='none' stroke='%23D7CCFF' stroke-opacity='.1' stroke-width='2'%3E%3Cpath d='M50 150 Q70 140 90 150 T130 150'/%3E%3Cpath d='M170 180 Q190 170 210 180 T250 180'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 400px 400px, 300px 300px;
+  background-position: 0 0, 200px 200px;
+  opacity: 1;
+  mix-blend-mode: multiply;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.2;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 

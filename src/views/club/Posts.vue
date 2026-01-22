@@ -1,5 +1,5 @@
 <template>
-  <div class="club-posts-page">
+  <div class="club-posts-page paw-print top-left">
     <el-card shadow="never">
       <template #header>
         <div class="header">
@@ -43,13 +43,14 @@
         </el-select>
       </div>
 
-      <div v-if="hotLabels.length" class="hot-tags">
-        <span class="hot-tags-label">热门标签：</span>
+      <div v-if="hotLabels.length > 0 || commonLabels.length > 0" class="hot-tags">
+        <span class="hot-tags-label">推荐标签：</span>
         <el-tag
-          v-for="t in hotLabels"
+          v-for="t in hotLabels.length > 0 ? hotLabels : commonLabels.filter(l => l.isRecommended === 1)"
           :key="String(t.id)"
           class="tag"
           effect="plain"
+          :style="{ borderColor: t.color, color: t.color }"
           @click="selectHotLabel(t.id)"
         >
           {{ t.name }}
@@ -91,7 +92,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus, Flag } from '@element-plus/icons-vue'
 import { fetchPosts } from '@/services/postService'
-import { fetchHotLabels, suggestLabels } from '@/services/labelService'
+import { fetchHotLabels, suggestLabels, fetchLabels } from '@/services/labelService'
 import type { Label, Post } from '@/types/club'
 
 const router = useRouter()
@@ -113,6 +114,7 @@ const loading = ref(false)
 const noMore = ref(false)
 
 const hotLabels = ref<Label[]>([])
+const commonLabels = ref<Label[]>([])
 const labelOptions = ref<Label[]>([])
 const labelLoading = ref(false)
 
@@ -197,6 +199,11 @@ const goActivities = () => {
 
 const selectHotLabel = (id: string | number) => {
   query.value.labelId = id
+  const allLabels = [...hotLabels.value, ...commonLabels.value, ...labelOptions.value]
+  const selectedLabel = allLabels.find(l => l.id === id)
+  if (selectedLabel && !labelOptions.value.find(l => l.id === id)) {
+    labelOptions.value.push(selectedLabel)
+  }
   reload()
 }
 
@@ -212,6 +219,20 @@ const remoteSearchLabels = async (keyword: string) => {
   }
 }
 
+const loadCommonLabels = async () => {
+  try {
+    const { data } = await fetchLabels({ type: 1 })
+    commonLabels.value = data || []
+    labelOptions.value = data || []
+    if (hotLabels.value.length === 0 && commonLabels.value.length > 0) {
+      hotLabels.value = commonLabels.value.filter(l => l.isRecommended === 1)
+    }
+  } catch (e) {
+    commonLabels.value = []
+    labelOptions.value = []
+  }
+}
+
 onMounted(async () => {
   try {
     const { data } = await fetchHotLabels()
@@ -219,89 +240,130 @@ onMounted(async () => {
   } catch (e) {
     hotLabels.value = []
   }
+  await loadCommonLabels()
   await reload()
 })
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/pet-theme.scss' as pet;
+
 .club-posts-page {
   padding: 24px;
+  position: relative;
 }
+
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
+  .title {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Comic Sans MS', sans-serif;
+  }
 }
-.title {
-  font-size: 18px;
-  font-weight: 600;
-}
+
 .actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .filters {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 12px;
 }
+
 .hot-tags {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  padding: 12px;
+  background: #FFFEFA;
+  border-radius: pet.$pet-radius-md;
+  border: 2px solid rgba(255, 138, 76, 0.25);
+
+  .hot-tags-label {
+    color: #7F8C8D;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .tag {
+    cursor: pointer;
+    background: linear-gradient(135deg, #FFB3BA 0%, #B8E6D4 100%);
+    border: 2px solid rgba(255, 138, 76, 0.25);
+    color: #2C3E50;
+  }
 }
-.hot-tags-label {
-  color: #909399;
-  font-size: 13px;
-}
-.tag {
-  cursor: pointer;
-}
+
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  gap: 16px;
   margin-top: 8px;
+  grid-template-columns: 1fr;
+
+  @include pet.mobile-up(pet.$pet-breakpoint-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
 .post-item {
   cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
 }
+
 .post-title {
   font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 6px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-family: 'Comic Sans MS', sans-serif;
+  color: #2C3E50;
 }
+
 .post-content {
-  color: #606266;
+  color: #7F8C8D;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  line-height: 1.6;
 }
+
 .post-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
+
 .meta-left {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .meta-text {
-  color: #909399;
+  color: #7F8C8D;
   font-size: 12px;
 }
+
 .pager {
-  margin-top: 16px;
+  margin-top: 24px;
   display: flex;
   justify-content: center;
 }

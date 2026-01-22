@@ -1,0 +1,144 @@
+/**
+ * @description 宠物关怀项目 - 手绘装饰元素样式
+ * @date 2026-01-21
+ * @author Michael
+ */
+
+@use './pet-theme.scss' as pet;
+
+// === 粗糙边框效果 ===
+.sketchy-border {
+  border: pet.$pet-border-width solid pet.$pet-border-color;
+  border-radius: pet.$pet-radius-md;
+}
+
+// === 波浪形状卡片 ===
+.wavy-card {
+  border-radius: pet.$pet-radius-lg;
+  position: relative;
+  background: pet.$pet-bg-card;
+
+  // 底部波浪装饰
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10"><path d="M0,5 Q25,0 50,5 T100,5" stroke="%23FF9F43" fill="none" stroke-width="2"/></svg>') repeat-x;
+    opacity: 0.6;
+  }
+}
+
+// === 爪印装饰 ===
+.paw-print {
+  position: relative;
+
+  &::before {
+    content: '🐾';
+    font-size: 20px;
+    opacity: 0.2;
+    position: absolute;
+  }
+
+  &.top-left::before {
+    top: -15px;
+    left: -15px;
+    transform: rotate(-15deg);
+  }
+
+  &.top-right::before {
+    top: -15px;
+    right: -15px;
+    transform: rotate(15deg);
+  }
+
+  &.bottom-left::before {
+    bottom: -15px;
+    left: -15px;
+    transform: rotate(15deg);
+  }
+
+  &.bottom-right::before {
+    bottom: -15px;
+    right: -15px;
+    transform: rotate(-15deg);
+  }
+}
+
+// === 纸质纹理 ===
+.paper-texture {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 159, 67, 0.02) 2px,
+      rgba(255, 159, 67, 0.02) 4px
+    );
+}
+
+// === 手绘按钮效果 ===
+.sketchy-button {
+  border: pet.$pet-border-width solid pet.$pet-border-color;
+  border-radius: pet.$pet-radius-sm;
+  font-weight: 600;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: pet.$pet-shadow-hover;
+  }
+
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: pet.$pet-shadow;
+  }
+}
+
+// === 状态标签手绘风格 ===
+.status-tag {
+  border: pet.$pet-border-width solid pet.$pet-border-color;
+  border-radius: pet.$pet-radius-sm;
+  font-weight: 600;
+  display: inline-block;
+  padding: 4px 12px;
+
+  &.status-recruiting {
+    background: pet.$pet-accent-green;
+  }
+
+  &.status-ongoing {
+    background: pet.$pet-primary;
+  }
+
+  &.status-ended {
+    background: #BDC3C7;
+  }
+}
+
+// === Grid 布局辅助类 ===
+.responsive-grid {
+  display: grid;
+  gap: pet.$pet-space-md;
+  grid-template-columns: 1fr;
+
+  @include pet.mobile-up(pet.$pet-breakpoint-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include pet.mobile-up(pet.$pet-breakpoint-lg) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.responsive-grid-2 {
+  display: grid;
+  gap: pet.$pet-space-md;
+  grid-template-columns: 1fr;
+
+  @include pet.mobile-up(pet.$pet-breakpoint-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

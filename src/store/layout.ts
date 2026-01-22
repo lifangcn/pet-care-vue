@@ -13,10 +13,10 @@ export const useLayoutStore = defineStore('layout', {
   getters: {
     sidebarWidth: (state) => {
       if (state.isMobile) return '0px'
-      return state.sidebarCollapsed ? '64px' : '200px'
+      return '200px'
     },
     isSidebarVisible: (state) => {
-      return !state.isMobile || !state.sidebarCollapsed
+      return !state.isMobile
     },
   },
   actions: {
@@ -28,10 +28,7 @@ export const useLayoutStore = defineStore('layout', {
     },
     setMobile(isMobile: boolean) {
       this.isMobile = isMobile
-      // 移动端时自动折叠侧边栏
-      if (isMobile) {
-        this.sidebarCollapsed = true
-      }
+      if (!isMobile) this.sidebarCollapsed = false
     },
   },
 })

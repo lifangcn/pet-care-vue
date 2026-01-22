@@ -2,7 +2,7 @@ import apiClient from './api'
 import type { CreatePostPayload, PageResult, Post, PostRating } from '@/types/club'
 
 /**
- * 俱乐部-动态相关接口
+ * 社区-动态相关接口
  * 文档：/api/post...
  */
 
@@ -57,10 +57,6 @@ export const ratePost = (id: string | number, payload: { ratingValue: 1 | 2 | 3 
   return apiClient.post<PostRating>(`/post/${id}/rate`, null, {
     params: { ratingValue: payload.ratingValue }
   })
-}
-
-export const fetchPostRatings = (id: string | number) => {
-  return apiClient.get<PostRating>(`/post/${id}/ratings`)
 }
 
 

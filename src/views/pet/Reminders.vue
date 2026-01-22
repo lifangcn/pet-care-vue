@@ -499,6 +499,8 @@ onMounted(async () => {
   align-items: center;
   h2 {
     margin: 0;
+    font-size: clamp(18px, 4.6vw, 22px);
+    line-height: 1.2;
   }
 }
 
@@ -506,6 +508,12 @@ onMounted(async () => {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+
+  :deep(.el-select) {
+    width: min(220px, 100%);
+  }
 }
 
 .reminder-list {
@@ -536,8 +544,12 @@ onMounted(async () => {
 
 .reminder-info {
   flex: 1;
+  min-width: 0;
   h4 {
     margin: 0 0 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   p {
     margin: 0 0 8px;
@@ -548,6 +560,7 @@ onMounted(async () => {
     gap: 16px;
     font-size: 12px;
     color: #999;
+    flex-wrap: wrap;
   }
 }
 
@@ -564,8 +577,9 @@ onMounted(async () => {
 
 .checkin-stats-card {
   margin-bottom: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #FF8A4C 0%, #FFD1A6 100%);
   border: none;
+  box-shadow: 0 4px 16px rgba(255, 138, 76, 0.2);
 
   :deep(.el-card__body) {
     padding: 24px;
@@ -578,6 +592,7 @@ onMounted(async () => {
   justify-content: center;
   gap: 48px;
   color: #fff;
+  flex-wrap: wrap;
 }
 
 .stat-item {
@@ -585,12 +600,14 @@ onMounted(async () => {
 }
 
 .stat-value {
-  font-size: 36px;
+  font-size: clamp(22px, 6vw, 36px);
   font-weight: bold;
   margin-bottom: 8px;
+  color: #fff;
 
   &.highlight {
-    color: #ffd700;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -610,6 +627,41 @@ onMounted(async () => {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .reminders-page {
+    padding: 16px;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    gap: 10px;
+
+    :deep(.el-select) {
+      flex: 1;
+      min-width: 140px;
+      width: auto;
+    }
+  }
+
+  .checkin-stats {
+    gap: 16px;
+    justify-content: flex-start;
+  }
+
+  .checkin-action {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 .checkin-dialog {

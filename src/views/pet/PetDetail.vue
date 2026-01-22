@@ -311,7 +311,10 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { FormInstance, FormRules, UploadProps, UploadFile } from 'element-plus'
-import type { DatePickerShortcuts } from 'element-plus/es/components/date-picker/src/date-picker'
+type DatePickerShortcuts = Array<{
+  text: string
+  value: () => Date
+}>
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, Plus, DataLine, Sunny, Warning, Delete } from '@element-plus/icons-vue'
 import { use } from 'echarts/core'
@@ -342,7 +345,7 @@ const petId = route.params.id as string
 
 const loading = ref(true)
 const pet = ref<Pet | null>(null)
-const activeTab = ref('basic')
+const activeTab = ref((route.query.tab as string) || 'basic')
 const editMode = ref(false)
 
 const basicFormRef = ref<FormInstance>()

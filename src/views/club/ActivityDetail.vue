@@ -1,5 +1,5 @@
 <template>
-  <div class="club-activity-detail-page">
+  <div class="club-activity-detail-page paw-print top-left">
     <el-card shadow="never">
       <template #header>
         <div class="header">
@@ -249,81 +249,121 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/pet-theme.scss' as pet;
+@use '@/styles/variables.scss' as vars;
+
 .club-activity-detail-page {
   padding: 24px;
+  position: relative;
 }
+
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
+  .title {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Comic Sans MS', sans-serif;
+  }
 }
-.title {
-  font-size: 18px;
-  font-weight: 600;
-}
+
 .actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .activity-title {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  font-family: 'Comic Sans MS', sans-serif;
+  color: #2C3E50;
 }
+
 .meta {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: vars.$pet-bg-card;
+  border-radius: pet.$pet-radius-md;
+  border: 2px solid rgba(255, 138, 76, 0.25);
 }
+
 .meta-text {
-  color: #909399;
-  font-size: 12px;
+  color: #7F8C8D;
+  font-size: 13px;
 }
+
 .cover {
-  margin: 12px 0 16px;
+  margin: 16px 0;
 }
+
 .cover-img {
   width: 100%;
   height: 240px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: pet.$pet-radius-lg;
+  border: 2px solid rgba(255, 138, 76, 0.25);
 }
+
 .desc {
   white-space: pre-wrap;
   line-height: 1.8;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: vars.$pet-bg-card;
+  border-radius: pet.$pet-radius-md;
+  border: 2px solid rgba(255, 138, 76, 0.25);
 }
+
 .block {
-  margin-top: 16px;
+  margin-top: 20px;
 }
+
 .block-title {
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  font-family: 'Comic Sans MS', sans-serif;
+  font-size: 16px;
+  color: #2C3E50;
 }
+
 .block-body {
-  color: #303133;
+  color: #2C3E50;
+  padding: 16px;
+  background: vars.$pet-bg-paper;
+  border-radius: pet.$pet-radius-md;
+  border: 2px solid rgba(255, 138, 76, 0.25);
 }
+
 .participants {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .checkin-item {
   margin-top: 12px;
 }
+
 .checkin-content {
   white-space: pre-wrap;
   line-height: 1.8;
 }
+
 .checkin-meta {
   margin-top: 10px;
 }
+
 .pager {
-  margin-top: 14px;
+  margin-top: 16px;
   display: flex;
   justify-content: center;
 }

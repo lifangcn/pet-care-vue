@@ -60,7 +60,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { fetchPostById, likePost, ratePost, fetchPostRatings } from '@/services/postService'
+import { fetchPostById, likePost, ratePost } from '@/services/postService'
 import type { Label, Post, PostMediaItem } from '@/types/club'
 
 const route = useRoute()
@@ -131,19 +131,6 @@ const load = async () => {
     post.value = data
     myRating.value = Number((data as any)?.userRatingValue ?? 0) || 0
     
-    // 如果评分数据缺失，单独获取评分
-    if (!post.value?.ratingAvg && !post.value?.ratingCount) {
-      try {
-        const { data: ratingData } = await fetchPostRatings(id)
-        if (ratingData && post.value) {
-          post.value.ratingAvg = ratingData.ratingAvg
-          post.value.ratingCount = ratingData.ratingCount
-          post.value.ratingTotal = ratingData.ratingTotal
-        }
-      } catch (e) {
-        // 忽略评分获取失败
-      }
-    }
   } catch (e: any) {
     ElMessage.error(e?.message || '加载失败')
   } finally {

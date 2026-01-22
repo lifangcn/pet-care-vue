@@ -2,7 +2,7 @@ import apiClient from './api'
 import type { Activity, CreateActivityPayload, PageResult, Post } from '@/types/club'
 
 /**
- * 俱乐部-活动打卡相关接口
+ * 社区-活动打卡相关接口
  */
 
 export const createActivity = (payload: CreateActivityPayload) => {

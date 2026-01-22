@@ -1,11 +1,50 @@
 <template>
   <div class="login-page">
+    <div class="floating-pets">
+      <span class="pet-icon">🐶</span>
+      <span class="pet-icon">🐱</span>
+      <span class="pet-icon">🐰</span>
+      <span class="pet-icon">🐹</span>
+    </div>
     <el-container class="login-container">
       <el-aside class="brand-panel">
+        <div class="carousel-background">
+          <div
+            v-for="(image, index) in petImages"
+            :key="index"
+            class="carousel-slide"
+            :class="{ active: currentImageIndex === index }"
+          >
+            <img
+              :src="image.url"
+              :alt="image.name"
+              class="carousel-image"
+              @error="handleImageError"
+            />
+          </div>
+          <div class="carousel-overlay" />
+        </div>
+        <div class="pet-decorations">
+          <span class="pet-emoji">🐶</span>
+          <span class="pet-emoji">🐱</span>
+          <span class="pet-emoji">🐰</span>
+          <span class="pet-emoji">🐹</span>
+          <span class="pet-emoji">🐾</span>
+          <span class="pet-emoji">💖</span>
+        </div>
         <div class="brand-content">
           <div class="brand-logo">PetCare</div>
           <h2>宠物关怀系统</h2>
           <p>智能健康管理 · 专业护理服务 · 宠物社区互联</p>
+        </div>
+        <div class="carousel-indicators">
+          <span
+            v-for="(image, index) in petImages"
+            :key="index"
+            class="indicator"
+            :class="{ active: currentImageIndex === index }"
+            @click="currentImageIndex = index"
+          />
         </div>
       </el-aside>
       <el-main class="form-panel">
@@ -100,6 +139,35 @@ const qrCodeUrl = ref('')
 const ticket = ref('')
 const scanStatus = ref<'WAITING' | 'SCANNED' | 'CONFIRMED' | 'EXPIRED'>('WAITING')
 let scanTimer: number | null = null
+
+const currentImageIndex = ref(0)
+const petImages = [
+  {
+    url: '/images/samoyed.jpg',
+    name: '萨摩耶'
+  },
+  {
+    url: '/images/shiba.jpg',
+    name: '柴犬'
+  },
+  {
+    url: '/images/golden-retriever.jpg',
+    name: '金毛'
+  }
+]
+let carouselTimer: number | null = null
+
+const startCarousel = () => {
+  carouselTimer = window.setInterval(() => {
+    currentImageIndex.value = (currentImageIndex.value + 1) % petImages.length
+  }, 5000)
+}
+
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  console.warn('图片加载失败:', img.src)
+  img.style.display = 'none'
+}
 
 const validatePhone = (_: unknown, value: string, callback: (error?: Error) => void) => {
   const phone = value?.trim()
@@ -220,11 +288,13 @@ onMounted(() => {
   if (activeTab.value === 'wechat') {
     generateQRCode()
   }
+  startCarousel()
 })
 
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
   if (scanTimer) clearInterval(scanTimer)
+  if (carouselTimer) clearInterval(carouselTimer)
 })
 
 /**
@@ -266,12 +336,83 @@ watch(
 
 .login-page {
   min-height: 100vh;
-  background: #f5f7fb;
+  background:
+    radial-gradient(900px 420px at 10% 8%, rgba(255, 209, 166, 0.55), transparent 60%),
+    radial-gradient(860px 520px at 92% 12%, rgba(191, 217, 242, 0.45), transparent 60%),
+    radial-gradient(900px 520px at 30% 92%, rgba(191, 235, 215, 0.45), transparent 65%),
+    linear-gradient(180deg, rgba(255, 251, 247, 1), rgba(255, 248, 240, 1));
   font-family: vars.$font-family-base;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
+  position: relative;
+  overflow: hidden;
+
+  .floating-pets {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+
+    .pet-icon {
+      position: absolute;
+      font-size: 48px;
+      opacity: 0.08;
+      animation: drift 20s linear infinite;
+
+      &:nth-child(1) {
+        top: 15%;
+        left: 8%;
+        animation-delay: 0s;
+      }
+
+      &:nth-child(2) {
+        top: 60%;
+        right: 10%;
+        animation-delay: 5s;
+      }
+
+      &:nth-child(3) {
+        bottom: 20%;
+        left: 15%;
+        animation-delay: 10s;
+      }
+
+      &:nth-child(4) {
+        top: 40%;
+        right: 5%;
+        animation-delay: 15s;
+      }
+    }
+  }
+
+  @keyframes drift {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(30px, -20px) rotate(90deg); }
+    50% { transform: translate(-20px, -40px) rotate(180deg); }
+    75% { transform: translate(-30px, -20px) rotate(270deg); }
+    100% { transform: translate(0, 0) rotate(360deg); }
+  }
+
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500'%3E%3Cg fill='none' stroke='%23FF8A4C' stroke-opacity='.1' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M50 100c20-15 45-15 65 0s45 15 65 0 45-15 65 0 45 15 65 0 45-15 65 0'/%3E%3Cpath d='M30 250c25-20 55-20 80 0s55 20 80 0 55-20 80 0 55 20 80 0 55-20 80 0'/%3E%3Cpath d='M60 400c18-18 42-18 60 0s42 18 60 0 42-18 60 0 42 18 60 0 42-18 60 0'/%3E%3C/g%3E%3Cg fill='%23FF8A4C' fill-opacity='.08'%3E%3Cpath d='M150 150c12-12 30-12 42 0s12 30 0 42-30 12-42 0-12-30 0-42z'/%3E%3Cpath d='M350 200c10-10 26-10 36 0s10 26 0 36-26 10-36 0-10-26 0-36z'/%3E%3Cpath d='M200 350c8-8 20-8 28 0s8 20 0 28-20 8-28 0-8-20 0-28z'/%3E%3C/g%3E%3Cg fill='%23FFB3BA' fill-opacity='.06'%3E%3Ccircle cx='100' cy='300' r='20'/%3E%3Ccircle cx='400' cy='150' r='16'/%3E%3Ccircle cx='300' cy='400' r='18'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 500px 500px;
+    opacity: 1;
+    mix-blend-mode: multiply;
+    animation: float 20s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(2deg); }
+  }
 }
 
 .login-container {
@@ -285,36 +426,201 @@ watch(
 }
 
 .brand-panel {
-  background-image: linear-gradient(135deg, rgba(84, 160, 255, 0.85), rgba(255, 155, 67, 0.85));
-  background-size: cover;
-  background-position: center;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px;
+  position: relative;
+  overflow: hidden;
+
+  .carousel-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+
+    .carousel-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+      overflow: hidden;
+
+      &.active {
+        opacity: 1;
+      }
+
+      .carousel-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+    }
+
+    .carousel-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 138, 76, 0.75), rgba(255, 209, 166, 0.7));
+      z-index: 1;
+    }
+  }
+
+  &::before {
+    content: '🐾';
+    position: absolute;
+    font-size: 120px;
+    opacity: 0.15;
+    top: 10%;
+    right: 10%;
+    animation: bounce 3s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '💕';
+    position: absolute;
+    font-size: 80px;
+    opacity: 0.15;
+    bottom: 15%;
+    left: 15%;
+    animation: bounce 3s ease-in-out infinite 1.5s;
+  }
+
+  .pet-decorations {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+
+    .pet-emoji {
+      position: absolute;
+      font-size: 60px;
+      opacity: 0.12;
+      animation: float 6s ease-in-out infinite;
+
+      &:nth-child(1) {
+        top: 5%;
+        left: 5%;
+        animation-delay: 0s;
+      }
+
+      &:nth-child(2) {
+        top: 20%;
+        right: 8%;
+        animation-delay: 1s;
+      }
+
+      &:nth-child(3) {
+        bottom: 25%;
+        left: 8%;
+        animation-delay: 2s;
+      }
+
+      &:nth-child(4) {
+        bottom: 10%;
+        right: 12%;
+        animation-delay: 3s;
+      }
+
+      &:nth-child(5) {
+        top: 50%;
+        left: 2%;
+        font-size: 40px;
+        animation-delay: 1.5s;
+      }
+
+      &:nth-child(6) {
+        top: 35%;
+        right: 3%;
+        font-size: 50px;
+        animation-delay: 2.5s;
+      }
+    }
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(10px, -15px) rotate(5deg); }
+    50% { transform: translate(-5px, -25px) rotate(-5deg); }
+    75% { transform: translate(-10px, -10px) rotate(3deg); }
+  }
 }
 
-.brand-content {
-  text-align: center;
-  max-width: 320px;
-}
+  .brand-content {
+    text-align: center;
+    max-width: 320px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .carousel-indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 3;
+
+    .indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &.active {
+        background: #fff;
+        width: 24px;
+        border-radius: 4px;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
 
 .brand-logo {
   font-family: vars.$font-family-pet;
   font-size: 48px;
   letter-spacing: 2px;
   margin-bottom: 16px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
 .brand-content h2 {
   font-size: 32px;
   margin-bottom: 12px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
 .brand-content p {
   font-size: 16px;
   line-height: 1.6;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 1;
 }
 
 .form-panel {
@@ -330,7 +636,23 @@ watch(
   max-width: 420px;
   border-radius: 20px;
   border: none;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(255, 138, 76, 0.15);
+  background: rgba(255, 254, 250, 0.95);
+  backdrop-filter: blur(10px);
+  animation: fadeInUp 0.6s ease-out;
+  position: relative;
+  z-index: 1;
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 .card-header {

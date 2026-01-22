@@ -1,0 +1,55 @@
+/**
+ * @description 宠物关怀项目 - 手绘插画风格设计系统变量
+ * @date 2026-01-21
+ * @author Michael
+ */
+
+// === 粉彩色彩体系 ===
+$pet-primary: #FF8A4C;       // 杏橙 - 主色
+$pet-secondary: #FFD1A6;     // 奶油橙 - 辅助色
+$pet-accent-green: #BFEBD7;  // 薄荷绿 - 成功/健康
+$pet-accent-blue: #BFD9F2;   // 天蓝 - 信息
+$pet-accent-yellow: #FFF0B8; // 淡黄 - 警告
+$pet-accent-lavender: #D7CCFF; // 淡紫 - 点缀
+
+$pet-bg-paper: #FFFBF7;     // 纸质背景
+$pet-bg-card: #FFFEFA;      // 卡片背景
+
+// === 圆角系统（不规则手绘感）===
+$pet-radius-sm: 6px 8px 4px 7px;      // 标签、小按钮
+$pet-radius-md: 12px 8px 14px 10px;   // 卡片、输入框
+$pet-radius-lg: 18px 14px 20px 16px;  // 大卡片
+
+// === 间距系统 ===
+$pet-space-xs: 4px;
+$pet-space-sm: 8px;
+$pet-space-md: 16px;
+$pet-space-lg: 24px;
+
+// === 阴影（手绘感）===
+$pet-shadow: 3px 3px 0 rgba(255, 159, 67, 0.3);
+$pet-shadow-hover: 4px 4px 0 rgba(255, 159, 67, 0.5);
+
+// === 手绘边框效果 ===
+$pet-border-width: 2px;
+$pet-border-color: rgba(255, 138, 76, 0.25);
+
+// === 响应式断点 ===
+$pet-breakpoint-xs: 375px;
+$pet-breakpoint-sm: 576px;
+$pet-breakpoint-md: 768px;
+$pet-breakpoint-lg: 992px;
+$pet-breakpoint-xl: 1200px;
+
+// === 混入宏 ===
+@mixin mobile-up($bp) {
+  @media (min-width: $bp) {
+    @content;
+  }
+}
+
+@mixin mobile-down($bp) {
+  @media (max-width: $bp - 1px) {
+    @content;
+  }
+}

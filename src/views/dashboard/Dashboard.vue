@@ -1,49 +1,106 @@
 <template>
   <div class="dashboard-page">
+    <div class="pet-decorations">
+      <span class="pet-emoji">🐶</span>
+      <span class="pet-emoji">🐱</span>
+      <span class="pet-emoji">🐰</span>
+      <span class="pet-emoji">🐹</span>
+    </div>
     <el-container class="content-shell">
       <el-main>
-        <section class="overview-section">
+        <section class="stats-section">
           <el-row :gutter="16">
             <el-col :xs="24" :sm="12" :lg="6">
-              <el-card shadow="hover">
+              <el-card shadow="hover" class="stat-card" @click="router.push('/pets')">
+                <div class="card-title">
+                  <span>我的宠物</span>
+                  <el-icon :size="20"><Avatar /></el-icon>
+                </div>
+                <el-statistic :value="petCount" suffix="只" />
+                <p class="card-desc">点击查看详情</p>
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :sm="12" :lg="6">
+              <el-card shadow="hover" class="stat-card" @click="router.push('/reminder')">
                 <div class="card-title">
                   <span>今日待办</span>
-                  <el-icon :size="18"><BellFilled /></el-icon>
+                  <el-icon :size="20"><BellFilled /></el-icon>
                 </div>
                 <el-statistic :value="stats.todos" suffix="项" />
-                <p class="card-desc">记得按时完成护理任务</p>
+                <p class="card-desc">点击查看提醒</p>
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :sm="12" :lg="6">
+              <el-card shadow="hover" class="stat-card" @click="router.push('/club/posts')">
+                <div class="card-title">
+                  <span>内容广场</span>
+                  <el-icon :size="20"><ChatDotRound /></el-icon>
+                </div>
+                <el-statistic :value="0" suffix="条" />
+                <p class="card-desc">点击查看动态</p>
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :sm="12" :lg="6">
+              <el-card shadow="hover" class="stat-card" @click="router.push('/ai/rag-chat')">
+                <div class="card-title">
+                  <span>AI问答</span>
+                  <el-icon :size="20"><MagicStick /></el-icon>
+                </div>
+                <el-statistic :value="stats.aiChatCount" suffix="次" />
+                <p class="card-desc">点击开始对话</p>
               </el-card>
             </el-col>
           </el-row>
         </section>
 
-        <section class="middle-section">
-          <el-row :gutter="16">
-            <el-col :xs="24" :lg="12">
-              <el-card class="action-card" shadow="hover">
-                <div class="section-title">
-                  <h3>快速操作</h3>
-                  <span>常用功能一步直达</span>
+        <section class="features-section">
+          <el-card shadow="hover" class="features-card">
+            <div class="section-title">
+              <h3>功能入口</h3>
+            </div>
+            <div class="features-grid">
+              <div
+                v-for="feature in features"
+                :key="feature.route"
+                class="feature-item"
+                @click="router.push(feature.route)"
+              >
+                <div class="feature-icon" :style="{ background: feature.bg, color: feature.color }">
+                  <el-icon :size="28"><component :is="feature.icon" /></el-icon>
                 </div>
-                <div class="action-grid">
-                  <div
-                    v-for="action in quickActions"
-                    :key="action.label"
-                    class="action-item"
-                    role="button"
-                    tabindex="0"
-                    :style="{ borderColor: action.color }"
-                    @click="handleAction(action)"
-                  >
-                    <div class="action-icon" :style="{ background: action.bg, color: action.color }">
-                      <el-icon :size="24"><component :is="action.icon" /></el-icon>
-                    </div>
-                    <p>{{ action.label }}</p>
+                <p class="feature-label">{{ feature.label }}</p>
+              </div>
+            </div>
+          </el-card>
+        </section>
+
+        <section v-if="recentPets.length > 0" class="pets-section">
+          <el-card shadow="hover" class="pets-card">
+            <div class="section-title">
+              <h3>我的宠物</h3>
+              <el-button text type="primary" @click="router.push('/pets')">查看全部</el-button>
+            </div>
+            <div class="pets-grid">
+              <el-card
+                v-for="pet in recentPets"
+                :key="pet.id"
+                class="pet-card"
+                shadow="hover"
+                @click="router.push(`/pet/${pet.id}`)"
+              >
+                <div class="pet-content">
+                  <el-avatar :size="64" :src="pet.avatar || ''" class="pet-avatar">
+                    <el-icon><Avatar /></el-icon>
+                  </el-avatar>
+                  <div class="pet-info">
+                    <h4>{{ pet.name }}</h4>
+                    <p>{{ pet.breed || '未设置品种' }} · {{ typeLabel(pet.type) }}</p>
+                    <p v-if="pet.birthday" class="pet-birthday">生日：{{ pet.birthday }}</p>
                   </div>
                 </div>
               </el-card>
-            </el-col>
-          </el-row>
+            </div>
+          </el-card>
         </section>
       </el-main>
 
@@ -89,32 +146,27 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   BellFilled,
-  EditPen,
-  FirstAidKit,
+  Avatar,
   MagicStick,
-  Clock,
-  Sunny,
+  ChatDotRound,
+  Document,
+  FirstAidKit,
+  Flag,
 } from '@element-plus/icons-vue'
-import { useAuthStore } from '@/store/auth'
-import { getUserAvatar } from '@/utils/avatarUtils'
+import { usePetStore } from '@/store/pet'
 import { fetchReminderExecutions, completeReminderExecution } from '@/services/petService'
-import type { ReminderExecution } from '@/types/pet'
+import type { ReminderExecution, Pet } from '@/types/pet'
 
 const router = useRouter()
-const authStore = useAuthStore()
-
-const userName = computed(() => {
-  return authStore.user?.nickname || authStore.user?.phone || '用户'
-})
-
-const userAvatar = computed(() => {
-  const username = authStore.user?.nickname || authStore.user?.phone || '用户'
-  return getUserAvatar(authStore.user?.avatar, username)
-})
+const petStore = usePetStore()
 
 const stats = reactive({
   todos: 0,
+  aiChatCount: 0,
 })
+
+const petCount = computed(() => petStore.pets.length)
+const recentPets = computed(() => petStore.pets.slice(0, 4))
 
 const timelines = ref<Array<{
   id: string | number
@@ -128,29 +180,64 @@ const timelines = ref<Array<{
   execution: ReminderExecution
 }>>([])
 
-const vars = {
-  petBlue: '#54A0FF',
-  petGreen: '#1DD1A1',
-  petOrange: '#FF9F43',
-  petPink: '#FF6B9C',
-}
-
-const quickActions = [
+const features = [
   {
-    label: '添加健康记录',
-    icon: EditPen,
-    route: '/pet/health',
-    color: vars.petOrange,
-    bg: 'rgba(255, 159, 67, 0.15)',
+    label: '宠物管理',
+    icon: Avatar,
+    route: '/pets',
+    color: '#FF8A4C',
+    bg: 'rgba(255, 138, 76, 0.15)',
+  },
+  {
+    label: '提醒管理',
+    icon: BellFilled,
+    route: '/reminder',
+    color: '#FF6B9C',
+    bg: 'rgba(255, 107, 156, 0.15)',
+  },
+  {
+    label: '内容广场',
+    icon: ChatDotRound,
+    route: '/club/posts',
+    color: '#54A0FF',
+    bg: 'rgba(84, 160, 255, 0.15)',
+  },
+  {
+    label: '活动打卡',
+    icon: Flag,
+    route: '/club/activities',
+    color: '#1DD1A1',
+    bg: 'rgba(29, 209, 161, 0.15)',
   },
   {
     label: 'AI健康检查',
+    icon: FirstAidKit,
+    route: '/ai/health-check',
+    color: '#BFD9F2',
+    bg: 'rgba(191, 217, 242, 0.15)',
+  },
+  {
+    label: 'AI助手',
     icon: MagicStick,
-    route: '/pet/ai-check',
-    color: vars.petBlue,
-    bg: 'rgba(84, 160, 255, 0.15)',
+    route: '/ai/rag-chat',
+    color: '#D7CCFF',
+    bg: 'rgba(215, 204, 255, 0.15)',
+  },
+  {
+    label: '文档管理',
+    icon: Document,
+    route: '/ai/documents',
+    color: '#FFF0B8',
+    bg: 'rgba(255, 240, 184, 0.15)',
   },
 ]
+
+const typeLabel = (type: Pet['type']) => {
+  if (type === 'dog') return '狗'
+  if (type === 'cat') return '猫'
+  if (type === 'other') return '其他'
+  return '未设置'
+}
 
 const formatTime = (dateTime: string): string => {
   const date = new Date(dateTime)
@@ -222,13 +309,15 @@ const handleComplete = async (item: typeof timelines.value[0]) => {
   }
 }
 
-
-const handleAction = (action: { route: string }) => {
-  router.push(action.route)
+const loadAIChatCount = () => {
+  const count = localStorage.getItem('ai_chat_count')
+  stats.aiChatCount = count ? parseInt(count, 10) : 0
 }
 
-onMounted(() => {
-  loadReminderExecutions()
+onMounted(async () => {
+  await petStore.loadPets()
+  await loadReminderExecutions()
+  loadAIChatCount()
 })
 </script>
 
@@ -238,124 +327,87 @@ onMounted(() => {
 .dashboard-page {
   position: relative;
   padding: 32px 24px 40px;
-  background: linear-gradient(135deg, rgba(255, 159, 67, 0.2), rgba(84, 160, 255, 0.18)) #fdfaf6;
   min-height: 100vh;
   font-family: vars.$font-family-base;
-}
 
-.hero-panel {
-  position: relative;
-  border-radius: 28px;
-  overflow: hidden;
-  margin-bottom: 24px;
-  box-shadow: 0 25px 60px rgba(255, 159, 67, 0.2);
-  backdrop-filter: blur(6px);
-}
-
-.hero-gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, #ffaf7b, #ffd56f 50%, #ffa5c3);
-  opacity: 0.85;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-  padding: 36px 40px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 28px;
-  color: #fff;
-}
-
-.hero-text {
-  flex: 1 1 320px;
-  min-width: 280px;
-}
-
-.hero-welcome {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 8px;
-
-  .hero-avatar {
-    border: 3px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    background-image: 
+      radial-gradient(circle at 15% 25%, rgba(255, 209, 166, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 85% 75%, rgba(191, 217, 242, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(191, 235, 215, 0.1) 0%, transparent 40%);
+    z-index: 0;
   }
 
-  h1 {
-    margin: 0;
-    font-size: 32px;
-    font-weight: 600;
+  .pet-decorations {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+
+    .pet-emoji {
+      position: absolute;
+      font-size: 48px;
+      opacity: 0.08;
+      animation: petFloat 12s ease-in-out infinite;
+
+      &:nth-child(1) {
+        top: 8%;
+        right: 5%;
+        animation-delay: 0s;
+      }
+
+      &:nth-child(2) {
+        top: 25%;
+        left: 3%;
+        animation-delay: 2s;
+      }
+
+      &:nth-child(3) {
+        bottom: 20%;
+        right: 8%;
+        animation-delay: 4s;
+      }
+
+      &:nth-child(4) {
+        bottom: 35%;
+        left: 5%;
+        animation-delay: 6s;
+      }
+
+      &:nth-child(5) {
+        top: 50%;
+        right: 2%;
+        font-size: 36px;
+        animation-delay: 8s;
+      }
+    }
   }
-}
 
-.hero-subtitle {
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-size: 13px;
-  opacity: 0.8;
-  margin-bottom: 6px;
-}
-
-.hero-desc {
-  margin: 12px 0 16px;
-  max-width: 560px;
-  line-height: 1.6;
-}
-
-.hero-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.hero-cards {
-  flex: 1 1 320px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-}
-
-.hero-card {
-  border-radius: 18px;
-  border: none;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-
-  .label {
-    margin: 0;
-    opacity: 0.8;
+  @keyframes petFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    25% { transform: translate(20px, -25px) rotate(8deg) scale(1.1); }
+    50% { transform: translate(-15px, -35px) rotate(-8deg) scale(0.95); }
+    75% { transform: translate(-20px, -20px) rotate(5deg) scale(1.05); }
   }
-
-  .value {
-    margin: 8px 0 0;
-    font-size: 20px;
-    font-weight: 600;
-  }
-}
-
-.hero-card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  color: #ff9f43;
 }
 
 .content-shell {
-  background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
-  padding: 24px;
+  background: transparent;
   display: flex;
   gap: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .content-shell .el-main {
@@ -364,36 +416,60 @@ onMounted(() => {
 }
 
 .content-shell .el-aside {
-  border-left: 1px solid rgba(0, 0, 0, 0.05);
+  padding-left: 0;
 }
 
-.overview-section,
-.middle-section {
-  margin-bottom: 32px;
+.stats-section,
+.features-section,
+.pets-section {
+  margin-bottom: 24px;
 }
 
-.overview-section:last-of-type,
-.middle-section:last-of-type {
+.stats-section:last-of-type,
+.features-section:last-of-type,
+.pets-section:last-of-type {
   margin-bottom: 0;
 }
 
-.overview-section .el-col,
-.middle-section .el-col {
+.stats-section .el-col {
   display: flex;
 }
 
-.overview-section .el-card,
-.middle-section .el-card {
-  min-height: 180px;
-  border-radius: 20px;
-  border: none;
-  background: #fffaf4;
+.stat-card {
+  min-height: 140px;
+  border-radius: 16px;
   width: 100%;
-}
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 251, 247, 0.95));
 
-.middle-section .el-card {
-  min-height: auto;
-  background: #fff;
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 209, 166, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(255, 138, 76, 0.2);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  .card-title {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .card-title {
@@ -402,6 +478,8 @@ onMounted(() => {
   align-items: center;
   font-weight: 600;
   color: #1f2d3d;
+  margin-bottom: 16px;
+  position: relative;
 }
 
 .card-desc {
@@ -410,132 +488,181 @@ onMounted(() => {
   font-size: 13px;
 }
 
-.badge-wrapper {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 8px;
-}
-
 .section-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   color: #606266;
 
   h3 {
     margin: 0;
     color: #1f2d3d;
+    font-size: 18px;
   }
 }
 
-.action-card,
-.pet-status-card {
-  overflow: visible;
-
-  :deep(.el-card__body) {
-    overflow: visible;
-    padding-bottom: 16px;
-  }
+.features-card {
+  border-radius: 16px;
 }
 
-.action-grid {
+.features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 16px;
 }
 
-.action-item {
-  padding: 18px 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 159, 67, 0.25);
-  background: #fff;
+.feature-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
+  padding: 20px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 247, 0.98));
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
 
-  p {
-    margin: 0;
-    font-weight: 600;
-    color: #303133;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 209, 166, 0.2) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+    border-radius: 50%;
   }
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 35px rgba(255, 159, 67, 0.25);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(255, 138, 76, 0.15);
+
+    &::before {
+      width: 200px;
+      height: 200px;
+    }
+
+    .feature-icon {
+      transform: scale(1.1) rotate(5deg);
+    }
   }
 }
 
-.action-icon {
-  width: 46px;
-  height: 46px;
+.feature-icon {
+  width: 56px;
+  height: 56px;
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
 }
 
-.pet-status-card .pet-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.feature-label {
+  margin: 0;
+  font-weight: 500;
+  font-size: 14px;
+  color: #303133;
+  text-align: center;
 }
 
-.pet-item {
-  cursor: pointer;
-  transition: transform 0.2s ease;
+.pets-card {
   border-radius: 16px;
-  border: 1px solid rgba(255, 159, 67, 0.15);
+}
+
+.pets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.pet-card {
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 247, 0.98));
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '💕';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 20px;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+  }
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(255, 159, 67, 0.2);
-  }
-}
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(255, 138, 76, 0.15);
 
-.pet-header {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 8px;
+    &::after {
+      opacity: 0.6;
+      transform: scale(1);
+    }
 
-  .pet-name {
-    margin: 0;
-    font-weight: 600;
-    small {
-      color: #909399;
-      margin-left: 6px;
+    .pet-avatar {
+      transform: scale(1.1);
     }
   }
-
-  .pet-info {
-    margin: 0;
-    font-size: 12px;
-    color: #909399;
-  }
 }
 
-.pet-health {
+.pet-content {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: #606266;
+  gap: 12px;
+  text-align: center;
+}
+
+.pet-avatar {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.pet-info {
+  flex: 1;
+  min-width: 0;
+
+  h4 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2d3d;
+  }
+
+  p {
+    margin: 4px 0;
+    color: #909399;
+    font-size: 13px;
+  }
+
+  .pet-birthday {
+    color: #606266;
+    font-size: 12px;
+  }
 }
 
 .aside-panel {
-  padding: 16px 0 16px 16px;
+  padding: 0;
 }
 
 .todo-card {
   height: 100%;
   overflow-y: auto;
-  border-radius: 20px;
-  border: none;
-  background: #fff9f5;
+  border-radius: 16px;
 }
 
 .timeline-item {
@@ -592,21 +719,18 @@ onMounted(() => {
     flex-direction: column;
   }
 
-  .content-shell .el-aside {
-    border-left: none;
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-    padding-top: 16px;
-  }
-
-  .hero-content {
-    padding: 28px 24px;
-  }
-
   .aside-panel {
     width: 100% !important;
-    padding-left: 0;
     margin-top: 16px;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+  }
+
+  .pets-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 }
 </style>
-

@@ -1,12 +1,12 @@
 <template>
-  <div class="club-activities-page">
+  <div class="club-activities-page paw-print top-left">
     <el-card shadow="never">
       <template #header>
         <div class="header">
           <div class="title">活动打卡</div>
           <div class="actions">
             <el-button type="primary" :icon="Plus" @click="goCreate">创建活动</el-button>
-            <el-button @click="goSquare">内容广场</el-button>
+            <el-button :icon="Grid" @click="goSquare">内容广场</el-button>
           </div>
         </div>
       </template>
@@ -62,7 +62,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Grid } from '@element-plus/icons-vue'
 import { fetchActivities } from '@/services/activityService'
 import type { Activity } from '@/types/club'
 
@@ -153,60 +153,86 @@ onMounted(reload)
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/pet-theme.scss' as pet;
+
 .club-activities-page {
   padding: 24px;
+  position: relative;
 }
+
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
+  .title {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Comic Sans MS', sans-serif;
+  }
 }
-.title {
-  font-size: 18px;
-  font-weight: 600;
-}
+
 .actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .filters {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 12px;
 }
+
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+
+  @include pet.mobile-up(pet.$pet-breakpoint-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
 .item {
   cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
 }
+
 .item-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
+
 .item-title {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Comic Sans MS', sans-serif;
+  color: #2C3E50;
 }
+
 .item-meta {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .meta-text {
-  color: #909399;
+  color: #7F8C8D;
   font-size: 12px;
 }
+
 .pager {
-  margin-top: 16px;
+  margin-top: 24px;
   display: flex;
   justify-content: center;
 }

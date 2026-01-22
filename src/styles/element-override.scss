@@ -1,0 +1,203 @@
+/**
+ * @description 宠物关怀项目 - Element Plus 样式覆盖（手绘插画风格）
+ * @date 2026-01-21
+ * @author Michael
+ */
+
+@use './pet-theme.scss' as pet;
+
+// ============================================
+// Button 按钮覆盖
+// ============================================
+:deep(.el-button) {
+  border-radius: pet.$pet-radius-sm;
+  border: pet.$pet-border-width solid pet.$pet-border-color;
+  font-weight: 600;
+  transition: all 0.2s ease;
+
+  &.el-button--primary {
+    background: pet.$pet-primary;
+    border-color: pet.$pet-border-color;
+    color: pet.$pet-border-color;
+  }
+
+  &.el-button--success {
+    background: pet.$pet-accent-green;
+    border-color: pet.$pet-border-color;
+    color: pet.$pet-border-color;
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: pet.$pet-shadow-hover;
+  }
+
+  &:active {
+    transform: translate(0, 0);
+  }
+}
+
+// ============================================
+// Card 卡片覆盖
+// ============================================
+:deep(.el-card) {
+  border-radius: pet.$pet-radius-md;
+  border: pet.$pet-border-width solid pet.$pet-border-color;
+  background: pet.$pet-bg-card;
+  box-shadow: pet.$pet-shadow;
+
+  &:hover {
+    box-shadow: pet.$pet-shadow-hover;
+  }
+
+  .el-card__header {
+    background: pet.$pet-secondary;
+    border-bottom: pet.$pet-border-width solid pet.$pet-border-color;
+    border-radius: pet.$pet-radius-md pet.$pet-radius-md 0 0;
+    padding: 16px 20px;
+  }
+
+  .el-card__body {
+    padding: 20px;
+  }
+
+  &[shadow="hover"] {
+    &:hover {
+      box-shadow: pet.$pet-shadow-hover;
+    }
+  }
+}
+
+// ============================================
+// Tag 标签覆盖
+// ============================================
+:deep(.el-tag) {
+  border-radius: pet.$pet-radius-sm;
+  border: pet.$pet-border-width solid pet.$pet-border-color;
+  font-weight: 600;
+  padding: 4px 12px;
+
+  &.el-tag--success {
+    background: pet.$pet-accent-green;
+    border-color: pet.$pet-border-color;
+    color: pet.$pet-border-color;
+  }
+
+  &.el-tag--warning {
+    background: pet.$pet-accent-yellow;
+    border-color: pet.$pet-border-color;
+    color: pet.$pet-border-color;
+  }
+
+  &.el-tag--info {
+    background: pet.$pet-accent-blue;
+    border-color: pet.$pet-border-color;
+    color: pet.$pet-border-color;
+  }
+}
+
+// ============================================
+// Input 输入框覆盖
+// ============================================
+:deep(.el-input__wrapper) {
+  border-radius: pet.$pet-radius-sm;
+  border: pet.$pet-border-width solid #BDC3C7;
+  box-shadow: none;
+  transition: all 0.2s ease;
+
+  &.is-focus {
+    border-color: pet.$pet-primary;
+  }
+}
+
+:deep(.el-textarea__inner) {
+  border-radius: pet.$pet-radius-sm;
+  border: pet.$pet-border-width solid #BDC3C7;
+  box-shadow: none;
+
+  &:focus {
+    border-color: pet.$pet-primary;
+  }
+}
+
+// ============================================
+// Select 选择器覆盖
+// ============================================
+:deep(.el-select__wrapper) {
+  border-radius: pet.$pet-radius-sm;
+  border: pet.$pet-border-width solid #BDC3C7;
+  box-shadow: none;
+
+  &.is-focus {
+    border-color: pet.$pet-primary;
+  }
+}
+
+// ============================================
+// Form 表单覆盖
+// ============================================
+:deep(.el-form-item__label) {
+  font-family: 'Comic Sans MS', 'Helvetica Neue', Helvetica, 'PingFang SC', sans-serif;
+  font-weight: 600;
+  color: pet.$pet-border-color;
+}
+
+:deep(.el-form-item__required) {
+  color: pet.$pet-primary;
+}
+
+// ============================================
+// Empty 空状态覆盖
+// ============================================
+:deep(.el-empty) {
+  .el-empty__image {
+    svg {
+      filter: drop-shadow(2px 2px 0 rgba(255, 159, 67, 0.3));
+    }
+  }
+
+  .el-empty__description {
+    color: #7F8C8D;
+    font-family: 'Comic Sans MS', sans-serif;
+  }
+}
+
+// ============================================
+// Menu 菜单覆盖
+// ============================================
+:deep(.el-menu) {
+  border: none;
+}
+
+// ============================================
+// Dropdown 下拉菜单覆盖
+// ============================================
+:deep(.el-dropdown-menu) {
+  border-radius: pet.$pet-radius-md;
+  border: pet.$pet-border-width solid pet.$pet-border-color;
+  box-shadow: pet.$pet-shadow;
+
+  .el-dropdown-menu__item {
+    border-radius: pet.$pet-radius-sm;
+
+    &:hover {
+      background: pet.$pet-secondary;
+    }
+  }
+}
+
+// ============================================
+// Avatar 头像覆盖
+// ============================================
+:deep(.el-avatar) {
+  border: pet.$pet-border-width solid pet.$pet-border-color;
+}
+
+// ============================================
+// Skeleton 骨架屏覆盖
+// ============================================
+:deep(.el-skeleton) {
+  .el-skeleton__item {
+    border-radius: pet.$pet-radius-sm;
+  }
+}

@@ -70,7 +70,7 @@ const router = createRouter({
       meta: {
         title: '内容广场 - 宠物关怀系统',
         menu: {
-          title: '俱乐部',
+          title: '社区',
           icon: 'MagicStick',
           order: 6,
         },
@@ -139,9 +139,7 @@ const router = createRouter({
       meta: {
         title: '文档管理 - 宠物关怀系统',
         menu: {
-          title: '文档管理',
-          icon: 'Document',
-          order: 5,
+          hidden: true,
         },
       },
     },
@@ -150,9 +148,9 @@ const router = createRouter({
       name: 'ai-rag-chat',
       component: () => import('@/views/ai/RAGChat.vue'),
       meta: {
-        title: 'RAG智能问答 - 宠物关怀系统',
+        title: 'AI助手 - 宠物关怀系统',
         menu: {
-          title: 'RAG智能问答',
+          title: 'AI助手',
           icon: 'ChatDotRound',
           order: 4,
         },
@@ -184,7 +182,7 @@ const router = createRouter({
     // 钱包模块已移除（Wallet.vue 文件保留但不再使用）
     // 商城模块已移除（购物车、订单、优惠券等功能已废弃）
     // 服务订单模块已移除（ServiceOrders.vue 文件保留但不再使用）
-    // 旧社区模块已移除（专家、圈子、问答等功能已废弃，已由俱乐部模块替代）
+    // 旧社区模块已移除（专家、圈子、问答等功能已废弃，已由社区模块替代）
     {
       path: '/reminder',
       name: 'reminder',

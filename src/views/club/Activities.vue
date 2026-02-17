@@ -1,60 +1,73 @@
 <template>
-  <div class="club-activities-page paw-print top-left">
-    <el-card shadow="never">
-      <template #header>
-        <div class="header">
-          <div class="title">活动打卡</div>
-          <div class="actions">
-            <el-button type="primary" :icon="Plus" @click="goCreate">创建活动</el-button>
-            <el-button :icon="Grid" @click="goSquare">内容广场</el-button>
-          </div>
-        </div>
-      </template>
-
-      <div class="filters">
-        <el-select v-model="query.status" placeholder="状态" clearable style="width: 160px" @change="reload">
-          <el-option label="招募中" :value="1" />
-          <el-option label="进行中" :value="2" />
-          <el-option label="已结束" :value="3" />
-        </el-select>
-        <el-select v-model="query.activityType" placeholder="类型" clearable style="width: 160px" @change="reload">
-          <el-option label="线上活动" :value="1" />
-          <el-option label="线下聚会" :value="2" />
-        </el-select>
+  <div class="activities-page">
+    <!-- 顶部操作栏 -->
+    <div class="page-header">
+      <h1>活动</h1>
+      <div class="header-actions">
+        <el-button type="primary" @click="goSquare">社区</el-button>
+        <el-button type="primary" :icon="Plus" @click="goCreate">发布</el-button>
       </div>
+    </div>
 
-      <div class="list">
-        <el-empty v-if="!loading && activities.length === 0" description="暂无活动" />
-        <el-card
-          v-for="a in activities"
-          :key="String(a.id)"
-          class="item"
-          shadow="hover"
-          @click="goDetail(a.id)"
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-tabs">
+        <span
+          v-for="tab in statusTabs"
+          :key="tab.value"
+          class="filter-tab"
+          :class="{ active: query.status === tab.value }"
+          @click="setStatus(tab.value)"
         >
-          <div class="item-top">
-            <div class="item-title">{{ a.title }}</div>
-            <el-tag :type="statusType(a.status)" size="small">
-              {{ statusLabel(a.status) }}
-            </el-tag>
-          </div>
-          <div class="item-meta">
-            <span class="meta-text">{{ typeLabel(a.activityType) }}</span>
-            <span class="meta-text">时间：{{ formatTime(a.activityTime) }}</span>
-            <span class="meta-text" v-if="a.currentParticipants !== undefined">
-              参与：{{ a.currentParticipants }}{{ a.maxParticipants ? `/${a.maxParticipants}` : '' }}
-            </span>
-            <span class="meta-text" v-if="a.checkInCount !== undefined">打卡：{{ a.checkInCount }}</span>
-          </div>
-        </el-card>
+          {{ tab.label }}
+        </span>
       </div>
 
-      <div class="pager">
-        <el-button :loading="loading" :disabled="noMore" @click="loadMore">
-          {{ noMore ? '没有更多了' : '加载更多' }}
-        </el-button>
+      <el-select v-model="query.activityType" placeholder="类型" clearable class="filter-select" @change="reload">
+        <el-option label="全部" :value="undefined" />
+        <el-option label="线上活动" :value="1" />
+        <el-option label="线下聚会" :value="2" />
+      </el-select>
+    </div>
+
+    <!-- 活动列表 -->
+    <div class="activities-grid" v-loading="loading">
+      <div
+        v-for="a in activities"
+        :key="String(a.id)"
+        class="activity-card"
+        @click="goDetail(a.id)"
+      >
+        <div class="card-top">
+          <h3 class="card-title">{{ a.title }}</h3>
+          <span class="status-tag" :class="'status-' + a.status">
+            {{ statusLabel(a.status) }}
+          </span>
+        </div>
+        <div class="card-meta">
+          <span class="meta-text">{{ typeLabel(a.activityType) }}</span>
+          <span class="meta-text">时间：{{ formatTime(a.activityTime) }}</span>
+          <span class="meta-text" v-if="a.currentParticipants !== undefined">
+            参与：{{ a.currentParticipants }}{{ a.maxParticipants ? `/${a.maxParticipants}` : '' }}
+          </span>
+          <span class="meta-text" v-if="a.checkInCount !== undefined">打卡：{{ a.checkInCount }}</span>
+        </div>
       </div>
-    </el-card>
+    </div>
+
+    <!-- 加载更多 -->
+    <div class="load-more" v-if="!loading && activities.length > 0">
+      <el-button v-if="!noMore" @click="loadMore">加载更多</el-button>
+      <span v-else class="no-more">没有更多了</span>
+    </div>
+
+    <!-- 空状态 -->
+    <div v-if="!loading && activities.length === 0" class="empty-state">
+      <div class="empty-icon">📅</div>
+      <h3>暂无活动</h3>
+      <p>来发布第一个活动吧</p>
+      <el-button type="primary" @click="goCreate">发布活动</el-button>
+    </div>
   </div>
 </template>
 
@@ -62,15 +75,22 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus, Grid } from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
 import { fetchActivities } from '@/services/activityService'
 import type { Activity } from '@/types/club'
 
 const router = useRouter()
 
+const statusTabs = [
+  { label: '招募中', value: 1 },
+  { label: '进行中', value: 2 },
+  { label: '已结束', value: 3 },
+]
+
 const query = ref<{ status?: number; activityType?: number; pageNumber: number; pageSize: number }>({
+  status: 1,
   pageNumber: 1,
-  pageSize: 10,
+  pageSize: 20,
 })
 
 const activities = ref<Activity[]>([])
@@ -84,13 +104,6 @@ const statusLabel = (s?: number) => {
   return '未知'
 }
 
-const statusType = (s?: number) => {
-  if (s === 1) return 'success'
-  if (s === 2) return 'warning'
-  if (s === 3) return 'info'
-  return 'info'
-}
-
 const typeLabel = (t: number) => {
   if (t === 1) return '线上活动'
   if (t === 2) return '线下聚会'
@@ -102,6 +115,11 @@ const formatTime = (v?: string) => {
   const d = new Date(v)
   if (Number.isNaN(d.getTime())) return v
   return d.toLocaleString('zh-CN')
+}
+
+const setStatus = (value: number | undefined) => {
+  query.value.status = value
+  reload()
 }
 
 const load = async (append: boolean) => {
@@ -153,89 +171,232 @@ onMounted(reload)
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/variables.scss' as vars;
 @use '@/styles/pet-theme.scss' as pet;
+@use '@/styles/animations.scss' as anim;
 
-.club-activities-page {
-  padding: 24px;
-  position: relative;
+.activities-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 24px;
 }
 
-.header {
+// 顶部操作栏
+.page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  margin-bottom: 20px;
 
-  .title {
-    font-size: 20px;
+  h1 {
+    margin: 0;
+    font-size: 24px;
     font-weight: 700;
-    font-family: 'Comic Sans MS', sans-serif;
+    color: vars.$pet-charcoal;
   }
 }
 
-.actions {
+.header-actions {
   display: flex;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
-.filters {
+// 筛选栏
+.filter-bar {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-.list {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr;
-
-  @include pet.mobile-up(pet.$pet-breakpoint-md) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.filter-tabs {
+  display: flex;
+  gap: 8px;
 }
 
-.item {
+.filter-tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: pet.$pet-warm-gray;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-4px);
+    color: vars.$pet-charcoal;
+    background: #F5F0E8;
+  }
+
+  &.active {
+    color: #fff;
+    background: pet.$pet-primary;
   }
 }
 
-.item-top {
+:deep(.filter-select) {
+  width: 140px;
+}
+
+// 活动列表 3列
+.activities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.activity-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  @include anim.anim-standard;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-.item-title {
-  font-size: 16px;
-  font-weight: 700;
-  font-family: 'Comic Sans MS', sans-serif;
-  color: #2C3E50;
+.card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: vars.$pet-charcoal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
-.item-meta {
+.status-tag {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  flex-shrink: 0;
+
+  &.status-1 {
+    background: rgba(129, 178, 154, 0.2);
+    color: #81B29A;
+  }
+
+  &.status-2 {
+    background: rgba(242, 204, 143, 0.3);
+    color: #B8860B;
+  }
+
+  &.status-3 {
+    background: #F5F0E8;
+    color: pet.$pet-warm-gray;
+  }
+}
+
+.card-meta {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
 .meta-text {
-  color: #7F8C8D;
+  color: pet.$pet-warm-gray;
   font-size: 12px;
 }
 
-.pager {
-  margin-top: 24px;
+// 加载更多
+.load-more {
   display: flex;
   justify-content: center;
+  padding: 24px 0;
+}
+
+.no-more {
+  color: pet.$pet-warm-gray;
+  font-size: 14px;
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: vars.$pet-charcoal;
+  }
+
+  p {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: pet.$pet-warm-gray;
+  }
+}
+
+// 响应式
+@media (max-width: 768px) {
+  .activities-page {
+    padding: 12px 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    h1 {
+      font-size: 20px;
+    }
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+
+    .filter-tabs {
+      justify-content: center;
+    }
+
+    :deep(.filter-select) {
+      width: 100%;
+    }
+  }
+
+  .activities-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .activities-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
-
-

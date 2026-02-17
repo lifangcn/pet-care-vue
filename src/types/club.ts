@@ -1,17 +1,5 @@
 export type PostType = 1 | 2 | 3 | 4 | 5
 
-export interface PostMediaItem {
-  url: string
-  type?: 1 | 2
-  thumbnail?: string
-}
-
-export interface LocationInfo {
-  address?: string
-  city?: string
-  district?: string
-}
-
 export interface Label {
   id: string | number
   name: string
@@ -29,9 +17,9 @@ export interface Post {
   title?: string
   content?: string
   postType: PostType
-  mediaUrls?: PostMediaItem[] | string
+  mediaUrls?: string[]
   externalLink?: string
-  locationInfo?: LocationInfo | string
+  locationAddress?: string
   priceRange?: string
   likeCount?: number
   userRatingValue?: number
@@ -57,9 +45,9 @@ export interface CreatePostPayload {
   title?: string
   content?: string
   postType: PostType
-  mediaUrls?: PostMediaItem[]
+  mediaUrls?: string[]
   externalLink?: string
-  locationInfo?: LocationInfo
+  locationAddress?: string
   priceRange?: string
   labelIds?: Array<string | number>
   activityId?: string | number

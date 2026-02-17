@@ -132,7 +132,7 @@ export const usePetStore = defineStore('pet', {
      */
     async deletePet(id: string | number) {
       try {
-        // [API调用] POST /pet/remove/{id} - 删除宠物
+        // [API调用] DELETE /pet/remove/{id} - 删除宠物
         await removePet(id)
         this.pets = this.pets.filter((pet) => String(pet.id) !== String(id))
         ElMessage.success('删除宠物成功')

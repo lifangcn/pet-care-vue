@@ -66,11 +66,11 @@
               v-model="checkInMediaText"
               type="textarea"
               :rows="2"
-              placeholder="媒体URL（每行一个）。如需上传文件，请后端提供上传接口后再接入。"
+              placeholder="图片/视频链接（每行一个）"
               style="margin-top: 10px"
             />
             <div style="margin-top: 10px">
-              <el-button type="primary" :loading="checkInLoading" @click="handleCheckIn">提交打卡</el-button>
+              <el-button type="primary" :loading="checkInLoading" @click="handleCheckIn">打卡</el-button>
             </div>
           </div>
         </div>

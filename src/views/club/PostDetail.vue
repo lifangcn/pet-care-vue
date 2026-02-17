@@ -14,15 +14,15 @@
         <div class="post-title">{{ post?.title || '-' }}</div>
         <div class="post-meta">
           <el-tag size="small" effect="plain">{{ typeLabel(post?.postType) }}</el-tag>
-          <span v-if="city" class="meta-text">{{ city }}</span>
+          <span v-if="locationAddress" class="meta-text">{{ locationAddress }}</span>
           <span class="meta-text">{{ formatTime(post?.createdAt) }}</span>
         </div>
 
         <div v-if="mediaList.length" class="media">
           <el-carousel height="260px" indicator-position="outside">
             <el-carousel-item v-for="(m, idx) in mediaList" :key="idx">
-              <img v-if="!isVideo(m.url)" :src="m.url" class="media-img" />
-              <video v-else class="media-video" controls :src="m.url" />
+              <img v-if="!isVideo(m)" :src="m" class="media-img" />
+              <video v-else class="media-video" controls :src="m" />
             </el-carousel-item>
           </el-carousel>
         </div>
@@ -61,7 +61,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { fetchPostById, likePost, ratePost } from '@/services/postService'
-import type { Label, Post, PostMediaItem } from '@/types/club'
+import type { Label, Post } from '@/types/club'
 
 const route = useRoute()
 const router = useRouter()
@@ -84,7 +84,7 @@ const parseMaybeJson = (v: any) => {
   return null
 }
 
-const mediaList = computed<PostMediaItem[]>(() => {
+const mediaList = computed<string[]>(() => {
   const raw: any = (post.value as any)?.mediaUrls
   const obj = parseMaybeJson(raw)
   if (Array.isArray(obj)) return obj
@@ -97,9 +97,8 @@ const labels = computed<Label[]>(() => {
   return []
 })
 
-const city = computed(() => {
-  const obj: any = parseMaybeJson((post.value as any)?.locationInfo)
-  return obj?.city || ''
+const locationAddress = computed(() => {
+  return (post.value as any)?.locationAddress || ''
 })
 
 const typeLabel = (t?: number) => {

@@ -363,6 +363,7 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 @use '@/styles/variables.scss' as vars;
+@use '@/styles/pet-theme.scss' as pet;
 
 .health-check-page {
   padding: 24px;
@@ -438,7 +439,7 @@ onMounted(async () => {
 
     .analysis-icon {
       margin-bottom: 24px;
-      color: vars.$pet-color-blue;
+      color: pet.$pet-primary;
     }
 
     h3 {
@@ -468,7 +469,7 @@ onMounted(async () => {
 
         &.active {
           opacity: 1;
-          color: vars.$pet-color-blue;
+          color: pet.$pet-primary;
           font-weight: 600;
         }
       }
@@ -524,7 +525,7 @@ onMounted(async () => {
       color: #1f2d3d;
 
       .el-icon {
-        color: vars.$pet-color-blue;
+        color: pet.$pet-primary;
       }
     }
 

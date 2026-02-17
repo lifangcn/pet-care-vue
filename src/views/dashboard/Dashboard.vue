@@ -1,142 +1,150 @@
 <template>
-  <div class="dashboard-page">
-    <div class="pet-decorations">
-      <span class="pet-emoji">🐶</span>
-      <span class="pet-emoji">🐱</span>
-      <span class="pet-emoji">🐰</span>
-      <span class="pet-emoji">🐹</span>
-    </div>
-    <el-container class="content-shell">
-      <el-main>
-        <section class="stats-section">
-          <el-row :gutter="16">
-            <el-col :xs="24" :sm="12" :lg="6">
-              <el-card shadow="hover" class="stat-card" @click="router.push('/pets')">
-                <div class="card-title">
-                  <span>我的宠物</span>
-                  <el-icon :size="20"><Avatar /></el-icon>
-                </div>
-                <el-statistic :value="petCount" suffix="只" />
-                <p class="card-desc">点击查看详情</p>
-              </el-card>
-            </el-col>
-            <el-col :xs="24" :sm="12" :lg="6">
-              <el-card shadow="hover" class="stat-card" @click="router.push('/reminder')">
-                <div class="card-title">
-                  <span>今日待办</span>
-                  <el-icon :size="20"><BellFilled /></el-icon>
-                </div>
-                <el-statistic :value="stats.todos" suffix="项" />
-                <p class="card-desc">点击查看提醒</p>
-              </el-card>
-            </el-col>
-            <el-col :xs="24" :sm="12" :lg="6">
-              <el-card shadow="hover" class="stat-card" @click="router.push('/club/posts')">
-                <div class="card-title">
-                  <span>内容广场</span>
-                  <el-icon :size="20"><ChatDotRound /></el-icon>
-                </div>
-                <el-statistic :value="0" suffix="条" />
-                <p class="card-desc">点击查看动态</p>
-              </el-card>
-            </el-col>
-            <el-col :xs="24" :sm="12" :lg="6">
-              <el-card shadow="hover" class="stat-card" @click="router.push('/ai/rag-chat')">
-                <div class="card-title">
-                  <span>AI问答</span>
-                  <el-icon :size="20"><MagicStick /></el-icon>
-                </div>
-                <el-statistic :value="stats.aiChatCount" suffix="次" />
-                <p class="card-desc">点击开始对话</p>
-              </el-card>
-            </el-col>
-          </el-row>
-        </section>
-
-        <section class="features-section">
-          <el-card shadow="hover" class="features-card">
-            <div class="section-title">
-              <h3>功能入口</h3>
+  <div class="home-page">
+    <div class="home-container">
+      <!-- 顶部欢迎条 -->
+      <div class="welcome-bar">
+        <div class="welcome-text">
+          <h1>{{ greeting }}</h1>
+          <p>{{ greetingSub }}</p>
+        </div>
+        <div class="welcome-stats">
+          <div class="mini-stat" @click="router.push('/pets')">
+            <span class="mini-stat-icon">🐕</span>
+            <div class="mini-stat-text">
+              <strong>{{ recentPets.length }}</strong>
+              <span>毛孩子</span>
             </div>
-            <div class="features-grid">
-              <div
-                v-for="feature in features"
-                :key="feature.route"
-                class="feature-item"
-                @click="router.push(feature.route)"
-              >
-                <div class="feature-icon" :style="{ background: feature.bg, color: feature.color }">
-                  <el-icon :size="28"><component :is="feature.icon" /></el-icon>
-                </div>
-                <p class="feature-label">{{ feature.label }}</p>
+          </div>
+          <div class="mini-stat" @click="router.push('/reminder')">
+            <span class="mini-stat-icon">📋</span>
+            <div class="mini-stat-text">
+              <strong>{{ timelines.length }}</strong>
+              <span>今日待办</span>
+            </div>
+          </div>
+          <div class="mini-stat" @click="router.push('/profile')">
+            <span class="mini-stat-icon">⭐</span>
+            <div class="mini-stat-text">
+              <strong>{{ pointsStore.availablePoints }}</strong>
+              <span>{{ pointsStore.level.title }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主内容流 -->
+      <div class="content-flow">
+        <!-- 宠物卡片区域 -->
+        <section v-if="recentPets.length > 0" class="flow-section">
+          <div class="section-header">
+            <h2>我的毛孩子</h2>
+            <router-link to="/pets" class="view-all">全部 →</router-link>
+          </div>
+
+          <div class="pets-grid">
+            <div
+              v-for="pet in recentPets"
+              :key="pet.id"
+              class="pet-card"
+              @click="router.push(`/pet/${pet.id}`)"
+            >
+              <div class="pet-image">
+                <img :src="pet.avatar || '/default-pet.png'" :alt="pet.name" @error="handleImageError" />
+              </div>
+              <div class="pet-info">
+                <h3>{{ pet.name }}</h3>
+                <p>{{ pet.breed || '毛孩子' }}</p>
               </div>
             </div>
-          </el-card>
-        </section>
-
-        <section v-if="recentPets.length > 0" class="pets-section">
-          <el-card shadow="hover" class="pets-card">
-            <div class="section-title">
-              <h3>我的宠物</h3>
-              <el-button text type="primary" @click="router.push('/pets')">查看全部</el-button>
-            </div>
-            <div class="pets-grid">
-              <el-card
-                v-for="pet in recentPets"
-                :key="pet.id"
-                class="pet-card"
-                shadow="hover"
-                @click="router.push(`/pet/${pet.id}`)"
-              >
-                <div class="pet-content">
-                  <el-avatar :size="64" :src="pet.avatar || ''" class="pet-avatar">
-                    <el-icon><Avatar /></el-icon>
-                  </el-avatar>
-                  <div class="pet-info">
-                    <h4>{{ pet.name }}</h4>
-                    <p>{{ pet.breed || '未设置品种' }} · {{ typeLabel(pet.type) }}</p>
-                    <p v-if="pet.birthday" class="pet-birthday">生日：{{ pet.birthday }}</p>
-                  </div>
-                </div>
-              </el-card>
-            </div>
-          </el-card>
-        </section>
-      </el-main>
-
-      <el-aside width="320px" class="aside-panel">
-        <el-card shadow="hover" class="todo-card">
-          <div class="section-title">
-            <h3>待办提醒</h3>
-            <span>按时间排序</span>
           </div>
-          <el-empty v-if="timelines.length === 0" description="暂无待办提醒" :image-size="80" />
-          <el-timeline v-else>
-            <el-timeline-item
+        </section>
+
+        <section v-else class="empty-state">
+          <div class="empty-icon">🐾</div>
+          <h2>还没有添加宠物</h2>
+          <p>快来添加你的第一个毛孩子吧</p>
+          <el-button type="primary" :icon="Plus" @click="router.push('/pets')">
+            添加宠物
+          </el-button>
+        </section>
+
+        <!-- 今日提醒区域 -->
+        <section v-if="timelines.length > 0" class="flow-section">
+          <div class="section-header">
+            <h2>今日提醒</h2>
+            <span class="reminder-count">{{ timelines.length }}项待办</span>
+          </div>
+
+          <div class="reminders-list">
+            <div
               v-for="item in timelines"
               :key="item.id"
-              :timestamp="item.time"
-              :type="item.type"
+              class="reminder-item"
+              :class="{ done: item.completed }"
             >
-              <div class="timeline-item">
-                <div class="timeline-content">
-                  <div class="timeline-header">
-                    <el-avatar v-if="item.petAvatar" :src="item.petAvatar" :size="32" class="pet-avatar" />
-                    <el-avatar v-else :size="32" class="pet-avatar">{{ item.petName?.charAt(0) || '?' }}</el-avatar>
-                    <div class="timeline-text">
-                      <p class="title">{{ item.title }}</p>
-                      <p class="desc">{{ item.desc }}</p>
-                      <p v-if="item.petName" class="pet-name">{{ item.petName }}</p>
-                    </div>
-                  </div>
-                </div>
-                <el-checkbox :model-value="item.completed" :disabled="item.completed" @change="() => handleComplete(item)">完成</el-checkbox>
+              <div class="reminder-checkbox">
+                <el-checkbox
+                  :model-value="item.completed"
+                  :disabled="item.completed"
+                  @change="() => handleComplete(item)"
+                />
               </div>
-            </el-timeline-item>
-          </el-timeline>
-        </el-card>
-      </el-aside>
-    </el-container>
+              <div class="reminder-time">{{ item.time }}</div>
+              <div class="reminder-content">
+                <p class="reminder-title">{{ item.title }}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 快捷操作 -->
+        <section class="quick-actions">
+          <router-link to="/club/posts" class="action-card">
+            <span class="action-icon">💬</span>
+            <div class="action-text">
+              <strong>发布动态</strong>
+              <span>分享毛孩子的日常</span>
+            </div>
+            <span class="action-arrow">→</span>
+          </router-link>
+          <!-- <router-link to="/ai/health-check" class="action-card">
+            <span class="action-icon">🏥</span>
+            <div class="action-text">
+              <strong>健康记录</strong>
+              <span>记录成长点滴</span>
+            </div>
+            <span class="action-arrow">→</span>
+          </router-link> -->
+        </section>
+
+        <!-- 社区动态 -->
+        <section v-if="communityPosts.length > 0" class="flow-section">
+          <div class="section-header">
+            <h2>社区</h2>
+            <router-link to="/club/posts" class="view-all">更多 →</router-link>
+          </div>
+
+          <div class="community-list">
+            <div
+              v-for="post in communityPosts"
+              :key="post.id"
+              class="community-item"
+              @click="router.push(`/club/posts/${post.id}`)"
+            >
+              <div class="community-content">
+                <p class="community-title">{{ post.title || post.content?.slice(0, 50) + '...' }}</p>
+                <div class="community-meta">
+                  <span class="meta-time">{{ formatPostTime(post.createdAt) }}</span>
+                  <span class="meta-likes" v-if="post.likeCount !== undefined">
+                    <span>👍</span> {{ post.likeCount }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -144,104 +152,71 @@
 import { reactive, computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import {
-  BellFilled,
-  Avatar,
-  MagicStick,
-  ChatDotRound,
-  Document,
-  FirstAidKit,
-  Flag,
-} from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
 import { usePetStore } from '@/store/pet'
+import { usePointsStore } from '@/store/points'
 import { fetchReminderExecutions, completeReminderExecution } from '@/services/petService'
-import type { ReminderExecution, Pet } from '@/types/pet'
+import { fetchPosts } from '@/services/postService'
+import type { ReminderExecution } from '@/types/pet'
+import type { Post } from '@/types/club'
 
 const router = useRouter()
 const petStore = usePetStore()
+const pointsStore = usePointsStore()
 
-const stats = reactive({
-  todos: 0,
-  aiChatCount: 0,
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 6) return '夜深了'
+  if (hour < 9) return '早安'
+  if (hour < 12) return '上午好'
+  if (hour < 14) return '中午好'
+  if (hour < 18) return '下午好'
+  if (hour < 22) return '晚上好'
+  return '夜深了'
 })
 
-const petCount = computed(() => petStore.pets.length)
-const recentPets = computed(() => petStore.pets.slice(0, 4))
+const greetingSub = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 6) return '注意休息，明天见'
+  if (hour < 9) return '新的一天，记得照顾毛孩子'
+  if (hour < 12) return '忙碌的早晨，别忘了它们'
+  if (hour < 14) return '吃过午饭了吗？'
+  if (hour < 18) return '下午加油，毛孩子在家等你'
+  if (hour < 22) return '下班了，好好陪陪它们'
+  return '早点休息，晚安'
+})
+
+const recentPets = computed(() => petStore.pets.slice(0, 6))
 
 const timelines = ref<Array<{
   id: string | number
   time: string
   title: string
-  desc: string
-  petName?: string | null
   petAvatar?: string | null
-  type: 'primary' | 'success' | 'warning' | 'info' | 'danger'
   completed: boolean
   execution: ReminderExecution
 }>>([])
 
-const features = [
-  {
-    label: '宠物管理',
-    icon: Avatar,
-    route: '/pets',
-    color: '#FF8A4C',
-    bg: 'rgba(255, 138, 76, 0.15)',
-  },
-  {
-    label: '提醒管理',
-    icon: BellFilled,
-    route: '/reminder',
-    color: '#FF6B9C',
-    bg: 'rgba(255, 107, 156, 0.15)',
-  },
-  {
-    label: '内容广场',
-    icon: ChatDotRound,
-    route: '/club/posts',
-    color: '#54A0FF',
-    bg: 'rgba(84, 160, 255, 0.15)',
-  },
-  {
-    label: '活动打卡',
-    icon: Flag,
-    route: '/club/activities',
-    color: '#1DD1A1',
-    bg: 'rgba(29, 209, 161, 0.15)',
-  },
-  {
-    label: 'AI健康检查',
-    icon: FirstAidKit,
-    route: '/ai/health-check',
-    color: '#BFD9F2',
-    bg: 'rgba(191, 217, 242, 0.15)',
-  },
-  {
-    label: 'AI助手',
-    icon: MagicStick,
-    route: '/ai/rag-chat',
-    color: '#D7CCFF',
-    bg: 'rgba(215, 204, 255, 0.15)',
-  },
-  {
-    label: '文档管理',
-    icon: Document,
-    route: '/ai/documents',
-    color: '#FFF0B8',
-    bg: 'rgba(255, 240, 184, 0.15)',
-  },
-]
-
-const typeLabel = (type: Pet['type']) => {
-  if (type === 'dog') return '狗'
-  if (type === 'cat') return '猫'
-  if (type === 'other') return '其他'
-  return '未设置'
-}
+const communityPosts = ref<Post[]>([])
 
 const formatTime = (dateTime: string): string => {
   const date = new Date(dateTime)
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
+const formatPostTime = (dateTime?: string): string => {
+  if (!dateTime) return ''
+  const date = new Date(dateTime)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+
+  if (minutes < 60) return `${minutes}分钟前`
+  if (hours < 24) return `${hours}小时前`
+  if (days < 7) return `${days}天前`
+  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
 const formatDateTime = (date: Date): string => {
@@ -252,12 +227,6 @@ const formatDateTime = (date: Date): string => {
   const minutes = String(date.getMinutes()).padStart(2, '0')
   const seconds = String(date.getSeconds()).padStart(2, '0')
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
-}
-
-const getTimelineType = (status: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => {
-  if (status === 'COMPLETED') return 'success'
-  if (status === 'OVERDUE') return 'danger'
-  return 'primary'
 }
 
 const loadReminderExecutions = async () => {
@@ -272,27 +241,22 @@ const loadReminderExecutions = async () => {
       startTime: formatDateTime(today),
       endTime: formatDateTime(tomorrow),
       pageNumber: 1,
-      pageSize: 10,
+      pageSize: 5,
     })
 
     const executions = res.data?.records || []
-    stats.todos = executions.length
-
     timelines.value = executions.map((execution) => ({
       id: execution.id,
       time: formatTime(execution.scheduleTime),
-      title: execution.reminderTitle || `提醒执行 #${execution.id}`,
-      desc: execution.reminderDescription || execution.completionNotes || '待处理提醒事项',
-      petName: execution.petName,
+      title: execution.reminderTitle || `提醒 #${execution.id}`,
       petAvatar: execution.petAvatar,
-      type: getTimelineType(execution.status),
       completed: execution.status === 'COMPLETED',
       execution,
     })).sort((a, b) => {
       return new Date(a.execution.scheduleTime).getTime() - new Date(b.execution.scheduleTime).getTime()
     })
   } catch (error) {
-    console.error('加载待办提醒失败:', error)
+    console.error('加载提醒失败:', error)
   }
 }
 
@@ -301,436 +265,504 @@ const handleComplete = async (item: typeof timelines.value[0]) => {
   try {
     await completeReminderExecution(item.id)
     item.completed = true
-    item.type = 'success'
-    stats.todos = Math.max(0, stats.todos - 1)
     ElMessage.success('已完成')
+    timelines.value = timelines.value.filter(t => t.id !== item.id)
   } catch (error) {
     ElMessage.error('操作失败')
   }
 }
 
-const loadAIChatCount = () => {
-  const count = localStorage.getItem('ai_chat_count')
-  stats.aiChatCount = count ? parseInt(count, 10) : 0
+const loadCommunityPosts = async () => {
+  try {
+    const res = await fetchPosts({
+      sort: 'latest',
+      pageNumber: 1,
+      pageSize: 5,
+    })
+    communityPosts.value = res.data?.records || []
+  } catch (error) {
+    console.error('加载社区动态失败:', error)
+  }
+}
+
+const handleImageError = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  img.src = 'data:image/svg+xml,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <rect fill="#F5F0E8" width="100" height="100"/>
+      <text x="50" y="55" font-size="40" text-anchor="middle" fill="#CCC">🐾</text>
+    </svg>
+  `)
 }
 
 onMounted(async () => {
   await petStore.loadPets()
+  pointsStore.fetchAccount()
   await loadReminderExecutions()
-  loadAIChatCount()
+  await loadCommunityPosts()
 })
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/variables.scss' as vars;
+@use '@/styles/pet-theme.scss' as pet;
+@use '@/styles/animations.scss' as anim;
 
-.dashboard-page {
-  position: relative;
-  padding: 32px 24px 40px;
-  min-height: 100vh;
-  font-family: vars.$font-family-base;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    background-image: 
-      radial-gradient(circle at 15% 25%, rgba(255, 209, 166, 0.12) 0%, transparent 40%),
-      radial-gradient(circle at 85% 75%, rgba(191, 217, 242, 0.12) 0%, transparent 40%),
-      radial-gradient(circle at 50% 50%, rgba(191, 235, 215, 0.1) 0%, transparent 40%);
-    z-index: 0;
-  }
-
-  .pet-decorations {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-
-    .pet-emoji {
-      position: absolute;
-      font-size: 48px;
-      opacity: 0.08;
-      animation: petFloat 12s ease-in-out infinite;
-
-      &:nth-child(1) {
-        top: 8%;
-        right: 5%;
-        animation-delay: 0s;
-      }
-
-      &:nth-child(2) {
-        top: 25%;
-        left: 3%;
-        animation-delay: 2s;
-      }
-
-      &:nth-child(3) {
-        bottom: 20%;
-        right: 8%;
-        animation-delay: 4s;
-      }
-
-      &:nth-child(4) {
-        bottom: 35%;
-        left: 5%;
-        animation-delay: 6s;
-      }
-
-      &:nth-child(5) {
-        top: 50%;
-        right: 2%;
-        font-size: 36px;
-        animation-delay: 8s;
-      }
-    }
-  }
-
-  @keyframes petFloat {
-    0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
-    25% { transform: translate(20px, -25px) rotate(8deg) scale(1.1); }
-    50% { transform: translate(-15px, -35px) rotate(-8deg) scale(0.95); }
-    75% { transform: translate(-20px, -20px) rotate(5deg) scale(1.05); }
-  }
-}
-
-.content-shell {
-  background: transparent;
-  display: flex;
-  gap: 24px;
-  position: relative;
-  z-index: 1;
-}
-
-.content-shell .el-main {
+.home-page {
   padding: 0;
-  overflow: visible;
+  min-height: 100%;
 }
 
-.content-shell .el-aside {
-  padding-left: 0;
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 24px;
 }
 
-.stats-section,
-.features-section,
-.pets-section {
-  margin-bottom: 24px;
-}
-
-.stats-section:last-of-type,
-.features-section:last-of-type,
-.pets-section:last-of-type {
-  margin-bottom: 0;
-}
-
-.stats-section .el-col {
+// 顶部欢迎条
+.welcome-bar {
   display: flex;
-}
-
-.stat-card {
-  min-height: 140px;
-  border-radius: 16px;
-  width: 100%;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 251, 247, 0.95));
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255, 209, 166, 0.1) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(255, 138, 76, 0.2);
-
-    &::before {
-      opacity: 1;
-    }
-  }
-
-  .card-title {
-    position: relative;
-    z-index: 1;
-  }
-}
-
-.card-title {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-weight: 600;
-  color: #1f2d3d;
-  margin-bottom: 16px;
-  position: relative;
-}
-
-.card-desc {
-  margin-top: 12px;
-  color: #909399;
-  font-size: 13px;
-}
-
-.section-title {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
+  padding: 20px 28px;
+  background: linear-gradient(135deg, #FF8A4C 0%, #FFB380 50%, #FFD4A8 100%);
+  border-radius: 20px;
   margin-bottom: 20px;
-  color: #606266;
 
-  h3 {
-    margin: 0;
-    color: #1f2d3d;
-    font-size: 18px;
-  }
-}
-
-.features-card {
-  border-radius: 16px;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 16px;
-}
-
-.feature-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 20px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 247, 0.98));
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
-  overflow: hidden;
-
+  // 噪点纹理
   &::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(circle, rgba(255, 209, 166, 0.2) 0%, transparent 70%);
-    transform: translate(-50%, -50%);
-    transition: width 0.3s ease, height 0.3s ease;
-    border-radius: 50%;
-  }
-
-  &:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(255, 138, 76, 0.15);
-
-    &::before {
-      width: 200px;
-      height: 200px;
-    }
-
-    .feature-icon {
-      transform: scale(1.1) rotate(5deg);
-    }
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    border-radius: 20px;
   }
 }
 
-.feature-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.welcome-text {
   position: relative;
   z-index: 1;
-  transition: transform 0.3s ease;
-}
 
-.feature-label {
-  margin: 0;
-  font-weight: 500;
-  font-size: 14px;
-  color: #303133;
-  text-align: center;
-}
-
-.pets-card {
-  border-radius: 16px;
-}
-
-.pets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.pet-card {
-  border-radius: 12px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 247, 0.98));
-  position: relative;
-  overflow: hidden;
-
-  &::after {
-    content: '💕';
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 20px;
-    opacity: 0;
-    transform: scale(0);
-    transition: all 0.3s ease;
-  }
-
-  &:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(255, 138, 76, 0.15);
-
-    &::after {
-      opacity: 0.6;
-      transform: scale(1);
-    }
-
-    .pet-avatar {
-      transform: scale(1.1);
-    }
-  }
-}
-
-.pet-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-}
-
-.pet-avatar {
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
-  position: relative;
-  z-index: 1;
-}
-
-.pet-info {
-  flex: 1;
-  min-width: 0;
-
-  h4 {
-    margin: 0 0 6px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2d3d;
+  h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
   }
 
   p {
-    margin: 4px 0;
-    color: #909399;
-    font-size: 13px;
-  }
-
-  .pet-birthday {
-    color: #606266;
-    font-size: 12px;
+    margin: 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
   }
 }
 
-.aside-panel {
-  padding: 0;
-}
-
-.todo-card {
-  height: 100%;
-  overflow-y: auto;
-  border-radius: 16px;
-}
-
-.timeline-item {
+.welcome-stats {
+  position: relative;
+  z-index: 1;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   gap: 12px;
 }
 
-.timeline-content {
-  flex: 1;
-  
-  .timeline-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .pet-avatar {
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-  
-  .timeline-text {
-    flex: 1;
-    min-width: 0;
-  }
-  
-  .title {
-    margin: 0;
-    font-weight: 600;
-    font-size: 14px;
-  }
-  .desc {
-    margin: 4px 0 0;
-    color: #909399;
-    font-size: 13px;
-    line-height: 1.4;
-  }
-  .pet-name {
-    margin: 6px 0 0;
-    color: #606266;
-    font-size: 12px;
-    font-weight: 500;
+.mini-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  @include anim.anim-standard;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
   }
 }
 
-@media (max-width: 960px) {
-  .dashboard-page {
-    padding: 16px 12px 32px;
+.mini-stat-icon {
+  font-size: 20px;
+}
+
+.mini-stat-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+
+  strong {
+    font-size: 18px;
+    color: #fff;
+    font-weight: 700;
   }
 
-  .content-shell {
+  span {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+// 内容流
+.content-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.flow-section {
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: vars.$pet-charcoal;
+    }
+
+    .view-all {
+      font-size: 13px;
+      color: pet.$pet-primary;
+      text-decoration: none;
+      font-weight: 500;
+      @include anim.anim-standard;
+
+      &:hover {
+        color: #E5723E;
+      }
+    }
+
+    .reminder-count {
+      font-size: 13px;
+      color: pet.$pet-warm-gray;
+    }
+  }
+}
+
+// 宠物卡片流
+.pets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  max-width: 900px;
+}
+
+.pet-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  @include anim.anim-standard;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.pet-image {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.pet-info {
+  padding: 12px 14px;
+
+  h3 {
+    margin: 0 0 2px;
+    font-size: 15px;
+    font-weight: 600;
+    color: vars.$pet-charcoal;
+  }
+
+  p {
+    margin: 0;
+    font-size: 12px;
+    color: pet.$pet-warm-gray;
+  }
+}
+
+// 快捷操作
+.quick-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border-radius: 12px;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  @include anim.anim-standard;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 138, 76, 0.15);
+  }
+
+  .action-icon {
+    font-size: 20px;
+  }
+
+  .action-text {
+    flex: 1;
+    display: flex;
     flex-direction: column;
+    gap: 2px;
+
+    strong {
+      font-size: 14px;
+      color: vars.$pet-charcoal;
+    }
+
+    span {
+      font-size: 12px;
+      color: pet.$pet-warm-gray;
+    }
   }
 
-  .aside-panel {
-    width: 100% !important;
-    margin-top: 16px;
+  .action-arrow {
+    font-size: 16px;
+    color: pet.$pet-warm-gray;
+  }
+}
+
+// 社区列表
+.community-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.community-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  @include anim.anim-standard;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateX(4px);
+  }
+}
+
+.community-content {
+  flex: 1;
+  min-width: 0;
+
+  .community-title {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: vars.$pet-charcoal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
   }
 
-  .features-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  .community-meta {
+    display: flex;
+    align-items: center;
     gap: 12px;
+    font-size: 12px;
+
+    .meta-time {
+      color: pet.$pet-warm-gray;
+    }
+
+    .meta-likes {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: pet.$pet-warm-gray;
+
+      span:first-child {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+// 提醒卡片流
+.reminders-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reminder-card-flow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  @include anim.anim-standard;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &.done {
+    opacity: 0.5;
+
+    .reminder-title {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.reminder-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #FF8A4C, #FFB380);
+  border-radius: 12px;
+  flex-shrink: 0;
+  color: #fff;
+
+  .time-hour {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .time-minute {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+}
+
+.reminder-divider {
+  width: 1px;
+  height: 32px;
+  background: #E5E7EB;
+  flex-shrink: 0;
+}
+
+.reminder-content {
+  flex: 1;
+  min-width: 0;
+
+  .reminder-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: vars.$pet-charcoal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: #fff;
+  border-radius: 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: vars.$pet-charcoal;
+  }
+
+  p {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: pet.$pet-warm-gray;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+// 响应式
+@media (max-width: 900px) {
+  .content-flow {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    padding: 12px 16px;
+  }
+
+  .welcome-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+  }
+
+  .welcome-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mini-stat {
+    flex: 1;
+    justify-content: center;
   }
 
   .pets-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-actions {
+    flex-direction: column;
   }
 }
 </style>

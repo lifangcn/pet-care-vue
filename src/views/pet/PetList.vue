@@ -15,28 +15,33 @@
     </div>
 
     <!-- 单个宠物时的大卡片展示 -->
-    <div v-if="petStore.filteredPets.length === 1" class="single-pet-container">
-      <el-card shadow="hover" class="single-pet-card">
-        <div class="single-pet-content">
-          <div class="icon-actions-top">
-            <el-button type="primary" :icon="Edit" circle size="small" @click="openEditDialog(petStore.filteredPets[0])" />
-            <el-button type="danger" :icon="Delete" circle size="small" @click="confirmDelete(petStore.filteredPets[0].id)" />
-          </div>
-          <div class="pet-avatar-section">
-            <el-avatar :size="120" :src="petStore.filteredPets[0].avatar || ''" class="main-avatar">
-              <el-icon :size="60"><Avatar /></el-icon>
-            </el-avatar>
-            <h2 class="pet-name">{{ petStore.filteredPets[0].name }}</h2>
-            <p class="pet-basic-info">
-              {{ petStore.filteredPets[0].breed || '未设置品种' }} · {{ typeLabel(petStore.filteredPets[0].type) }} · {{ genderLabel(petStore.filteredPets[0].gender) }}
-            </p>
-          </div>
-          <div class="pet-info-section">
-            <div class="pet-detail-string">
-              {{ getPetDetailString(petStore.filteredPets[0]) }}
+    <div v-if="petStore.filteredPets.length === 1" class="single-pet-container paw-print top-left">
+      <el-card shadow="never" class="single-pet-card">
+        <div class="single-pet-header">
+          <div class="pet-title-section">
+            <div class="pet-avatar-large">
+              <img :src="petStore.filteredPets[0].avatar || ''" :alt="petStore.filteredPets[0].name" />
+            </div>
+            <div class="pet-title-info">
+              <h2 class="pet-name-large">{{ petStore.filteredPets[0].name }}</h2>
+              <p class="pet-meta-text">
+                {{ petStore.filteredPets[0].breed || '未设置品种' }} · {{ typeLabel(petStore.filteredPets[0].type) }} · {{ genderLabel(petStore.filteredPets[0].gender) }}
+              </p>
             </div>
           </div>
-          <div class="pet-actions-section">
+          <div class="pet-header-actions">
+            <el-button type="primary" :icon="Edit" @click="openEditDialog(petStore.filteredPets[0])">修改</el-button>
+            <el-button type="danger" :icon="Delete" @click="confirmDelete(petStore.filteredPets[0].id)">删除</el-button>
+          </div>
+        </div>
+      </el-card>
+
+      <el-card shadow="never" class="single-pet-detail-card">
+        <div class="pet-detail-content">
+          <div class="pet-info-brief">
+            {{ getPetDetailString(petStore.filteredPets[0]) }}
+          </div>
+          <div class="pet-view-tabs">
             <el-button :type="activeView === 'basic' ? 'primary' : ''" @click="switchView('basic')">宠物详情</el-button>
             <el-button :type="activeView === 'health' ? 'primary' : ''" @click="switchView('health')">健康记录</el-button>
           </div>
@@ -119,10 +124,10 @@
             </div>
             <div v-else class="health-chart-view">
               <h3>健康趋势综合图表</h3>
-              <v-chart 
+              <v-chart
                 v-if="healthViewMode === 'chart'"
                 :key="`combined-${healthRecords.length}`"
-                class="chart" 
+                class="chart"
                 :option="combinedChartOption"
                 autoresize
               />
@@ -1080,111 +1085,124 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 @use '@/styles/variables.scss' as vars;
+@use '@/styles/pet-theme.scss' as pet;
+@use '@/styles/animations.scss' as anim;
 
 .pet-page {
-  padding: 24px;
-  background: #f6f7fb;
-  min-height: 100vh;
-  font-family: vars.$font-family-base;
-
-  &.single-pet {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 24px;
-  }
+  padding: 0;
+  min-height: 100%;
+  font-family: vars.$font-family-body;
 }
 
 .single-pet-container {
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .single-pet-card {
-  border-radius: 24px;
-  border: none;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  position: relative;
+  border-radius: pet.$pet-radius-lg;
+  border: 1px solid rgba(255, 138, 76, 0.2);
+  background: linear-gradient(135deg, #fff, #fffbf7);
+  box-shadow: pet.$pet-shadow;
 }
 
-.single-pet-content {
-  padding: 20px;
-  position: relative;
-}
-
-.icon-actions-top {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+.single-pet-header {
   display: flex;
-  gap: 8px;
-  z-index: 10;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 24px;
 }
 
-.pet-avatar-section {
-  text-align: center;
-  margin-bottom: 32px;
-  padding-bottom: 32px;
-  border-bottom: 1px solid #ebeef5;
+.pet-title-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
 
-  .main-avatar {
-    margin-bottom: 16px;
-    border: 4px solid #fff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  }
+.pet-avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 20px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 3px solid rgba(255, 138, 76, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 138, 76, 0.15);
 
-  .pet-name {
-    margin: 16px 0 8px;
-    font-size: 28px;
-    font-weight: 600;
-    color: #1f2d3d;
-  }
-
-  .pet-basic-info {
-    margin: 0;
-    color: #909399;
-    font-size: 16px;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
-.pet-info-section {
-  margin-bottom: 32px;
+.pet-title-info {
+  flex: 1;
 }
 
-.pet-detail-string {
-  padding: 16px;
-  background: #f5f7fa;
-  border-radius: 8px;
-  color: #606266;
+.pet-name-large {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+  font-family: vars.$font-family-cute;
+  color: vars.$pet-charcoal;
+  letter-spacing: -0.5px;
+}
+
+.pet-meta-text {
+  margin: 0;
+  color: pet.$pet-warm-gray;
+  font-size: 15px;
+}
+
+.pet-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.single-pet-detail-card {
+  border-radius: pet.$pet-radius-lg;
+  border: 2px solid rgba(255, 138, 76, 0.25);
+  box-shadow: pet.$pet-shadow;
+}
+
+.pet-detail-content {
+  padding: 24px;
+}
+
+.pet-info-brief {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(255, 138, 76, 0.08), rgba(255, 209, 166, 0.08));
+  border-radius: pet.$pet-radius-md;
+  color: vars.$pet-charcoal;
   font-size: 14px;
   line-height: 1.6;
-  text-align: center;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 138, 76, 0.2);
+  font-family: vars.$font-family-body;
 }
 
-.pet-actions-section {
+.pet-view-tabs {
   display: flex;
   gap: 12px;
-  padding-top: 24px;
-  border-top: 1px solid #ebeef5;
-  justify-content: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid pet.$pet-border-color;
+  margin-bottom: 16px;
 
   .el-button {
-    flex: 1;
-    max-width: 200px;
+    font-family: vars.$font-family-cute;
+    font-weight: 500;
   }
-}
-
-.content-display-area {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #ebeef5;
 }
 
 .health-view-header {
   margin-bottom: 16px;
   display: flex;
-  justify-content: center;
 }
 
 .health-list-view {
@@ -1199,18 +1217,17 @@ onMounted(async () => {
 .health-chart-view {
   h3, h4 {
     margin: 0 0 16px;
-    text-align: center;
-    color: #1f2d3d;
+    color: vars.$pet-charcoal;
   }
 
   .chart {
     width: 100%;
-    height: 400px;
+    height: 360px;
   }
 
   .chart-small {
     width: 100%;
-    height: 300px;
+    height: 280px;
   }
 }
 
@@ -1235,24 +1252,19 @@ onMounted(async () => {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   align-items: center;
 }
 
-.left-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 .search-input {
-  width: 320px;
+  width: 280px;
 }
 
 .pet-card {
-  border-radius: 20px;
-  border: none;
-  margin-bottom: 16px;
+  border-radius: pet.$pet-radius-md;
+  border: 1px solid pet.$pet-border-color;
+  background: #fff;
+  margin-bottom: 12px;
 }
 
 .pet-card-header {
@@ -1263,16 +1275,17 @@ onMounted(async () => {
 
   h3 {
     margin: 0;
-    font-size: 20px;
+    font-size: 18px;
+    font-family: vars.$font-family-cute;
+    font-weight: 600;
+    color: vars.$pet-charcoal;
   }
 
   p {
     margin: 4px 0;
-    color: #909399;
-  }
-
-  small {
-    color: #c0c4cc;
+    color: #888;
+    font-size: 14px;
+    font-family: vars.$font-family-body;
   }
 
   .icon-actions-top-small {
@@ -1285,18 +1298,7 @@ onMounted(async () => {
 }
 
 .pet-body {
-  margin-top: 16px;
-
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 12px 0 0;
-
-    li {
-      color: #606266;
-      line-height: 1.8;
-    }
-  }
+  margin-top: 12px;
 }
 
 .health-tag {
@@ -1331,30 +1333,44 @@ onMounted(async () => {
 
 .fab-button {
   position: fixed;
-  right: 32px;
-  bottom: 32px;
+  right: 24px;
+  bottom: 24px;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(255, 138, 76, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: pet.$pet-shadow;
+  @include anim.anim-elastic;
 
   &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(255, 138, 76, 0.4);
+    box-shadow: pet.$pet-shadow-hover;
   }
 }
 
 @media (max-width: 768px) {
-  .pet-page {
-    padding: 16px;
-  }
-
   .search-input {
     width: 100%;
   }
 
   .fab-button {
-    right: 20px;
-    bottom: 20px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .single-pet-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .pet-title-section {
+    width: 100%;
+  }
+
+  .pet-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .pet-view-tabs {
+    flex-wrap: wrap;
   }
 }
 </style>

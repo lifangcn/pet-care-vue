@@ -1,20 +1,21 @@
 <template>
-  <div class="rag-chat-page">
+  <div class="rag-chat-page paw-print top-left">
     <div class="pet-decorations">
-      <span class="pet-emoji">🐾</span>
-      <span class="pet-emoji">💕</span>
-      <span class="pet-emoji">🐶</span>
-      <span class="pet-emoji">🐱</span>
+      <div class="deco-circle deco-1"></div>
+      <div class="deco-circle deco-2"></div>
+      <div class="deco-circle deco-3"></div>
+      <div class="deco-circle deco-4"></div>
     </div>
     <el-card class="chat-card">
       <template #header>
         <div class="header">
           <div class="header-left">
-            <div class="header-icon">🤖</div>
-            <h2>AI 助手</h2>
+            <div class="header-icon">
+              <el-icon :size="32"><ChatDotRound /></el-icon>
+            </div>
+            <h2>AI助手</h2>
           </div>
           <div class="header-actions">
-            <el-button @click="goToDocuments">文档管理</el-button>
             <el-button @click="createNewSession">新建会话</el-button>
             <el-select v-model="currentSessionId" style="width: 200px" placeholder="选择会话" @change="loadSession">
               <el-option
@@ -24,29 +25,52 @@
                 :value="session.id"
               />
             </el-select>
+            <!-- 后台管理操作收纳 -->
+            <el-dropdown trigger="click" @command="handleAdminCommand">
+              <el-button class="admin-more-btn" text>
+                <el-icon :size="18"><MoreFilled /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="syncPosts" :disabled="syncPostsLoading">
+                    {{ syncPostsLoading ? '同步中...' : '同步动态' }}
+                  </el-dropdown-item>
+                  <el-dropdown-item command="syncActivities" :disabled="syncActivitiesLoading">
+                    {{ syncActivitiesLoading ? '同步中...' : '同步活动' }}
+                  </el-dropdown-item>
+                  <el-dropdown-item divided command="documents">文档管理</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </div>
         <div class="knowledge-hint">
           <el-icon><InfoFilled /></el-icon>
-          <span>基于知识库回答，提供专业的宠物护理建议 💝</span>
+          <span>基于知识库回答，提供专业的宠物护理建议</span>
+          <span class="points-badge">
+            <span class="points-icon">✦</span>
+            {{ pointsStore.availablePoints }} 积分
+          </span>
         </div>
       </template>
 
       <div class="chat-container">
         <div ref="messagesContainer" class="messages-container">
           <div v-if="messages.length === 0" class="empty-state">
-            <div class="empty-icon">💬</div>
-            <h3>你好！我是你的宠物护理助手 🐾</h3>
+            <div class="empty-icon">
+              <el-icon :size="64" color="#FF8A4C"><ChatDotRound /></el-icon>
+            </div>
+            <h3>你好！我是你的宠物护理助手</h3>
             <p>有什么关于宠物的问题都可以问我哦～我会基于知识库为你提供专业的建议</p>
             <div class="suggestions">
               <div class="suggestion-item" @click="inputMessage = '如何照顾刚出生的小猫？'; handleSend()">
-                <span>🐱</span> 如何照顾刚出生的小猫？
+                <el-icon color="#FF8A4C"><ChatDotRound /></el-icon> 如何照顾刚出生的小猫？
               </div>
               <div class="suggestion-item" @click="inputMessage = '狗狗需要打哪些疫苗？'; handleSend()">
-                <span>🐶</span> 狗狗需要打哪些疫苗？
+                <el-icon color="#FF8A4C"><ChatDotRound /></el-icon> 狗狗需要打哪些疫苗？
               </div>
               <div class="suggestion-item" @click="inputMessage = '宠物日常饮食需要注意什么？'; handleSend()">
-                <span>🍽️</span> 宠物日常饮食需要注意什么？
+                <el-icon color="#FF8A4C"><ChatDotRound /></el-icon> 宠物日常饮食需要注意什么？
               </div>
             </div>
           </div>
@@ -57,10 +81,10 @@
           >
             <div class="message-avatar">
               <el-avatar v-if="message.role === 'user'" :size="40" class="user-avatar">
-                <span class="avatar-emoji">👤</span>
+                <el-icon><User /></el-icon>
               </el-avatar>
               <el-avatar v-else :size="40" class="assistant-avatar">
-                <span class="avatar-emoji">🤖</span>
+                <el-icon><Service /></el-icon>
               </el-avatar>
             </div>
             <div class="message-content">
@@ -76,7 +100,7 @@
           <div v-if="isStreaming" class="message-item assistant">
             <div class="message-avatar">
               <el-avatar :size="40" class="assistant-avatar">
-                <span class="avatar-emoji">🤖</span>
+                <el-icon><Service /></el-icon>
               </el-avatar>
             </div>
             <div class="message-content">
@@ -91,11 +115,17 @@
         </div>
 
         <div class="input-container">
+          <!-- 积分余额提示 -->
+          <div class="points-hint">
+            <span class="points-hint-label">当前积分</span>
+            <span class="points-hint-value" :class="{ 'points-low': pointsStore.availablePoints < 10 }">{{ pointsStore.availablePoints }}</span>
+            <span class="points-hint-cost">每次提问消耗 10 积分</span>
+          </div>
           <el-input
             v-model="inputMessage"
             type="textarea"
             :rows="3"
-            placeholder="💭 输入您的问题，我会尽力帮助您..."
+            placeholder="输入您的问题，我会尽力帮助您..."
             :disabled="isStreaming"
             @keydown.enter.exact.prevent="handleSend"
             @keydown.enter.shift.exact="() => {}"
@@ -116,12 +146,17 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Service, ChatDotRound, InfoFilled, Promotion } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
-import { ragChat } from '@/services/aiService'
+import { User, Service, ChatDotRound, InfoFilled, Promotion, MoreFilled } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ragChat, syncPostsMigrate, syncActivitiesMigrate } from '@/services/aiService'
+import { usePointsStore } from '@/store/points'
 import type { ChatMessage } from '@/types/ai'
 
 const router = useRouter()
+const pointsStore = usePointsStore()
+
+/** AI咨询每次消耗积分 */
+const AI_COST_PER_QUERY = 10
 
 const messages = ref<ChatMessage[]>([])
 const inputMessage = ref(localStorage.getItem('rag_chat_input') || '')
@@ -158,8 +193,64 @@ const goToDocuments = () => {
   router.push('/ai/documents')
 }
 
+const syncPostsLoading = ref(false)
+const syncActivitiesLoading = ref(false)
+
+const handleSyncPosts = async () => {
+  try {
+    syncPostsLoading.value = true
+    await syncPostsMigrate()
+    ElMessage.success('动态同步完成')
+  } catch (e: any) {
+    ElMessage.error(e?.message || '同步动态失败')
+  } finally {
+    syncPostsLoading.value = false
+  }
+}
+
+const handleSyncActivities = async () => {
+  try {
+    syncActivitiesLoading.value = true
+    await syncActivitiesMigrate()
+    ElMessage.success('活动同步完成')
+  } catch (e: any) {
+    ElMessage.error(e?.message || '同步活动失败')
+  } finally {
+    syncActivitiesLoading.value = false
+  }
+}
+
+/** 后台管理下拉菜单命令分发 */
+const handleAdminCommand = (command: string) => {
+  switch (command) {
+    case 'syncPosts': handleSyncPosts(); break
+    case 'syncActivities': handleSyncActivities(); break
+    case 'documents': goToDocuments(); break
+  }
+}
+
 const handleSend = async () => {
   if (!inputMessage.value.trim() || isStreaming.value) return
+
+  // 积分校验：余额不足时弹窗拦截
+  if (pointsStore.availablePoints < AI_COST_PER_QUERY) {
+    try {
+      await ElMessageBox.confirm(
+        `当前积分余额 ${pointsStore.availablePoints}，本次咨询需要 ${AI_COST_PER_QUERY} 积分。\n发帖、评论、签到都可以获取积分。`,
+        '积分不足',
+        {
+          confirmButtonText: '去赚积分',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }
+      )
+      // 跳转到社区页面引导用户赚积分
+      router.push('/club/posts')
+    } catch {
+      // 用户点取消，不做任何操作
+    }
+    return
+  }
 
   const userMessage: ChatMessage = {
     id: `msg_${Date.now()}`,
@@ -219,6 +310,8 @@ const handleSend = async () => {
         if (assistantMessage.content) {
           messages.value.push(assistantMessage)
         }
+        // 本地扣减积分（后端已自动扣分，此处同步前端状态）
+        pointsStore.deductPoints(AI_COST_PER_QUERY)
         isStreaming.value = false
         streamingContent.value = ''
         closeConnection.value = null
@@ -264,6 +357,9 @@ const formatMarkdown = (text: string) => {
     .replace(/`(.+?)`/g, '<code>$1</code>')
 }
 
+// 页面加载时获取积分账户
+pointsStore.fetchAccount()
+
 onUnmounted(() => {
   if (closeConnection.value) {
     closeConnection.value()
@@ -290,33 +386,45 @@ onUnmounted(() => {
     z-index: 0;
     overflow: hidden;
 
-    .pet-emoji {
+    .deco-circle {
       position: absolute;
-      font-size: 48px;
-      opacity: 0.06;
-      animation: gentleFloat 15s ease-in-out infinite;
+      border-radius: 50%;
+      opacity: 0.08;
+      animation: gentleFloat 15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 
-      &:nth-child(1) {
+      &.deco-1 {
+        width: 120px;
+        height: 120px;
         top: 10%;
         left: 5%;
+        background: linear-gradient(135deg, #FF8A4C, #FFD1A6);
         animation-delay: 0s;
       }
 
-      &:nth-child(2) {
+      &.deco-2 {
+        width: 80px;
+        height: 80px;
         top: 30%;
         right: 8%;
+        background: linear-gradient(135deg, #BFD9F2, #D7CCFF);
         animation-delay: 3s;
       }
 
-      &:nth-child(3) {
+      &.deco-3 {
+        width: 100px;
+        height: 100px;
         bottom: 25%;
         left: 3%;
+        background: linear-gradient(135deg, #FFD1A6, #BFD9F2);
         animation-delay: 6s;
       }
 
-      &:nth-child(4) {
+      &.deco-4 {
+        width: 90px;
+        height: 90px;
         bottom: 15%;
         right: 5%;
+        background: linear-gradient(135deg, #D7CCFF, #FF8A4C);
         animation-delay: 9s;
       }
     }
@@ -349,8 +457,15 @@ onUnmounted(() => {
       gap: 12px;
 
       .header-icon {
-        font-size: 32px;
-        animation: wave 2s ease-in-out infinite;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #FF8A4C, #FFD1A6);
+        border-radius: 12px;
+        animation: wave 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        color: #fff;
       }
 
       h2 {
@@ -366,14 +481,26 @@ onUnmounted(() => {
 
     .header-actions {
       display: flex;
+      align-items: center;
       gap: 12px;
+
+      .admin-more-btn {
+        padding: 6px;
+        color: #999;
+        border-radius: 8px;
+
+        &:hover {
+          color: #FF8A4C;
+          background: rgba(255, 138, 76, 0.08);
+        }
+      }
     }
   }
 
   @keyframes wave {
     0%, 100% { transform: rotate(0deg); }
-    25% { transform: rotate(-10deg); }
-    75% { transform: rotate(10deg); }
+    25% { transform: rotate(-8deg); }
+    75% { transform: rotate(8deg); }
   }
 
   .knowledge-hint {
@@ -386,6 +513,25 @@ onUnmounted(() => {
     color: #FF8A4C;
     font-size: 14px;
     border: 1px solid rgba(255, 138, 76, 0.2);
+
+    .points-badge {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 138, 76, 0.25);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #FF8A4C;
+      white-space: nowrap;
+
+      .points-icon {
+        font-size: 12px;
+      }
+    }
   }
 
   .chat-container {
@@ -411,9 +557,15 @@ onUnmounted(() => {
       padding: 40px 20px;
 
       .empty-icon {
-        font-size: 80px;
-        margin-bottom: 16px;
-        animation: bounce 2s ease-in-out infinite;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 16px;
+        background: linear-gradient(135deg, rgba(255, 138, 76, 0.1), rgba(191, 217, 242, 0.1));
+        border-radius: 24px;
+        animation: bounce 2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
       }
 
       h3 {
@@ -435,23 +587,25 @@ onUnmounted(() => {
         flex-direction: column;
         gap: 12px;
         width: 100%;
-        max-width: 400px;
+        max-width: 420px;
 
         .suggestion-item {
-          padding: 12px 20px;
+          padding: 12px 16px;
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 251, 247, 0.9));
           border: 2px solid rgba(255, 138, 76, 0.2);
           border-radius: 12px;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease-out;
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           font-size: 14px;
           color: #606266;
+          white-space: nowrap;
+          text-align: left;
 
-          span {
-            font-size: 20px;
+          .el-icon {
+            flex-shrink: 0;
           }
 
           &:hover {
@@ -466,7 +620,7 @@ onUnmounted(() => {
 
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+      50% { transform: translateY(-8px); }
     }
 
     @keyframes blink {
@@ -498,10 +652,6 @@ onUnmounted(() => {
         .assistant-avatar {
           background: linear-gradient(135deg, #BFD9F2, #D7CCFF);
           border: 2px solid rgba(191, 217, 242, 0.3);
-        }
-
-        .avatar-emoji {
-          font-size: 20px;
         }
       }
 
@@ -578,6 +728,42 @@ onUnmounted(() => {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 251, 247, 0.95));
     border-top: 1px solid rgba(255, 138, 76, 0.15);
     border-radius: 0 0 12px 12px;
+
+    .points-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: #999;
+
+      .points-hint-label {
+        color: #999;
+      }
+
+      .points-hint-value {
+        font-weight: 700;
+        font-family: 'SF Mono', 'Consolas', monospace;
+        color: #FF8A4C;
+        font-size: 15px;
+
+        &.points-low {
+          color: #E07A5F;
+          animation: pulse 1.5s infinite;
+        }
+      }
+
+      .points-hint-cost {
+        margin-left: auto;
+        font-size: 12px;
+        color: #bbb;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
 
     :deep(.el-textarea__inner) {
       border: 2px solid rgba(255, 138, 76, 0.2);

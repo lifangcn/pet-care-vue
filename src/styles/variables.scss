@@ -1,20 +1,31 @@
-$el-color-primary: #ff8a4c;
-$el-color-success: #1dd1a1;
-$el-color-warning: #f6b93b;
-$el-color-danger: #ff6b6b;
-$el-color-info: #6c7a89;
+// === 反SaaS色彩系统 - 避免紫色/靛蓝渐变 ===
+$el-color-primary: #E07A5F;     // 陶土红 - 主色
+$el-color-success: #81B29A;     // 鼠尾草绿
+$el-color-warning: #F2CC8F;     // 暖黄
+$el-color-danger: #E07A5F;      // 与主色统一
+$el-color-info: #3D405B;        // 深蓝灰
 
-$pet-color-orange: #ff9f43;
-$pet-color-green: #1dd1a1;
-$pet-color-blue: #54a0ff;
-$pet-color-pink: #ff6b9c;
+// 辅助色
+$pet-color-warm: #D4A373;       // 暖棕
+$pet-color-sage: #81B29A;       // 鼠尾草
+$pet-color-sand: #FAEDCD;       // 沙色
+$pet-charcoal: #3D405B;         // 炭灰
 
-// 使用系统字体，避免网络请求
-$font-family-base: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-  '微软雅黑', Arial, sans-serif;
-// 宠物相关字体使用系统自带的 Comic Sans MS，如果没有则使用默认字体
-$font-family-pet: 'Comic Sans MS', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
-  'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+// === 卡通可爱字体系统 ===
+// 基础字体 - 圆润友好
+$font-family-base: 'YouYuan', '幼圆', 'Comic Sans MS', 'Hiragino Sans GB', 'Microsoft YaHei',
+  '微软雅黑', 'PingFang SC', sans-serif;
+
+// 宠物名称/标题 - 可爱卡通
+$font-family-cute: 'Comic Sans MS', 'YouYuan', '幼圆', 'Bradley Hand', 'Chalkboard SE',
+  'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+
+// 正文 - 清晰易读
+$font-family-body: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Helvetica Neue',
+  Helvetica, Arial, sans-serif;
+
+// 数字/数据 - 等宽清晰
+$font-family-number: 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
 
 $--color-primary: $el-color-primary;
 $--color-success: $el-color-success;
@@ -22,7 +33,8 @@ $--color-warning: $el-color-warning;
 $--color-danger: $el-color-danger;
 $--color-info: $el-color-info;
 $--font-family: $font-family-base;
-$--font-family-pet: $font-family-pet;
+$--font-family-cute: $font-family-cute;
+$--font-family-body: $font-family-body;
 
 // ============================================
 // 手绘插画风格扩展
@@ -67,41 +79,70 @@ body {
   --pc-font-md: clamp(14px, 3.3vw, 16px);
   --pc-font-lg: clamp(16px, 3.8vw, 18px);
   --pc-font-xl: clamp(18px, 4.6vw, 22px);
+
+  // Element Plus 主色覆盖：陶土红 #E07A5F 替换默认蓝 #409EFF
+  --el-color-primary: #{$el-color-primary};
+  --el-color-primary-light-3: #E9A28F;
+  --el-color-primary-light-5: #F0BDAF;
+  --el-color-primary-light-7: #F6D7CF;
+  --el-color-primary-light-8: #F9E4DF;
+  --el-color-primary-light-9: #FCF2EF;
+  --el-color-primary-dark-2: #B3624C;
+
+  // Element Plus 成功色覆盖：鼠尾草绿
+  --el-color-success: #{$el-color-success};
+  --el-color-success-light-3: #A3CBB8;
+  --el-color-success-light-5: #C0D9CD;
+  --el-color-success-light-9: #F2F8F5;
+  --el-color-success-dark-2: #67907B;
+
+  // Element Plus 警告色覆盖：暖黄
+  --el-color-warning: #{$el-color-warning};
+
+  // Element Plus 危险色覆盖：与主色统一
+  --el-color-danger: #E07A5F;
+  --el-color-danger-light-3: #E9A28F;
+  --el-color-danger-light-5: #F0BDAF;
+  --el-color-danger-light-9: #FCF2EF;
+  --el-color-danger-dark-2: #B3624C;
 }
 
+// === 背景：温暖的米色 ===
 body {
   font-family: $font-family-base;
   font-size: var(--pc-font-md);
-  background:
-    radial-gradient(900px 420px at 10% 8%, rgba(255, 209, 166, 0.55), transparent 60%),
-    radial-gradient(860px 520px at 92% 12%, rgba(191, 217, 242, 0.45), transparent 60%),
-    radial-gradient(900px 520px at 30% 92%, rgba(191, 235, 215, 0.45), transparent 65%),
-    linear-gradient(180deg, rgba(255, 251, 247, 1), rgba(255, 248, 240, 1));
-  color: #2c3e50;
+  background: #FDF9F3;
+  color: $pet-charcoal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cg fill='none' stroke='%23FF8A4C' stroke-opacity='.08' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M50 80c12-8 28-8 40 0s28 8 40 0 28-8 40 0 28 8 40 0 28-8 40 0 28 8 40 0'/%3E%3Cpath d='M30 180c15-12 32-12 47 0s32 12 47 0 32-12 47 0 32 12 47 0 32-12 47 0 32 12 47 0'/%3E%3Cpath d='M60 280c10-10 24-10 34 0s24 10 34 0 24-10 34 0 24 10 34 0 24-10 34 0 24 10 34 0'/%3E%3C/g%3E%3Cg fill='%23FF8A4C' fill-opacity='.06'%3E%3Cpath d='M120 120c8-8 20-8 28 0s8 20 0 28-20 8-28 0-8-20 0-28z'/%3E%3Cpath d='M150 100c5-5 13-5 18 0s5 13 0 18-13 5-18 0-5-13 0-18z'/%3E%3Cpath d='M130 90c5-5 13-5 18 0s5 13 0 18-13 5-18 0-5-13 0-18z'/%3E%3Cpath d='M280 150c10-10 26-10 36 0s10 26 0 36-26 10-36 0-10-26 0-36z'/%3E%3Cpath d='M250 200c6-6 16-6 22 0s6 16 0 22-16 6-22 0-6-16 0-22z'/%3E%3Cpath d='M320 250c8-8 20-8 28 0s8 20 0 28-20 8-28 0-8-20 0-28z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23FFD1A6' stroke-opacity='.12' stroke-width='2'%3E%3Cpath d='M100 50 Q120 40 140 50 T180 50'/%3E%3Cpath d='M200 60 Q220 50 240 60 T280 60'/%3E%3Cpath d='M80 320 Q100 310 120 320 T160 320'/%3E%3C/g%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cg fill='%23FFB3BA' fill-opacity='.05'%3E%3Ccircle cx='80' cy='80' r='12'/%3E%3Ccircle cx='220' cy='100' r='10'/%3E%3Ccircle cx='150' cy='250' r='14'/%3E%3Ccircle cx='250' cy='200' r='8'/%3E%3C/g%3E%3Cg fill='none' stroke='%23D7CCFF' stroke-opacity='.1' stroke-width='2'%3E%3Cpath d='M50 150 Q70 140 90 150 T130 150'/%3E%3Cpath d='M170 180 Q190 170 210 180 T250 180'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 400px 400px, 300px 300px;
-  background-position: 0 0, 200px 200px;
-  opacity: 1;
-  mix-blend-mode: multiply;
+// 全局可爱字体类
+.font-cute {
+  font-family: $font-family-cute !important;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+.font-body {
+  font-family: $font-family-body !important;
+}
+
+.font-number {
+  font-family: $font-family-number !important;
+}
+
+// 标题默认使用可爱字体
+h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
+  font-family: $font-family-cute;
+  font-weight: 600;
 }
+
+h1 { font-size: clamp(24px, 5vw, 32px); }
+h2 { font-size: clamp(20px, 4.5vw, 26px); }
+h3 { font-size: clamp(18px, 4vw, 22px); }
+h4 { font-size: clamp(16px, 3.6vw, 20px); }
+h5 { font-size: clamp(14px, 3.2vw, 18px); }
+h6 { font-size: clamp(13px, 3vw, 16px); }
 
 img,
 svg,

@@ -1,155 +1,126 @@
 <template>
-  <div class="club-posts-page paw-print top-left">
-    <el-card shadow="never">
-      <template #header>
-        <div class="header">
-          <div class="title">内容广场</div>
-          <div class="actions">
-            <el-button type="primary" :icon="Plus" @click="goPublish">发布动态</el-button>
-            <el-button :icon="Flag" @click="goActivities">活动打卡</el-button>
+  <div class="posts-page">
+    <!-- 顶部操作栏 -->
+    <div class="posts-header">
+      <h1>社区</h1>
+      <div class="header-actions">
+        <el-button type="primary" @click="router.push('/club/activities')">活动</el-button>
+        <el-button type="primary" :icon="Plus" @click="router.push('/club/posts/publish')">发布</el-button>
+      </div>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-tabs">
+        <span
+          v-for="tab in sortTabs"
+          :key="tab.value"
+          class="filter-tab"
+          :class="{ active: query.sort === tab.value }"
+          @click="setSort(tab.value)"
+        >
+          {{ tab.label }}
+        </span>
+      </div>
+
+      <el-select v-model="query.postType" placeholder="类型" clearable class="filter-select" @change="reload">
+        <el-option label="全部" :value="undefined" />
+        <el-option label="好物" :value="1" />
+        <el-option label="服务" :value="2" />
+        <el-option label="地点" :value="3" />
+        <el-option label="日常" :value="4" />
+        <el-option label="打卡" :value="5" />
+      </el-select>
+    </div>
+
+    <!-- 瀑布流卡片 -->
+    <div class="posts-grid" v-loading="loading">
+      <div
+        v-for="post in posts"
+        :key="post.id"
+        class="post-card"
+        @click="router.push(`/club/posts/${post.id}`)"
+      >
+        <!-- 图片区域 -->
+        <div class="post-image" v-if="getPostImage(post)">
+          <img :src="getPostImage(post)" :alt="post.title" />
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="post-content">
+          <h3 class="post-title">{{ post.title || '分享' }}</h3>
+          <p class="post-excerpt">{{ post.content }}</p>
+        </div>
+
+        <!-- 底部信息 -->
+        <div class="post-footer">
+          <div class="post-tags" v-if="post.labels && post.labels.length > 0">
+            <span v-for="label in post.labels.slice(0, 2)" :key="label.id" class="mini-tag">
+              {{ label.name }}
+            </span>
+          </div>
+          <div class="post-stats">
+            <span v-if="post.likeCount" class="stat-item">👍 {{ post.likeCount }}</span>
           </div>
         </div>
-      </template>
-
-      <div class="filters">
-        <el-select v-model="query.postType" placeholder="类型" clearable style="width: 160px" @change="reload">
-          <el-option label="好物分享" :value="1" />
-          <el-option label="服务推荐" :value="2" />
-          <el-option label="地点推荐" :value="3" />
-          <el-option label="日常分享" :value="4" />
-          <el-option label="活动打卡" :value="5" />
-        </el-select>
-
-        <el-select v-model="query.sort" placeholder="排序" clearable style="width: 160px" @change="reload">
-          <el-option label="最新" value="latest" />
-          <el-option label="最热" value="hot" />
-          <el-option label="评分最高" value="rating" />
-        </el-select>
-
-        <el-input v-model="query.city" placeholder="城市" clearable style="width: 200px" @change="reload" />
-
-        <el-select
-          v-model="query.labelId"
-          filterable
-          remote
-          clearable
-          placeholder="标签"
-          :remote-method="remoteSearchLabels"
-          :loading="labelLoading"
-          style="width: 240px"
-          @change="reload"
-        >
-          <el-option v-for="t in labelOptions" :key="String(t.id)" :label="t.name" :value="t.id" />
-        </el-select>
       </div>
+    </div>
 
-      <div v-if="hotLabels.length > 0 || commonLabels.length > 0" class="hot-tags">
-        <span class="hot-tags-label">推荐标签：</span>
-        <el-tag
-          v-for="t in hotLabels.length > 0 ? hotLabels : commonLabels.filter(l => l.isRecommended === 1)"
-          :key="String(t.id)"
-          class="tag"
-          effect="plain"
-          :style="{ borderColor: t.color, color: t.color }"
-          @click="selectHotLabel(t.id)"
-        >
-          {{ t.name }}
-        </el-tag>
-      </div>
+    <!-- 加载更多 -->
+    <div class="load-more" v-if="!loading && posts.length > 0">
+      <el-button v-if="!noMore" @click="loadMore">加载更多</el-button>
+      <span v-else class="no-more">没有更多了</span>
+    </div>
 
-      <div class="list">
-        <el-empty v-if="!loading && posts.length === 0" description="暂无内容" />
-
-        <el-card v-for="p in posts" :key="String(p.id)" class="post-item" shadow="hover" @click="goDetail(p.id)">
-          <div class="post-title">{{ p.title || typeLabel(p.postType) }}</div>
-          <div class="post-content">{{ p.content || '-' }}</div>
-          <div class="post-meta">
-            <div class="meta-left">
-              <el-tag size="small" effect="plain">{{ typeLabel(p.postType) }}</el-tag>
-              <span v-if="getCity(p)" class="meta-text">{{ getCity(p) }}</span>
-              <span v-if="p.ratingAvg" class="meta-text">评分：{{ Number(p.ratingAvg).toFixed(1) }}</span>
-              <span v-if="p.likeCount" class="meta-text">点赞：{{ p.likeCount }}</span>
-            </div>
-            <div class="meta-right">
-              <span class="meta-text">{{ formatTime(p.createdAt) }}</span>
-            </div>
-          </div>
-        </el-card>
-      </div>
-
-      <div class="pager">
-        <el-button :loading="loading" :disabled="noMore" @click="loadMore">
-          {{ noMore ? '没有更多了' : '加载更多' }}
-        </el-button>
-      </div>
-    </el-card>
+    <!-- 空状态 -->
+    <div v-if="!loading && posts.length === 0" class="empty-state">
+      <div class="empty-icon">📝</div>
+      <h3>暂无动态</h3>
+      <p>来发布第一条动态吧</p>
+      <el-button type="primary" @click="router.push('/club/posts/publish')">发布动态</el-button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus, Flag } from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
 import { fetchPosts } from '@/services/postService'
-import { fetchHotLabels, suggestLabels, fetchLabels } from '@/services/labelService'
-import type { Label, Post } from '@/types/club'
+import type { Post } from '@/types/club'
 
 const router = useRouter()
 
+const sortTabs = [
+  { label: '最新', value: 'latest' },
+  { label: '最热', value: 'hot' },
+  { label: '评分', value: 'rating' },
+]
+
 const query = ref<{
   postType?: number
-  labelId?: string | number
-  city?: string
   sort?: 'latest' | 'hot' | 'rating'
   pageNumber: number
   pageSize: number
 }>({
+  sort: 'latest',
   pageNumber: 1,
-  pageSize: 10,
+  pageSize: 20,
 })
 
 const posts = ref<Post[]>([])
 const loading = ref(false)
 const noMore = ref(false)
 
-const hotLabels = ref<Label[]>([])
-const commonLabels = ref<Label[]>([])
-const labelOptions = ref<Label[]>([])
-const labelLoading = ref(false)
-
-const typeLabel = (t: number) => {
-  if (t === 1) return '好物分享'
-  if (t === 2) return '服务推荐'
-  if (t === 3) return '地点推荐'
-  if (t === 4) return '日常分享'
-  if (t === 5) return '活动打卡'
-  return '动态'
+const getPostImage = (post: Post): string | null => {
+  if (!post.mediaUrls) return null
+  return post.mediaUrls[0] || null
 }
 
-const formatTime = (v?: string) => {
-  if (!v) return ''
-  const d = new Date(v)
-  if (Number.isNaN(d.getTime())) return v
-  return d.toLocaleString('zh-CN')
-}
-
-const parseMaybeJson = (v: any) => {
-  if (!v) return null
-  if (typeof v === 'object') return v
-  if (typeof v === 'string') {
-    try {
-      return JSON.parse(v)
-    } catch (e) {
-      return null
-    }
-  }
-  return null
-}
-
-const getCity = (p: Post) => {
-  const obj: any = parseMaybeJson((p as any).locationInfo)
-  return obj?.city || ''
+const setSort = (value: 'latest' | 'hot' | 'rating') => {
+  query.value.sort = value
+  reload()
 }
 
 const load = async (append: boolean) => {
@@ -158,8 +129,11 @@ const load = async (append: boolean) => {
   try {
     const { data } = await fetchPosts(query.value)
     const list = data?.records || []
-    if (append) posts.value = posts.value.concat(list)
-    else posts.value = list
+    if (append) {
+      posts.value = [...posts.value, ...list]
+    } else {
+      posts.value = list
+    }
     const totalPage = data?.totalPage
     if (typeof totalPage === 'number') {
       noMore.value = (data.pageNumber || query.value.pageNumber) >= totalPage
@@ -167,7 +141,7 @@ const load = async (append: boolean) => {
       noMore.value = list.length < query.value.pageSize
     }
   } catch (e: any) {
-    ElMessage.error(e?.message || '加载失败')
+    ElMessage.error('加载失败')
   } finally {
     loading.value = false
   }
@@ -185,188 +159,282 @@ const loadMore = async () => {
   await load(true)
 }
 
-const goDetail = (id: string | number) => {
-  router.push(`/club/posts/${id}`)
-}
-
-const goPublish = () => {
-  router.push('/club/posts/publish')
-}
-
-const goActivities = () => {
-  router.push('/club/activities')
-}
-
-const selectHotLabel = (id: string | number) => {
-  query.value.labelId = id
-  const allLabels = [...hotLabels.value, ...commonLabels.value, ...labelOptions.value]
-  const selectedLabel = allLabels.find(l => l.id === id)
-  if (selectedLabel && !labelOptions.value.find(l => l.id === id)) {
-    labelOptions.value.push(selectedLabel)
-  }
-  reload()
-}
-
-const remoteSearchLabels = async (keyword: string) => {
-  const kw = (keyword || '').trim()
-  if (!kw) return
-  labelLoading.value = true
-  try {
-    const { data } = await suggestLabels({ keyword: kw })
-    labelOptions.value = data || []
-  } finally {
-    labelLoading.value = false
-  }
-}
-
-const loadCommonLabels = async () => {
-  try {
-    const { data } = await fetchLabels({ type: 1 })
-    commonLabels.value = data || []
-    labelOptions.value = data || []
-    if (hotLabels.value.length === 0 && commonLabels.value.length > 0) {
-      hotLabels.value = commonLabels.value.filter(l => l.isRecommended === 1)
-    }
-  } catch (e) {
-    commonLabels.value = []
-    labelOptions.value = []
-  }
-}
-
 onMounted(async () => {
-  try {
-    const { data } = await fetchHotLabels()
-    hotLabels.value = data || []
-  } catch (e) {
-    hotLabels.value = []
-  }
-  await loadCommonLabels()
   await reload()
 })
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/variables.scss' as vars;
 @use '@/styles/pet-theme.scss' as pet;
+@use '@/styles/animations.scss' as anim;
 
-.club-posts-page {
-  padding: 24px;
-  position: relative;
+.posts-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 24px;
 }
 
-.header {
+// 顶部操作栏
+.posts-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  margin-bottom: 20px;
 
-  .title {
-    font-size: 20px;
+  h1 {
+    margin: 0;
+    font-size: 24px;
     font-weight: 700;
-    font-family: 'Comic Sans MS', sans-serif;
+    color: vars.$pet-charcoal;
   }
 }
 
-.actions {
+.header-actions {
   display: flex;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
-.filters {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.hot-tags {
-  margin-bottom: 16px;
+// 筛选栏
+.filter-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.filter-tabs {
+  display: flex;
   gap: 8px;
-  flex-wrap: wrap;
-  padding: 12px;
-  background: #FFFEFA;
-  border-radius: pet.$pet-radius-md;
-  border: 2px solid rgba(255, 138, 76, 0.25);
-
-  .hot-tags-label {
-    color: #7F8C8D;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .tag {
-    cursor: pointer;
-    background: linear-gradient(135deg, #FFB3BA 0%, #B8E6D4 100%);
-    border: 2px solid rgba(255, 138, 76, 0.25);
-    color: #2C3E50;
-  }
 }
 
-.list {
-  display: grid;
-  gap: 16px;
-  margin-top: 8px;
-  grid-template-columns: 1fr;
-
-  @include pet.mobile-up(pet.$pet-breakpoint-md) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.post-item {
+.filter-tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: pet.$pet-warm-gray;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-4px);
+    color: vars.$pet-charcoal;
+    background: #F5F0E8;
+  }
+
+  &.active {
+    color: #fff;
+    background: pet.$pet-primary;
   }
 }
 
-.post-title {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  font-family: 'Comic Sans MS', sans-serif;
-  color: #2C3E50;
+:deep(.filter-select) {
+  width: 140px;
+}
+
+// 瀑布流卡片 3列
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.post-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  @include anim.anim-standard;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.post-image {
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #F5F0E8;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .post-card:hover & img {
+    transform: scale(1.05);
+  }
 }
 
 .post-content {
-  color: #7F8C8D;
+  padding: 12px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: vars.$pet-charcoal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-excerpt {
+  margin: 0;
+  font-size: 13px;
+  color: pet.$pet-warm-gray;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  overflow: hidden;
-  margin-bottom: 12px;
-  line-height: 1.6;
+  flex: 1;
 }
 
-.post-meta {
+.post-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-top: 1px solid #F0F0F0;
 }
 
-.meta-left {
+.post-tags {
   display: flex;
-  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mini-tag {
+  padding: 3px 8px;
+  background: #F5F0E8;
+  border-radius: 4px;
+  font-size: 11px;
+  color: pet.$pet-warm-gray;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-stats {
+  display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
-.meta-text {
-  color: #7F8C8D;
+.stat-item {
   font-size: 12px;
+  color: pet.$pet-warm-gray;
 }
 
-.pager {
-  margin-top: 24px;
+// 加载更多
+.load-more {
   display: flex;
   justify-content: center;
+  padding: 24px 0;
+}
+
+.no-more {
+  color: pet.$pet-warm-gray;
+  font-size: 14px;
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: vars.$pet-charcoal;
+  }
+
+  p {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: pet.$pet-warm-gray;
+  }
+}
+
+// 响应式
+@media (max-width: 768px) {
+  .posts-page {
+    padding: 12px 16px;
+  }
+
+  .posts-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    h1 {
+      font-size: 20px;
+    }
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+
+    .filter-tabs {
+      justify-content: center;
+    }
+
+    :deep(.filter-select) {
+      width: 100%;
+    }
+  }
+
+  .posts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .post-content {
+    padding: 10px 12px;
+  }
+
+  .post-title {
+    font-size: 14px;
+  }
+
+  .post-excerpt {
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .posts-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
-
-

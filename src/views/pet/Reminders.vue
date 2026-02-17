@@ -1,124 +1,134 @@
 <template>
-  <div class="reminders-page">
-    <el-card class="checkin-stats-card">
+  <div class="reminders-page paw-print top-left">
+    <!-- 简洁的打卡栏 -->
+    <div class="checkin-bar">
       <div class="checkin-stats">
-        <div class="stat-item">
-          <div class="stat-value">{{ checkInStats?.monthCheckInCount ?? '-' }}</div>
-          <div class="stat-label">本月打卡</div>
+        <div class="mini-stat">
+          <span class="mini-stat-value">{{ checkInStats?.continuousDays ?? 0 }}</span>
+          <span class="mini-stat-label">连续天数</span>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <div class="stat-value highlight">{{ checkInStats?.continuousDays ?? '-' }}</div>
-          <div class="stat-label">连续打卡</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <div class="stat-value">{{ lastCheckInText }}</div>
-          <div class="stat-label">上次打卡</div>
-        </div>
-        <div class="checkin-action">
-          <el-button type="primary" :icon="Calendar" @click="handleCheckIn" :loading="checkInLoading">今日打卡</el-button>
-          <el-button @click="showCheckInDialog = true" :disabled="!checkInStats">签到记录</el-button>
+        <div class="mini-stat">
+          <span class="mini-stat-value">{{ checkInStats?.monthCheckInCount ?? 0 }}</span>
+          <span class="mini-stat-label">本月打卡</span>
         </div>
       </div>
-    </el-card>
+      <div class="checkin-buttons">
+        <button class="checkin-btn glass" :disabled="checkInLoading" @click="handleCheckIn">
+          <el-icon v-if="!checkInLoading"><Calendar /></el-icon>
+          <el-icon v-else class="is-loading"><Loading /></el-icon>
+          今日打卡
+        </button>
+        <button class="checkin-btn text" @click="showCheckInDialog = true">记录</button>
+      </div>
+    </div>
 
-    <el-card>
-      <template #header>
-        <div class="header">
-          <h2>提醒管理</h2>
-          <div class="header-actions">
-            <el-select v-model="selectedPetId" style="width: 220px" placeholder="选择宠物" @change="handlePetChange">
-              <el-option v-for="pet in pets" :key="pet.id" :label="pet.name" :value="pet.id" />
-            </el-select>
-            <el-button :disabled="!selectedPetId" @click="goToExecutions">查看执行记录</el-button>
-            <el-button type="primary" :disabled="!selectedPetId" @click="showAddDialog = true">添加提醒</el-button>
+    <!-- 提醒管理区域 -->
+    <div class="reminders-content">
+      <div class="content-header">
+        <h2>提醒管理</h2>
+        <div class="header-actions">
+          <el-select v-model="selectedPetId" style="width: 160px" placeholder="选毛孩子" @change="handlePetChange" size="default">
+            <el-option v-for="pet in pets" :key="pet.id" :label="pet.name" :value="pet.id" />
+          </el-select>
+          <el-button :disabled="!selectedPetId" @click="goToExecutions">执行记录</el-button>
+          <el-button type="primary" :disabled="!selectedPetId" :icon="Plus" @click="showAddDialog = true">新建</el-button>
+        </div>
+      </div>
+
+      <div v-if="!selectedPetId" class="empty-state">
+        <div class="empty-icon">🐾</div>
+        <p>选个毛孩子开始管理提醒吧</p>
+      </div>
+
+      <div v-else-if="reminders.length === 0" class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>还没有提醒哦，点击"新建"添加一个吧</p>
+      </div>
+
+      <div v-else class="reminder-grid">
+        <div v-for="reminder in reminders" :key="String(reminder.id)" class="reminder-card" :class="{ inactive: !reminder.isActive }">
+          <div class="reminder-card-header">
+            <div class="reminder-title-row">
+              <h3 class="reminder-title">{{ reminder.title || '未命名提醒' }}</h3>
+              <div class="reminder-status-badge" :class="getStatusClass(reminder)">
+                {{ getStatusText(reminder) }}
+              </div>
+            </div>
+            <p v-if="reminder.description" class="reminder-desc">{{ reminder.description }}</p>
+          </div>
+
+          <div class="reminder-time-info">
+            <div class="time-item">
+              <span class="time-icon">⏰</span>
+              <span class="time-label">{{ formatTimeShort(reminder.recordTime) }}</span>
+            </div>
+            <div v-if="reminder.scheduleTime" class="time-item">
+              <span class="time-icon">📅</span>
+              <span class="time-label">{{ formatTimeShort(reminder.scheduleTime) }}</span>
+            </div>
+          </div>
+
+          <div class="reminder-meta-tags">
+            <span class="meta-tag">
+              <span class="tag-icon">🔔</span>
+              提前{{ reminder.remindBeforeMinutes || 0 }}分钟
+            </span>
+            <span class="meta-tag">
+              <span class="tag-icon">🔁</span>
+              {{ getRepeatText(reminder.repeatType) }}
+            </span>
+            <span v-if="reminder.totalOccurrences" class="meta-tag progress">
+              <span class="tag-icon">📊</span>
+              {{ reminder.completedCount || 0 }}/{{ reminder.totalOccurrences }}
+            </span>
+          </div>
+
+          <div class="reminder-card-actions">
+            <el-button
+              v-if="reminder.isActive"
+              type="warning"
+              size="small"
+              plain
+              @click="deactivateReminderHandler(reminder.id)"
+            >
+              暂停
+            </el-button>
+            <el-button
+              v-else
+              type="success"
+              size="small"
+              plain
+              @click="activateReminderHandler(reminder.id)"
+            >
+              启用
+            </el-button>
+            <el-button size="small" @click="editReminder(reminder)">编辑</el-button>
+            <el-button type="danger" size="small" plain @click="deleteReminderHandler(reminder.id)">删除</el-button>
           </div>
         </div>
-      </template>
-      <div class="reminder-list">
-        <el-empty v-if="!selectedPetId" description="请选择宠物" />
-        <el-empty v-else-if="reminders.length === 0" description="暂无提醒" />
-        <el-card v-for="reminder in reminders" :key="String(reminder.id)" class="reminder-item">
-          <div class="reminder-header">
-            <div class="reminder-info">
-              <h4>{{ reminder.title || '未命名提醒' }}</h4>
-              <p v-if="reminder.description">{{ reminder.description }}</p>
-              <div class="reminder-meta">
-                <span>记录时间：{{ formatTime(reminder.recordTime) }}</span>
-                <span v-if="reminder.scheduleTime">计划时间：{{ formatTime(reminder.scheduleTime) }}</span>
-                <span>提前：{{ reminder.remindBeforeMinutes || 0 }} 分钟</span>
-                <span>重复：{{ getRepeatText(reminder.repeatType) }}</span>
-                <span v-if="reminder.totalOccurrences">进度：{{ reminder.completedCount || 0 }}/{{ reminder.totalOccurrences }}</span>
-              </div>
-            </div>
-            <div class="reminder-actions">
-              <div class="reminder-status">
-                <el-tag v-if="!reminder.isActive" type="info" size="small">已停用</el-tag>
-                <el-tag v-else-if="reminder.completedCount && reminder.totalOccurrences && reminder.completedCount >= reminder.totalOccurrences" type="success" size="small">已完成</el-tag>
-                <el-tag v-else type="warning" size="small">进行中</el-tag>
-              </div>
-              <div class="action-buttons">
-                <el-button
-                  v-if="reminder.isActive"
-                  type="warning"
-                  size="small"
-                  text
-                  @click="deactivateReminderHandler(reminder.id)"
-                >
-                  停用
-                </el-button>
-                <el-button
-                  v-else
-                  type="success"
-                  size="small"
-                  text
-                  @click="activateReminderHandler(reminder.id)"
-                >
-                  激活
-                </el-button>
-                <el-button
-                  type="primary"
-                  size="small"
-                  text
-                  @click="editReminder(reminder)"
-                >
-                  编辑
-                </el-button>
-                <el-button
-                  type="danger"
-                  size="small"
-                  text
-                  @click="deleteReminderHandler(reminder.id)"
-                >
-                  删除
-                </el-button>
-              </div>
-            </div>
-          </div>
-        </el-card>
       </div>
 
       <div v-if="selectedPetId && pagination.totalRow > 0" class="pagination-wrapper">
         <el-pagination
           v-model:current-page="pagination.pageNumber"
           v-model:page-size="pagination.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
+          :page-sizes="[10, 20, 50]"
           :total="pagination.totalRow"
-          layout="total, sizes, prev, pager, next, jumper"
+          layout="total, sizes, prev, pager, next"
           @size-change="handleSizeChange"
           @current-change="handlePageChange"
+          small
         />
       </div>
-    </el-card>
+    </div>
 
-    <el-dialog v-model="showAddDialog" :title="editingReminderId ? '编辑提醒' : '添加提醒'" width="520px">
+    <el-dialog v-model="showAddDialog" :title="editingReminderId ? '编辑提醒' : '新建提醒'" width="520px">
       <el-form :model="reminderForm" label-width="100px">
         <el-form-item label="标题">
-          <el-input v-model="reminderForm.title" />
+          <el-input v-model="reminderForm.title" placeholder="比如：遛狗、喂食..." />
         </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="reminderForm.description" type="textarea" />
+        <el-form-item label="备注说明">
+          <el-input v-model="reminderForm.description" type="textarea" placeholder="写点备注吧" />
         </el-form-item>
         <el-form-item label="记录时间">
           <el-date-picker
@@ -126,7 +136,7 @@
             type="datetime"
             value-format="YYYY-MM-DD HH:mm:ss"
             format="YYYY-MM-DD HH:mm"
-            placeholder="选择记录时间"
+            placeholder="选个时间"
             style="width: 100%"
             :shortcuts="dateTimeShortcuts"
             :default-time="new Date(2000, 1, 1, 9, 0, 0)"
@@ -139,19 +149,20 @@
             type="datetime"
             value-format="YYYY-MM-DD HH:mm:ss"
             format="YYYY-MM-DD HH:mm"
-            placeholder="选择计划时间"
+            placeholder="选个时间"
             style="width: 100%"
             :shortcuts="dateTimeShortcuts"
             :default-time="new Date(2000, 1, 1, 9, 0, 0)"
             clearable
           />
         </el-form-item>
-        <el-form-item label="提前提醒(分钟)">
+        <el-form-item label="提前提醒">
           <el-input-number v-model="reminderForm.remindBeforeMinutes" :min="0" style="width: 100%" />
+          <span style="margin-left: 8px; color: #999;">分钟</span>
         </el-form-item>
         <el-form-item label="重复">
-          <el-select v-model="reminderForm.repeatType" style="width: 100%">
-            <el-option label="不重复" value="NONE" />
+          <el-select v-model="reminderForm.repeatType" placeholder="怎么重复" style="width: 100%">
+            <el-option label="一次就好" value="NONE" />
             <el-option label="每天" value="DAILY" />
             <el-option label="每周" value="WEEKLY" />
             <el-option label="每月" value="MONTHLY" />
@@ -161,7 +172,7 @@
       </el-form>
       <template #footer>
         <el-button @click="cancelReminderEdit">取消</el-button>
-        <el-button type="primary" @click="saveReminder">保存</el-button>
+        <el-button type="primary" @click="saveReminder">确定</el-button>
       </template>
     </el-dialog>
 
@@ -190,7 +201,7 @@
 import { onMounted, ref, computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Calendar } from '@element-plus/icons-vue'
+import { Calendar, Plus, Loading } from '@element-plus/icons-vue'
 import { fetchPets, fetchReminders, createReminder, updateReminder, deleteReminder, activateReminder, deactivateReminder } from '@/services/petService'
 import { userCheckIn, fetchCheckInStats, type CheckInStats } from '@/services/userService'
 import type { Reminder, Pet, RepeatType } from '@/types/pet'
@@ -464,6 +475,28 @@ const formatTime = (time: string) => {
   return new Date(time).toLocaleString('zh-CN')
 }
 
+const formatTimeShort = (time: string) => {
+  if (!time) return ''
+  const date = new Date(time)
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${month}-${day} ${hours}:${minutes}`
+}
+
+const getStatusClass = (reminder: Reminder) => {
+  if (!reminder.isActive) return 'inactive'
+  if (reminder.completedCount && reminder.totalOccurrences && reminder.completedCount >= reminder.totalOccurrences) return 'completed'
+  return 'active'
+}
+
+const getStatusText = (reminder: Reminder) => {
+  if (!reminder.isActive) return '已暂停'
+  if (reminder.completedCount && reminder.totalOccurrences && reminder.completedCount >= reminder.totalOccurrences) return '已完成'
+  return '进行中'
+}
+
 const handleSizeChange = (size: number) => {
   pagination.pageSize = size
   pagination.pageNumber = 1
@@ -489,181 +522,302 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/variables.scss' as vars;
+@use '@/styles/pet-theme.scss' as pet;
+@use '@/styles/animations.scss' as anim;
+
 .reminders-page {
   padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.header {
+// 简洁打卡栏
+.checkin-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #FF8A4C 0%, #FFB380 100%);
+  border-radius: pet.$pet-radius-md;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(255, 138, 76, 0.25);
+}
+
+.checkin-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.mini-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: #fff;
+}
+
+.mini-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: vars.$font-family-cute;
+}
+
+.mini-stat-label {
+  font-size: 13px;
+  opacity: 0.95;
+}
+
+.checkin-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+// 打卡栏玻璃态按钮
+.checkin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  @include anim.anim-standard;
+
+  &.glass {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 20px;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.42);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  }
+
+  &.text {
+    padding: 8px 12px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+  }
+}
+
+// 提醒内容区域
+.reminders-content {
+  background: #fff;
+  border-radius: pet.$pet-radius-md;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(212, 163, 115, 0.12);
+}
+
+.content-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+
   h2 {
     margin: 0;
-    font-size: clamp(18px, 4.6vw, 22px);
-    line-height: 1.2;
+    font-size: 22px;
+    font-family: vars.$font-family-cute;
+    color: vars.$pet-charcoal;
   }
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   flex-wrap: wrap;
-  min-width: 0;
-
-  :deep(.el-select) {
-    width: min(220px, 100%);
-  }
 }
 
-.reminder-list {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
+// 空状态
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0;
+  color: #7F8C8D;
+}
+
+// 提醒卡片网格
+.reminder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
 }
 
-.reminder-header {
+.reminder-card {
+  background: #FFFEFA;
+  border: 2px solid #E8E8E8;
+  border-radius: pet.$pet-radius-md;
+  padding: 16px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(255, 138, 76, 0.15);
+    border-color: #FFD4A8;
+  }
+
+  &.inactive {
+    opacity: 0.6;
+    background: #F5F5F5;
+  }
+}
+
+.reminder-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reminder-title-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-}
-
-.reminder-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-.action-buttons {
-  display: flex;
   gap: 8px;
 }
 
-.reminder-info {
+.reminder-title {
+  margin: 0;
+  font-size: 18px;
+  font-family: vars.$font-family-cute;
+  color: #2C3E50;
+  line-height: 1.3;
   flex: 1;
-  min-width: 0;
-  h4 {
-    margin: 0 0 8px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+}
+
+.reminder-status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.active {
+    background: linear-gradient(135deg, #B8E6D4 0%, #81B29A 100%);
+    color: #2C3E50;
   }
-  p {
-    margin: 0 0 8px;
-    color: #666;
+
+  &.completed {
+    background: linear-gradient(135deg, #FFB3BA 0%, #FF8A80 100%);
+    color: #2C3E50;
   }
-  .reminder-meta {
-    display: flex;
-    gap: 16px;
-    font-size: 12px;
-    color: #999;
-    flex-wrap: wrap;
+
+  &.inactive {
+    background: #E0E0E0;
+    color: #7F8C8D;
   }
+}
+
+.reminder-desc {
+  margin: 0;
+  font-size: 14px;
+  color: #7F8C8D;
+  line-height: 1.5;
+  font-family: vars.$font-family-body;
+}
+
+.reminder-time-info {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #5D6D7E;
+}
+
+.time-icon {
+  font-size: 14px;
+}
+
+.time-label {
+  font-family: vars.$font-family-number;
+  font-weight: 500;
+}
+
+.reminder-meta-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #FFF3E0;
+  border-radius: pet.$pet-radius-sm;
+  font-size: 12px;
+  color: #5D4037;
+  font-family: vars.$font-family-body;
+
+  &.progress {
+    background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%);
+    color: #01579B;
+  }
+}
+
+.tag-icon {
+  font-size: 12px;
+}
+
+.reminder-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px dashed #E0E0E0;
 }
 
 .pagination-wrapper {
-  margin-top: 20px;
+  margin-top: 24px;
   display: flex;
-  justify-content: flex-end;
-}
-
-.reminder-status {
-  display: flex;
-  align-items: center;
-}
-
-.checkin-stats-card {
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #FF8A4C 0%, #FFD1A6 100%);
-  border: none;
-  box-shadow: 0 4px 16px rgba(255, 138, 76, 0.2);
-
-  :deep(.el-card__body) {
-    padding: 24px;
-  }
-}
-
-.checkin-stats {
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 48px;
-  color: #fff;
-  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid #F0F0F0;
 }
 
-.stat-item {
-  text-align: center;
-}
-
-.stat-value {
-  font-size: clamp(22px, 6vw, 36px);
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: #fff;
-
-  &.highlight {
-    color: #fff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.stat-label {
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.checkin-action {
-  margin-left: 24px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 768px) {
-  .reminders-page {
-    padding: 16px;
-  }
-
-  .header {
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .header-actions {
-    width: 100%;
-    gap: 10px;
-
-    :deep(.el-select) {
-      flex: 1;
-      min-width: 140px;
-      width: auto;
-    }
-  }
-
-  .checkin-stats {
-    gap: 16px;
-    justify-content: flex-start;
-  }
-
-  .checkin-action {
-    margin-left: 0;
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
+// 签到对话框样式保持不变
 .checkin-dialog {
   .checkin-dialog-header {
     margin-bottom: 16px;
@@ -673,6 +827,85 @@ onMounted(async () => {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+  }
+}
+
+// 移动端适配
+@media (max-width: 768px) {
+  .reminders-page {
+    padding: 16px;
+  }
+
+  .checkin-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .checkin-stats {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .checkin-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+
+    :deep(.el-select) {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+
+  .reminder-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .reminder-card {
+    padding: 14px;
+  }
+
+  .reminder-title {
+    font-size: 16px;
+  }
+
+  .reminder-card-actions {
+    justify-content: stretch;
+
+    .el-button {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .mini-stat-value {
+    font-size: 24px;
+  }
+
+  .mini-stat-label {
+    font-size: 12px;
+  }
+
+  .checkin-buttons {
+    flex-direction: column;
+    width: 100%;
+
+    .el-button {
+      width: 100%;
+    }
   }
 }
 </style>

@@ -3,13 +3,13 @@
     <el-card shadow="never">
       <template #header>
         <div class="header">
-          <div class="title">发布动态</div>
+          <div class="title">发动态</div>
           <el-button @click="goBack">返回</el-button>
         </div>
       </template>
 
       <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
-        <el-form-item label="类型" prop="postType">
+        <el-form-item label="分享类型" prop="postType">
           <el-select v-model="form.postType" style="width: 240px">
             <el-option label="好物分享" :value="1" />
             <el-option label="服务推荐" :value="2" />
@@ -19,36 +19,32 @@
         </el-form-item>
 
         <el-form-item label="标题" prop="title">
-          <el-input v-model="form.title" maxlength="200" show-word-limit />
+          <el-input v-model="form.title" placeholder="写个标题吧" maxlength="200" show-word-limit />
         </el-form-item>
 
-        <el-form-item label="内容" prop="content">
-          <el-input v-model="form.content" type="textarea" :rows="6" maxlength="5000" show-word-limit />
+        <el-form-item label="写点什么" prop="content">
+          <el-input v-model="form.content" type="textarea" :rows="6" placeholder="分享你的想法..." maxlength="5000" show-word-limit />
         </el-form-item>
 
-        <el-form-item label="媒体URL">
+        <el-form-item label="图片/视频">
           <el-input
             v-model="mediaUrlText"
             type="textarea"
             :rows="3"
-            placeholder="每行一个URL（图片/视频）。如需上传文件，请后端提供上传接口后再接入。"
+            placeholder="每行一个链接（图片/视频）"
           />
         </el-form-item>
 
-        <el-form-item label="外部链接">
-          <el-input v-model="form.externalLink" maxlength="500" />
+        <el-form-item label="相关链接">
+          <el-input v-model="form.externalLink" placeholder="相关链接" maxlength="500" />
         </el-form-item>
 
-        <el-form-item label="价格区间">
+        <el-form-item label="价格">
           <el-input v-model="form.priceRange" placeholder="如：100-200元" maxlength="50" style="width: 240px" />
         </el-form-item>
 
-        <el-form-item label="地点">
-          <div class="location-row">
-            <el-input v-model="form.locationInfo.city" placeholder="城市" style="width: 160px" />
-            <el-input v-model="form.locationInfo.district" placeholder="区域" style="width: 160px" />
-            <el-input v-model="form.locationInfo.address" placeholder="地址" style="width: 360px" />
-          </div>
+        <el-form-item label="在哪儿">
+          <el-input v-model="form.locationAddress" placeholder="地址" maxlength="200" style="width: 520px" />
         </el-form-item>
 
         <el-form-item label="标签">
@@ -60,7 +56,7 @@
             clearable
             :remote-method="remoteSearchLabels"
             :loading="labelLoading"
-            placeholder="输入关键词联想或选择推荐标签"
+            placeholder="选个标签吧"
             style="width: 520px"
           >
             <el-option-group v-if="commonLabels.length > 0" label="推荐标签">
@@ -72,7 +68,7 @@
             <el-option v-for="t in labelOptions" :key="String(t.id)" :label="t.name" :value="t.id" />
           </el-select>
           <div v-if="commonLabels.length > 0" class="recommended-labels">
-            <span class="label-hint">推荐标签：</span>
+            <span class="label-hint">推荐：</span>
             <el-tag
               v-for="label in commonLabels"
               :key="String(label.id)"
@@ -116,7 +112,7 @@ const form = ref<CreatePostPayload>({
   content: '',
   externalLink: '',
   priceRange: '',
-  locationInfo: { city: '', district: '', address: '' },
+  locationAddress: '',
   mediaUrls: [],
   labelIds: [],
 })
@@ -139,7 +135,7 @@ const normalizeMediaUrls = () => {
     .split('\n')
     .map(s => s.trim())
     .filter(Boolean)
-  form.value.mediaUrls = lines.map(url => ({ url }))
+  form.value.mediaUrls = lines
 }
 
 const loadCommonLabels = async () => {
@@ -225,12 +221,6 @@ const goBack = () => {
     font-weight: 700;
     font-family: 'Comic Sans MS', sans-serif;
   }
-}
-
-.location-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 
 .recommended-labels {

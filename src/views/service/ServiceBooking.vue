@@ -292,6 +292,7 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 @use '@/styles/variables.scss' as vars;
+@use '@/styles/pet-theme.scss' as pet;
 
 .service-booking-page {
   padding: 24px;
@@ -515,7 +516,7 @@ onMounted(async () => {
 }
 
 .service-price {
-  color: vars.$pet-color-orange;
+  color: pet.$pet-primary;
   font-weight: 600;
   margin-left: 8px;
 }

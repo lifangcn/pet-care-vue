@@ -5,7 +5,12 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/login',
+      name: 'landing',
+      component: () => import('@/views/landing/Landing.vue'),
+      meta: {
+        title: '宠物关怀助手 - 发现更合适的，从真实分享开始',
+        description: '真实养宠人的分享社区，帮你找到适合毛孩子的食品、用品和好去处。少踩坑，多发现。',
+      },
     },
     {
       path: '/login',
@@ -13,6 +18,7 @@ const router = createRouter({
       component: () => import('@/views/auth/Login.vue'),
       meta: {
         title: '登录 - 宠物关怀系统',
+        description: '登录宠物关怀助手，加入真实养宠人分享社区，发现适合毛孩子的食品、用品和好去处。',
       },
     },
     {
@@ -33,7 +39,7 @@ const router = createRouter({
       meta: {
         title: '仪表盘 - 宠物关怀系统',
         menu: {
-          title: '仪表盘',
+          title: '首页',
           icon: 'DataBoard',
           order: 1,
         },
@@ -46,7 +52,7 @@ const router = createRouter({
       meta: {
         title: '宠物列表 - 宠物关怀系统',
         menu: {
-          title: '宠物管理',
+          title: '毛孩子',
           icon: 'Avatar',
           order: 2,
         },
@@ -70,7 +76,7 @@ const router = createRouter({
       meta: {
         title: '内容广场 - 宠物关怀系统',
         menu: {
-          title: '社区',
+          title: '说说',
           icon: 'MagicStick',
           order: 6,
         },
@@ -178,6 +184,15 @@ const router = createRouter({
         },
       },
     },
+    {
+      path: '/points/records',
+      name: 'points-records',
+      component: () => import('@/views/points/PointsRecords.vue'),
+      meta: {
+        title: '积分明细 - 宠物关怀系统',
+        menu: { hidden: true },
+      },
+    },
     // ========== 以下路由已废弃，模块已移除 ==========
     // 钱包模块已移除（Wallet.vue 文件保留但不再使用）
     // 商城模块已移除（购物车、订单、优惠券等功能已废弃）
@@ -190,7 +205,7 @@ const router = createRouter({
       meta: {
         title: '提醒管理 - 宠物关怀系统',
         menu: {
-          title: '提醒管理',
+          title: '提醒',
           icon: 'Bell',
           order: 3,
         },
@@ -235,12 +250,38 @@ const router = createRouter({
         },
       },
     },
+    {
+      path: '/points/grab',
+      name: 'points-grab',
+      component: () => import('@/views/points/CouponGrab.vue'),
+      meta: {
+        title: '抢劵活动 - 宠物关怀系统',
+        menu: { hidden: true },
+      },
+    },
   ],
 })
+
+/** 设置或更新 meta 标签，用于 SEO */
+function setMeta(name, content, isProperty = false) {
+  const attr = isProperty ? 'property' : 'name'
+  let el = document.querySelector(`meta[${attr}="${name}"]`)
+  if (!el) {
+    el = document.createElement('meta')
+    el.setAttribute(attr, name)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('content', content || '')
+}
 
 router.beforeEach((to, _from, next) => {
   if (to.meta?.title) {
     document.title = to.meta.title
+  }
+  if (to.meta?.description) {
+    setMeta('description', to.meta.description)
+    setMeta('og:title', to.meta.title, true)
+    setMeta('og:description', to.meta.description, true)
   }
   next()
 })

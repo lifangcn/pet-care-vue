@@ -88,6 +88,26 @@ export const getDocumentPreviewUrl = (id: number) => {
 }
 
 /**
+ * 同步调试接口
+ */
+
+/**
+ * [API调用] POST /ai/sync/posts/migrate
+ * 同步动态到知识库
+ */
+export const syncPostsMigrate = () => {
+  return apiClient.post('/ai/sync/posts/migrate')
+}
+
+/**
+ * [API调用] POST /ai/sync/activities/migrate
+ * 同步活动到知识库
+ */
+export const syncActivitiesMigrate = () => {
+  return apiClient.post('/ai/sync/activities/migrate')
+}
+
+/**
  * RAG对话相关接口
  */
 

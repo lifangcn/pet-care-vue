@@ -14,7 +14,7 @@ const AppLayout = defineAsyncComponent(() => import('@/components/layout/AppLayo
 
 const route = useRoute()
 
-// 不需要布局的页面（如登录页）
-const noLayoutRoutes = ['/login']
+// 不需要布局的页面（落地页、登录页）
+const noLayoutRoutes = ['/', '/login']
 const showLayout = computed(() => !noLayoutRoutes.includes(route.path))
 </script>

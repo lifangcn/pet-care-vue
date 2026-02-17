@@ -47,13 +47,13 @@ export const savePet = (payload: CreatePetPayload & { id?: string | number }) =>
 }
 
 /**
- * [API调用] POST /pet/remove/{id}
+ * [API调用] DELETE /pet/remove/{id}
  * 删除宠物
  * @param {string | number} id - 宠物ID
  * @returns {Promise} 返回删除结果
  */
 export const removePet = (id: string | number) => {
-  return apiClient.post(`/pet/remove/${id}`)
+  return apiClient.delete(`/pet/remove/${id}`)
 }
 
 /**

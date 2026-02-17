@@ -1,38 +1,40 @@
 /**
- * @description 宠物关怀项目 - 手绘插画风格设计系统变量
- * @date 2026-01-21
+ * @description 宠物关怀项目 - 温暖友好设计系统
+ * @date 2026-01-29
  * @author Michael
  */
 
-// === 粉彩色彩体系 ===
-$pet-primary: #FF8A4C;       // 杏橙 - 主色
-$pet-secondary: #FFD1A6;     // 奶油橙 - 辅助色
-$pet-accent-green: #BFEBD7;  // 薄荷绿 - 成功/健康
-$pet-accent-blue: #BFD9F2;   // 天蓝 - 信息
-$pet-accent-yellow: #FFF0B8; // 淡黄 - 警告
-$pet-accent-lavender: #D7CCFF; // 淡紫 - 点缀
+// === 温暖色彩系统 ===
+$pet-primary: #E07A5F;       // 陶土红 - 主色
+$pet-secondary: #D4A373;     // 暖棕 - 辅助色
+$pet-accent-green: #81B29A;  // 鼠尾草绿
+$pet-accent-sand: #FAEDCD;   // 沙色
+$pet-accent-cream: #F8F4E8;  // 米白
+$pet-warm-gray: #9A8C7B;     // 暖灰
 
-$pet-bg-paper: #FFFBF7;     // 纸质背景
-$pet-bg-card: #FFFEFA;      // 卡片背景
+$pet-bg-paper: #FDF9F3;      // 纸质背景（暖白）
+$pet-bg-card: #FFFFFF;       // 卡片背景
 
-// === 圆角系统（不规则手绘感）===
-$pet-radius-sm: 6px 8px 4px 7px;      // 标签、小按钮
-$pet-radius-md: 12px 8px 14px 10px;   // 卡片、输入框
-$pet-radius-lg: 18px 14px 20px 16px;  // 大卡片
+// === 大圆角系统（更温暖）===
+$pet-radius-sm: 8px;         // 小圆角
+$pet-radius-md: 14px;        // 中圆角
+$pet-radius-lg: 20px;        // 大圆角
+$pet-radius-xl: 28px;        // 超大圆角
 
-// === 间距系统 ===
-$pet-space-xs: 4px;
-$pet-space-sm: 8px;
-$pet-space-md: 16px;
-$pet-space-lg: 24px;
+// === 松散间距系统 ===
+$pet-space-xs: 8px;
+$pet-space-sm: 16px;
+$pet-space-md: 24px;
+$pet-space-lg: 36px;
+$pet-space-xl: 48px;
 
-// === 阴影（手绘感）===
-$pet-shadow: 3px 3px 0 rgba(255, 159, 67, 0.3);
-$pet-shadow-hover: 4px 4px 0 rgba(255, 159, 67, 0.5);
+// === 柔和阴影 ===
+$pet-shadow: 0 4px 20px rgba(212, 163, 115, 0.15);
+$pet-shadow-hover: 0 8px 30px rgba(212, 163, 115, 0.25);
 
-// === 手绘边框效果 ===
-$pet-border-width: 2px;
-$pet-border-color: rgba(255, 138, 76, 0.25);
+// === 边框 ===
+$pet-border-width: 1px;
+$pet-border-color: rgba(212, 163, 115, 0.2);
 
 // === 响应式断点 ===
 $pet-breakpoint-xs: 375px;

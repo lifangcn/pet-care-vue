@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hero Preview - PetCare</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: #F5F0E8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 40px;
+      padding: 48px 52px;
+      background: linear-gradient(145deg, #FF8A4C 0%, #FFA167 35%, #FFC48A 70%, #FFD4A8 100%);
+      border-radius: 28px;
+      overflow: hidden;
+    }
+
+    /* Noise texture overlay */
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.06;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+    }
+
+    /* Organic blob decoration */
+    .blob-decoration {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .blob-1, .blob-2, .blob-3 {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(1px);
+    }
+
+    .blob-1 {
+      width: 280px;
+      height: 260px;
+      background: rgba(255, 255, 255, 0.25);
+      top: 10%;
+      right: 15%;
+      animation: float-blob-1 8s ease-in-out infinite;
+    }
+
+    .blob-2 {
+      width: 180px;
+      height: 200px;
+      background: rgba(255, 200, 150, 0.3);
+      bottom: 15%;
+      right: 35%;
+      animation: float-blob-2 10s ease-in-out infinite;
+    }
+
+    .blob-3 {
+      width: 120px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.2);
+      top: 45%;
+      right: 8%;
+      animation: float-blob-3 6s ease-in-out infinite;
+    }
+
+    /* Paw print illustration */
+    .paw-illustration {
+      position: relative;
+      z-index: 2;
+      width: 160px;
+      height: 160px;
+      animation: paw-pulse 3s ease-in-out infinite;
+    }
+
+    .paw-illustration svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 8px 24px rgba(180, 80, 20, 0.25));
+    }
+
+    /* Hero content */
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-greeting {
+      font-family: 'Quicksand', 'Noto Sans SC', sans-serif;
+      font-size: 42px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+      animation: slide-up 0.6s ease-out;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.92);
+      margin: 0 0 32px;
+      font-weight: 400;
+      animation: slide-up 0.6s ease-out 0.1s both;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      animation: slide-up 0.6s ease-out 0.2s both;
+    }
+
+    .stat-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 24px;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 18px;
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 12px 32px rgba(180, 70, 20, 0.2);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-value {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+    }
+
+    /* Decorative dot pattern */
+    .dot-pattern {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      top: 20px;
+      left: 30px;
+      opacity: 0.15;
+    }
+
+    .dot-pattern svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Animations */
+    @keyframes float-blob-1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(15px, -20px) scale(1.05); }
+      66% { transform: translate(-10px, 15px) scale(0.95); }
+    }
+
+    @keyframes float-blob-2 {
+      0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+      50% { transform: translate(-20px, 10px) scale(1.1) rotate(5deg); }
+    }
+
+    @keyframes float-blob-3 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(10px, -15px) scale(1.15); }
+    }
+
+    @keyframes paw-pulse {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.05) rotate(3deg); }
+    }
+
+    @keyframes slide-up {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-section {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 32px 24px;
+      }
+
+      .blob-decoration {
+        order: -1;
+        padding: 20px 0;
+      }
+
+      .blob-1 { width: 200px; height: 180px; }
+      .blob-2 { width: 140px; height: 160px; }
+      .blob-3 { width: 80px; height: 70px; }
+
+      .paw-illustration {
+        width: 100px;
+        height: 100px;
+      }
+
+      .hero-greeting {
+        font-size: 32px;
+      }
+
+      .stats-grid {
+        gap: 12px;
+      }
+
+      .stat-card {
+        padding: 16px 20px;
+      }
+
+      .stat-value {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero-section">
+      <!-- Left: Content -->
+      <div class="hero-content">
+        <h1 class="hero-greeting">中午好 🌤️</h1>
+        <p class="hero-subtitle">吃过午饭了吗？下午加油，毛孩子在家等你</p>
+
+        <div class="stats-grid">
+          <a href="#" class="stat-card">
+            <span class="stat-value">2</span>
+            <span class="stat-label">毛孩子</span>
+          </a>
+          <a href="#" class="stat-card">
+            <span class="stat-value">3</span>
+            <span class="stat-label">今日待办</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Decoration -->
+      <div class="blob-decoration">
+        <div class="blob-1"></div>
+        <div class="blob-2"></div>
+        <div class="blob-3"></div>
+        <div class="paw-illustration">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Main pad -->
+            <ellipse cx="50" cy="62" rx="22" ry="18" fill="rgba(255,255,255,0.9)"/>
+            <!-- Toe pads -->
+            <ellipse cx="28" cy="38" rx="10" ry="12" fill="rgba(255,255,255,0.85)"/>
+            <ellipse cx="50" cy="28" rx="10" ry="12" fill="rgba(255,255,255,0.85)"/>
+            <ellipse cx="72" cy="38" rx="10" ry="12" fill="rgba(255,255,255,0.85)"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

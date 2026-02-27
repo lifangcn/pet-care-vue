@@ -23,8 +23,8 @@
 
         <el-form-item label="活动类型" prop="activityType">
           <el-radio-group v-model="form.activityType">
-            <el-radio-button :value="1">线上活动</el-radio-button>
-            <el-radio-button :value="2">线下聚会</el-radio-button>
+            <el-radio-button value="ONLINE">线上活动</el-radio-button>
+            <el-radio-button value="OFFLINE">线下聚会</el-radio-button>
           </el-radio-group>
         </el-form-item>
 
@@ -51,11 +51,11 @@
           />
         </el-form-item>
 
-        <el-form-item label="在哪儿" v-if="form.activityType === 2">
+        <el-form-item label="在哪儿" v-if="form.activityType === 'OFFLINE'">
           <el-input v-model="form.address" placeholder="活动地点" maxlength="500" />
         </el-form-item>
 
-        <el-form-item label="线上链接" v-if="form.activityType === 1">
+        <el-form-item label="线上链接" v-if="form.activityType === 'ONLINE'">
           <el-input v-model="form.onlineLink" placeholder="活动链接" maxlength="500" />
         </el-form-item>
 
@@ -98,7 +98,7 @@ const form = ref<CreateActivityPayload>({
   title: '',
   description: '',
   coverImage: '',
-  activityType: 1,
+  activityType: 'ONLINE',
   activityTime: '',
   endTime: '',
   address: '',

@@ -61,7 +61,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { fetchPostById, likePost, ratePost } from '@/services/postService'
-import type { Label, Post } from '@/types/club'
+import type { Label, Post, PostType } from '@/types/club'
 
 const route = useRoute()
 const router = useRouter()
@@ -101,12 +101,13 @@ const locationAddress = computed(() => {
   return (post.value as any)?.locationAddress || ''
 })
 
-const typeLabel = (t?: number) => {
-  if (t === 1) return '好物分享'
-  if (t === 2) return '服务推荐'
-  if (t === 3) return '地点推荐'
-  if (t === 4) return '日常分享'
-  if (t === 5) return '活动打卡'
+const typeLabel = (t?: PostType) => {
+  if (t === 'PRODUCT') return '好物分享'
+  if (t === 'SERVICE') return '服务推荐'
+  if (t === 'LOCATION') return '地点推荐'
+  if (t === 'DAILY') return '日常分享'
+  if (t === 'ACTIVITY_CHECK') return '活动打卡'
+  if (t === 'ACTIVITY_JOIN') return '活动报名'
   return '动态'
 }
 

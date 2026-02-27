@@ -11,10 +11,10 @@
       <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
         <el-form-item label="分享类型" prop="postType">
           <el-select v-model="form.postType" style="width: 240px">
-            <el-option label="好物分享" :value="1" />
-            <el-option label="服务推荐" :value="2" />
-            <el-option label="地点推荐" :value="3" />
-            <el-option label="日常分享" :value="4" />
+            <el-option label="好物分享" value="PRODUCT" />
+            <el-option label="服务推荐" value="SERVICE" />
+            <el-option label="地点推荐" value="LOCATION" />
+            <el-option label="日常分享" value="DAILY" />
           </el-select>
         </el-form-item>
 
@@ -107,7 +107,7 @@ const formRef = ref<FormInstance>()
 const submitting = ref(false)
 
 const form = ref<CreatePostPayload>({
-  postType: 1,
+  postType: 'PRODUCT',
   title: '',
   content: '',
   externalLink: '',
@@ -181,7 +181,17 @@ const submit = async () => {
   try {
     normalizeMediaUrls()
     form.value.labelIds = selectedLabelIds.value
-    await createPost(form.value)
+
+    // 移除空数组，不传给后端
+    const payload = { ...form.value }
+    if (payload.mediaUrls.length === 0) {
+      delete payload.mediaUrls
+    }
+    if (payload.labelIds.length === 0) {
+      delete payload.labelIds
+    }
+
+    await createPost(payload)
     ElMessage.success('发布成功')
     router.replace('/club/posts')
   } catch (e: any) {

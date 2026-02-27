@@ -1,4 +1,4 @@
-export type PetGender = 0 | 1
+export type PetGender = 'MALE' | 'FEMALE' | null
 
 export interface Pet {
   id: string | number
@@ -6,7 +6,7 @@ export interface Pet {
   name: string
   type?: string | null
   breed?: string | null
-  gender?: PetGender | null
+  gender?: PetGender
   birthday?: string | null
   weight?: number | null
   avatar?: string | null
@@ -19,7 +19,7 @@ export interface CreatePetPayload {
   name: string
   type?: string | null
   breed?: string | null
-  gender?: PetGender | null
+  gender?: PetGender
   birthday?: string | null
   weight?: number | null
   avatar?: string | null

@@ -11,7 +11,7 @@ export const createPost = (payload: CreatePostPayload) => {
 }
 
 export const fetchPosts = (params?: {
-  postType?: number
+  postType?: PostType
   labelId?: string | number
   city?: string
   sort?: 'latest' | 'hot' | 'rating'

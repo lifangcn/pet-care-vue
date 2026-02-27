@@ -1,5 +1,5 @@
 import apiClient from './api'
-import type { Activity, CreateActivityPayload, PageResult, Post } from '@/types/club'
+import type { Activity, ActivityStatus, ActivityType, CreateActivityPayload, PageResult, Post } from '@/types/club'
 
 /**
  * 社区-活动打卡相关接口
@@ -10,8 +10,8 @@ export const createActivity = (payload: CreateActivityPayload) => {
 }
 
 export const fetchActivities = (params?: {
-  status?: number
-  activityType?: number
+  status?: ActivityStatus
+  activityType?: ActivityType
   pageNumber?: number
   pageSize?: number
 }) => {

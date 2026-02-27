@@ -90,11 +90,13 @@ export const usePetStore = defineStore('pet', {
       return ''
     },
     /**
-     * 转换性别：后端可能返回布尔值或其他格式，转换为 0|1|2
+     * 转换性别：统一为 MALE/FEMALE/null（与后端/数据库一致）
      */
-    convertGender(gender: any): 0 | 1 {
-      if (gender === true || gender === 1 || gender === '1') return 1
-      return 0
+    convertGender(gender: any): Pet['gender'] {
+      if (gender === 'MALE' || gender === 'FEMALE') return gender
+      if (gender === true || gender === 1 || gender === '1') return 'MALE'
+      if (gender === false || gender === 0 || gender === '0') return 'FEMALE'
+      return null
     },
     /**
      * [API调用] 保存宠物

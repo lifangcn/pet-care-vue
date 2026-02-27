@@ -25,8 +25,8 @@
 
       <el-select v-model="query.activityType" placeholder="类型" clearable class="filter-select" @change="reload">
         <el-option label="全部" :value="undefined" />
-        <el-option label="线上活动" :value="1" />
-        <el-option label="线下聚会" :value="2" />
+        <el-option label="线上活动" value="ONLINE" />
+        <el-option label="线下聚会" value="OFFLINE" />
       </el-select>
     </div>
 
@@ -77,18 +77,18 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { fetchActivities } from '@/services/activityService'
-import type { Activity } from '@/types/club'
+import type { Activity, ActivityStatus, ActivityType } from '@/types/club'
 
 const router = useRouter()
 
 const statusTabs = [
-  { label: '招募中', value: 1 },
-  { label: '进行中', value: 2 },
-  { label: '已结束', value: 3 },
+  { label: '招募中', value: 'RECRUITING' as const },
+  { label: '进行中', value: 'ONGOING' as const },
+  { label: '已结束', value: 'ENDED' as const },
 ]
 
-const query = ref<{ status?: number; activityType?: number; pageNumber: number; pageSize: number }>({
-  status: 1,
+const query = ref<{ status?: ActivityStatus; activityType?: ActivityType; pageNumber: number; pageSize: number }>({
+  status: 'RECRUITING',
   pageNumber: 1,
   pageSize: 20,
 })
@@ -97,16 +97,16 @@ const activities = ref<Activity[]>([])
 const loading = ref(false)
 const noMore = ref(false)
 
-const statusLabel = (s?: number) => {
-  if (s === 1) return '招募中'
-  if (s === 2) return '进行中'
-  if (s === 3) return '已结束'
+const statusLabel = (s?: ActivityStatus) => {
+  if (s === 'RECRUITING') return '招募中'
+  if (s === 'ONGOING') return '进行中'
+  if (s === 'ENDED') return '已结束'
   return '未知'
 }
 
-const typeLabel = (t: number) => {
-  if (t === 1) return '线上活动'
-  if (t === 2) return '线下聚会'
+const typeLabel = (t: ActivityType) => {
+  if (t === 'ONLINE') return '线上活动'
+  if (t === 'OFFLINE') return '线下聚会'
   return '活动'
 }
 
@@ -117,7 +117,7 @@ const formatTime = (v?: string) => {
   return d.toLocaleString('zh-CN')
 }
 
-const setStatus = (value: number | undefined) => {
+const setStatus = (value: ActivityStatus | undefined) => {
   query.value.status = value
   reload()
 }
@@ -291,17 +291,17 @@ onMounted(reload)
   font-size: 12px;
   flex-shrink: 0;
 
-  &.status-1 {
+  &.status-RECRUITING {
     background: rgba(129, 178, 154, 0.2);
     color: #81B29A;
   }
 
-  &.status-2 {
+  &.status-ONGOING {
     background: rgba(242, 204, 143, 0.3);
     color: #B8860B;
   }
 
-  &.status-3 {
+  &.status-ENDED {
     background: #F5F0E8;
     color: pet.$pet-warm-gray;
   }

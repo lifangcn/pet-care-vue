@@ -108,10 +108,11 @@
                   <el-col :span="12">
                     <el-form-item label="性别" prop="gender">
                       <el-radio-group v-if="editMode" v-model="basicForm.gender">
-                        <el-radio-button :value="1">公</el-radio-button>
-                        <el-radio-button :value="0">母</el-radio-button>
+                        <el-radio-button :value="null">未知</el-radio-button>
+                        <el-radio-button value="MALE">公</el-radio-button>
+                        <el-radio-button value="FEMALE">母</el-radio-button>
                       </el-radio-group>
-                      <span v-else class="gender-display">{{ basicForm.gender === 1 ? '公' : '母' }}</span>
+                      <span v-else class="gender-display">{{ genderLabel(basicForm.gender) }}</span>
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
@@ -367,7 +368,7 @@ const basicForm = reactive({
   name: '',
   type: '' as string,
   breed: '',
-  gender: 1 as 0 | 1,
+  gender: null as Pet['gender'],
   birthday: '' as string,
   weight: null as number | null,
   healthNotes: '',
@@ -438,10 +439,10 @@ const basicFormRules: FormRules = {
 }
 
 
-const genderLabel = (gender: any) => {
-  if (gender === 1) return '公'
-  if (gender === 0) return '母'
-  return '-'
+const genderLabel = (gender: Pet['gender']) => {
+  if (gender === 'MALE') return '公'
+  if (gender === 'FEMALE') return '母'
+  return '未知'
 }
 
 const typeLabel = (type: any) => {
@@ -910,11 +911,17 @@ const loadPet = async () => {
     const { data } = await fetchPetById(petId)
     pet.value = data
     const healthNotes = (data as any).healthNotes || ''
+    const normalizeGender = (g: any): Pet['gender'] => {
+      if (g === 'MALE' || g === 'FEMALE') return g
+      if (g === true || g === 1 || g === '1') return 'MALE'
+      if (g === false || g === 0 || g === '0') return 'FEMALE'
+      return null
+    }
     Object.assign(basicForm, {
       name: data.name,
       type: data.type || '',
       breed: data.breed || '',
-      gender: data.gender === 0 ? 0 : 1 as 0 | 1,
+      gender: normalizeGender((data as any).gender),
       birthday: data.birthday || '',
       weight: data.weight,
       healthNotes: healthNotes,
@@ -943,7 +950,7 @@ const saveBasicInfo = async () => {
       name: basicForm.name,
       type: basicForm.type || pet.value?.type || '',
       breed: basicForm.breed || '',
-      gender: (basicForm.gender === 0 ? 0 : 1) as 0 | 1,
+      gender: basicForm.gender ?? null,
       birthday: basicForm.birthday || null,
       weight: basicForm.weight,
       healthNotes: basicForm.healthNotes || '',
@@ -965,7 +972,12 @@ const cancelEdit = () => {
       name: pet.value.name,
       type: pet.value.type || '',
       breed: pet.value.breed || '',
-      gender: pet.value.gender === 0 ? 0 : 1 as 0 | 1,
+      gender: ((g: any): Pet['gender'] => {
+        if (g === 'MALE' || g === 'FEMALE') return g
+        if (g === true || g === 1 || g === '1') return 'MALE'
+        if (g === false || g === 0 || g === '0') return 'FEMALE'
+        return null
+      })((pet.value as any).gender),
       birthday: pet.value.birthday || '',
       weight: pet.value.weight,
       healthNotes: healthNotes,

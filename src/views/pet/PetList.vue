@@ -340,9 +340,9 @@
           <el-col :span="12">
             <el-form-item label="性别" prop="gender">
               <el-radio-group v-model="formState.gender">
-                <el-radio-button :value="0">未知</el-radio-button>
-                <el-radio-button :value="1">公</el-radio-button>
-                <el-radio-button :value="2">母</el-radio-button>
+              <el-radio-button :value="null">未知</el-radio-button>
+              <el-radio-button value="MALE">公</el-radio-button>
+              <el-radio-button value="FEMALE">母</el-radio-button>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -515,7 +515,7 @@ const formState = reactive<Partial<CreatePetPayload>>({
   name: '',
   breed: '',
   type: 'dog',
-  gender: 1,
+  gender: null,
   birthday: null,
   weight: null,
   avatar: '',
@@ -568,9 +568,9 @@ const healthFormRules: FormRules = {
 }
 
 const genderLabel = (gender: Pet['gender']) => {
-  if (gender === 1) return '公'
-  if (gender === 0) return '母'
-  return '-'
+  if (gender === 'MALE') return '公'
+  if (gender === 'FEMALE') return '母'
+  return '未知'
 }
 
 const typeLabel = (type: Pet['type']) => {
@@ -598,7 +598,7 @@ const openEditDialog = (pet: Pet) => {
     name: pet.name,
     breed: pet.breed || '',
     type: pet.type || 'dog',
-    gender: pet.gender ?? 1,
+    gender: pet.gender ?? null,
     birthday: pet.birthday || null,
     weight: pet.weight,
     avatar: pet.avatar || '',
@@ -615,7 +615,7 @@ const resetForm = () => {
     name: '',
     breed: '',
     type: 'dog',
-    gender: 1,
+    gender: null,
     birthday: null,
     weight: null,
     avatar: '',
@@ -630,7 +630,7 @@ const buildPayload = (): CreatePetPayload => {
     name: formState.name,
     breed: formState.breed || '',
     type: formState.type || 'dog',
-    gender: (formState.gender === 0 ? 0 : 1) as 0 | 1,
+    gender: (formState.gender ?? null),
     birthday: formState.birthday || null,
     weight: formState.weight,
     avatar: formState.avatar,

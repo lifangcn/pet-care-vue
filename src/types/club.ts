@@ -1,4 +1,19 @@
-export type PostType = 1 | 2 | 3 | 4 | 5
+export type PostType =
+  | 'PRODUCT'
+  | 'SERVICE'
+  | 'LOCATION'
+  | 'DAILY'
+  | 'ACTIVITY_CHECK'
+  | 'ACTIVITY_JOIN'
+
+export type ActivityType = 'ONLINE' | 'OFFLINE'
+
+/**
+ * 活动状态枚举
+ * @author Michael Li
+ * @description RECRUITING-招募中 ONGOING-进行中 ENDED-已结束
+ */
+export type ActivityStatus = 'RECRUITING' | 'ONGOING' | 'ENDED'
 
 export interface Label {
   id: string | number
@@ -59,14 +74,14 @@ export interface Activity {
   title: string
   description?: string
   coverImage?: string
-  activityType: 1 | 2
+  activityType: ActivityType
   activityTime: string
   endTime?: string
   address?: string
   onlineLink?: string
   maxParticipants?: number
   currentParticipants?: number
-  status?: 1 | 2 | 3
+  status?: ActivityStatus
   labels?: string[] | Label[]
   checkInEnabled?: 0 | 1
   checkInCount?: number
@@ -78,7 +93,7 @@ export interface CreateActivityPayload {
   title: string
   description?: string
   coverImage?: string
-  activityType: 1 | 2
+  activityType: ActivityType
   activityTime: string
   endTime?: string
   address?: string

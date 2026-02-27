@@ -25,11 +25,11 @@
 
       <el-select v-model="query.postType" placeholder="类型" clearable class="filter-select" @change="reload">
         <el-option label="全部" :value="undefined" />
-        <el-option label="好物" :value="1" />
-        <el-option label="服务" :value="2" />
-        <el-option label="地点" :value="3" />
-        <el-option label="日常" :value="4" />
-        <el-option label="打卡" :value="5" />
+        <el-option label="好物" value="PRODUCT" />
+        <el-option label="服务" value="SERVICE" />
+        <el-option label="地点" value="LOCATION" />
+        <el-option label="日常" value="DAILY" />
+        <el-option label="打卡" value="ACTIVITY_CHECK" />
       </el-select>
     </div>
 
@@ -88,7 +88,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { fetchPosts } from '@/services/postService'
-import type { Post } from '@/types/club'
+import type { Post, PostType } from '@/types/club'
 
 const router = useRouter()
 
@@ -99,7 +99,7 @@ const sortTabs = [
 ]
 
 const query = ref<{
-  postType?: number
+  postType?: PostType
   sort?: 'latest' | 'hot' | 'rating'
   pageNumber: number
   pageSize: number

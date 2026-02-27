@@ -34,12 +34,12 @@
           {{ activity.description }}
         </div>
 
-        <div v-if="activity?.activityType === 2 && activity?.address" class="block">
+        <div v-if="activity?.activityType === 'OFFLINE' && activity?.address" class="block">
           <div class="block-title">线下地址</div>
           <div class="block-body">{{ activity.address }}</div>
         </div>
 
-        <div v-if="activity?.activityType === 1 && activity?.onlineLink" class="block">
+        <div v-if="activity?.activityType === 'ONLINE' && activity?.onlineLink" class="block">
           <div class="block-title">线上链接</div>
           <div class="block-body">
             <el-link :href="activity.onlineLink" target="_blank" type="primary">{{ activity.onlineLink }}</el-link>
@@ -102,7 +102,7 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { checkInActivity, fetchActivityById, fetchCheckIns, fetchParticipants, joinActivity } from '@/services/activityService'
-import type { Activity, Post } from '@/types/club'
+import type { Activity, ActivityStatus, Post } from '@/types/club'
 
 const route = useRoute()
 const router = useRouter()
@@ -122,23 +122,23 @@ const checkInListLoading = ref(false)
 const checkInNoMore = ref(false)
 const checkInPage = ref({ pageNumber: 1, pageSize: 10 })
 
-const statusLabel = (s?: number) => {
-  if (s === 1) return '招募中'
-  if (s === 2) return '进行中'
-  if (s === 3) return '已结束'
+const statusLabel = (s?: ActivityStatus) => {
+  if (s === 'RECRUITING') return '招募中'
+  if (s === 'ONGOING') return '进行中'
+  if (s === 'ENDED') return '已结束'
   return '未知'
 }
 
-const statusType = (s?: number) => {
-  if (s === 1) return 'success'
-  if (s === 2) return 'warning'
-  if (s === 3) return 'info'
+const statusType = (s?: ActivityStatus) => {
+  if (s === 'RECRUITING') return 'success'
+  if (s === 'ONGOING') return 'warning'
+  if (s === 'ENDED') return 'info'
   return 'info'
 }
 
-const typeLabel = (t?: number) => {
-  if (t === 1) return '线上活动'
-  if (t === 2) return '线下聚会'
+const typeLabel = (t?: Activity['activityType']) => {
+  if (t === 'ONLINE') return '线上活动'
+  if (t === 'OFFLINE') return '线下聚会'
   return '活动'
 }
 

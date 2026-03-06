@@ -1,5 +1,13 @@
 import apiClient from './api'
-import type { HealthCheckForm, HealthCheckResult, CommonSymptom, KnowledgeDocument } from '@/types/ai'
+import type {
+  HealthCheckForm,
+  HealthCheckResult,
+  CommonSymptom,
+  KnowledgeDocument,
+  ChatSession,
+  ChatMessage,
+  ClearHistoryResponse
+} from '@/types/ai'
 
 /**
  * [API调用] GET /ai/symptoms
@@ -295,4 +303,60 @@ export const ragChat = (
   return () => {
     controller.abort()
   }
+}
+
+/**
+ * 会话管理相关接口
+ */
+
+/**
+ * [API调用] POST /ai/chat/session
+ * 创建新会话
+ * @author Michael
+ * @date 2026-03-02
+ */
+export const createSession = (name?: string) => {
+  return apiClient.post<ChatSession>('/ai/chat/session', name ? { name } : {})
+}
+
+/**
+ * [API调用] GET /ai/chat/sessions
+ * 获取会话列表
+ * @author Michael
+ * @date 2026-03-02
+ */
+export const fetchSessions = (pageNumber?: number, pageSize?: number) => {
+  return apiClient.get<{ total: number; items: ChatSession[] }>('/ai/chat/sessions', {
+    params: { pageNumber, pageSize }
+  })
+}
+
+/**
+ * [API调用] GET /ai/chat/session/{id}/messages
+ * 获取会话历史消息
+ * @author Michael
+ * @date 2026-03-02
+ */
+export const fetchSessionMessages = (sessionId: string) => {
+  return apiClient.get<ChatMessage[]>(`/ai/chat/session/${sessionId}/messages`)
+}
+
+/**
+ * [API调用] DELETE /ai/chat/session/{id}
+ * 删除会话
+ * @author Michael
+ * @date 2026-03-02
+ */
+export const deleteSession = (sessionId: string) => {
+  return apiClient.delete(`/ai/chat/session/${sessionId}`)
+}
+
+/**
+ * [API调用] DELETE /ai/chat/history
+ * 清除所有历史记录
+ * @author Michael
+ * @date 2026-03-02
+ */
+export const clearChatHistory = () => {
+  return apiClient.delete<ClearHistoryResponse>('/ai/chat/history')
 }

@@ -62,7 +62,7 @@ export const useAuthStore = defineStore('auth', {
         ElMessage.success('登录成功')
         return data
       } catch (error: any) {
-        const errorMsg = error.response?.data?.errorMsg || error.response?.data?.message || '登录失败，请检查手机号和验证码'
+        const errorMsg = error.message || error.response?.data?.errorMsg || error.response?.data?.message || '登录失败，请检查手机号和验证码'
         ElMessage.error(errorMsg)
         throw error
       }
@@ -141,7 +141,7 @@ export const useAuthStore = defineStore('auth', {
         const { data } = await sendSmsCode(phone)
         ElMessage.success('验证码已发送:' + data)
       } catch (error: any) {
-        const errorMsg = error.response?.data?.message || '发送验证码失败'
+        const errorMsg = error.message || error.response?.data?.message || '发送验证码失败'
         console.error('[Auth Store] 发送验证码失败:', {
           phone,
           message: errorMsg,
@@ -161,7 +161,7 @@ export const useAuthStore = defineStore('auth', {
         const { data } = await getWechatQRCode()
         return data
       } catch (error: any) {
-        const errorMsg = error.response?.data?.message || '获取二维码失败'
+        const errorMsg = error.message || error.response?.data?.message || '获取二维码失败'
         ElMessage.error(errorMsg)
         throw error
       }
@@ -197,7 +197,7 @@ export const useAuthStore = defineStore('auth', {
         }
         return data
       } catch (error: any) {
-        const errorMsg = error.response?.data?.message || '检查扫码状态失败'
+        const errorMsg = error.message || error.response?.data?.message || '检查扫码状态失败'
         throw new Error(errorMsg)
       }
     },

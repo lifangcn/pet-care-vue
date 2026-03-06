@@ -16,8 +16,8 @@
             <h2>AI助手</h2>
           </div>
           <div class="header-actions">
-            <el-button @click="createNewSession">新建会话</el-button>
-            <el-select v-model="currentSessionId" style="width: 200px" placeholder="选择会话" @change="loadSession">
+            <el-button @click="createNewSession" :loading="sessionsLoading">新建会话</el-button>
+            <el-select v-if="sessions.length > 0" v-model="currentSessionId" style="width: 200px" placeholder="选择会话" @change="loadSession" :loading="sessionsLoading">
               <el-option
                 v-for="session in sessions"
                 :key="session.id"
@@ -39,6 +39,9 @@
                     {{ syncActivitiesLoading ? '同步中...' : '同步活动' }}
                   </el-dropdown-item>
                   <el-dropdown-item divided command="documents">文档管理</el-dropdown-item>
+                  <el-dropdown-item divided command="clearHistory" :disabled="clearHistoryLoading">
+                    {{ clearHistoryLoading ? '清除中...' : '清除历史记录' }}
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -148,7 +151,7 @@ import { ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Service, ChatDotRound, InfoFilled, Promotion, MoreFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ragChat, syncPostsMigrate, syncActivitiesMigrate } from '@/services/aiService'
+import { ragChat, syncPostsMigrate, syncActivitiesMigrate, clearChatHistory, fetchSessions, createSession, fetchSessionMessages } from '@/services/aiService'
 import { usePointsStore } from '@/store/points'
 import type { ChatMessage } from '@/types/ai'
 
@@ -165,28 +168,83 @@ const streamingContent = ref('')
 const closeConnection = ref<(() => void) | null>(null)
 const messagesContainer = ref<HTMLElement>()
 
-const sessions = ref<Array<{ id: string; name: string }>>([
-  { id: 'default', name: '默认会话' },
-])
-const currentSessionId = ref('default')
+const sessions = ref<Array<{ id: string; name: string }>>([])
+const currentSessionId = ref('')
+const sessionsLoading = ref(false)
 
 watch(inputMessage, (newValue) => {
   localStorage.setItem('rag_chat_input', newValue)
 })
 
-const createNewSession = () => {
-  const newSessionId = `session_${Date.now()}`
-  const newSession = {
-    id: newSessionId,
-    name: `会话 ${sessions.value.length}`,
+/**
+ * @description 创建新会话
+ * @author Michael
+ * @date 2026-03-02
+ */
+const createNewSession = async () => {
+  try {
+    const newSession = await createSession()
+    sessions.value.unshift({
+      id: newSession.id,
+      name: newSession.name,
+    })
+    currentSessionId.value = newSession.id
+    messages.value = []
+  } catch (e) {
+    console.error('创建会话失败', e)
+    // 降级：使用本地临时会话
+    const tempId = `temp_${Date.now()}`
+    currentSessionId.value = tempId
+    messages.value = []
   }
-  sessions.value.push(newSession)
-  currentSessionId.value = newSessionId
-  messages.value = []
 }
 
-const loadSession = () => {
-  messages.value = []
+/**
+ * @description 加载会话历史消息
+ * @author Michael
+ * @date 2026-03-02
+ */
+const loadSession = async () => {
+  if (!currentSessionId.value) return
+  try {
+    const history = await fetchSessionMessages(currentSessionId.value)
+    messages.value = history
+    await nextTick()
+    scrollToBottom()
+  } catch (e) {
+    console.error('加载会话历史失败', e)
+    // 降级：清空消息，开始新对话
+    messages.value = []
+  }
+}
+
+/**
+ * @description 加载会话列表
+ * @author Michael
+ * @date 2026-03-02
+ */
+const loadSessions = async () => {
+  try {
+    sessionsLoading.value = true
+    const result = await fetchSessions()
+    const sessionList = result.items || []
+
+    if (sessionList.length > 0) {
+      sessions.value = sessionList
+      currentSessionId.value = sessionList[0].id
+      // 加载第一个会话的消息
+      await loadSession()
+    } else {
+      // 没有会话，创建一个默认会话
+      await createNewSession()
+    }
+  } catch (e) {
+    console.error('加载会话列表失败', e)
+    // 降级：创建临时会话
+    await createNewSession()
+  } finally {
+    sessionsLoading.value = false
+  }
 }
 
 const goToDocuments = () => {
@@ -195,6 +253,7 @@ const goToDocuments = () => {
 
 const syncPostsLoading = ref(false)
 const syncActivitiesLoading = ref(false)
+const clearHistoryLoading = ref(false)
 
 const handleSyncPosts = async () => {
   try {
@@ -220,12 +279,43 @@ const handleSyncActivities = async () => {
   }
 }
 
+/**
+ * @description 清除聊天历史记录
+ * @author Michael
+ * @date 2026-03-02
+ */
+const handleClearHistory = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要清除所有对话历史吗？此操作不可恢复。',
+      '清除历史记录',
+      {
+        confirmButtonText: '确定清除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    clearHistoryLoading.value = true
+    const result = await clearChatHistory()
+    ElMessage.success(`已清除 ${result.deletedCount} 条历史记录`)
+    // 重新加载会话列表
+    await loadSessions()
+  } catch (e: any) {
+    if (e !== 'cancel') {
+      ElMessage.error(e?.message || '清除失败')
+    }
+  } finally {
+    clearHistoryLoading.value = false
+  }
+}
+
 /** 后台管理下拉菜单命令分发 */
 const handleAdminCommand = (command: string) => {
   switch (command) {
     case 'syncPosts': handleSyncPosts(); break
     case 'syncActivities': handleSyncActivities(); break
     case 'documents': goToDocuments(); break
+    case 'clearHistory': handleClearHistory(); break
   }
 }
 
@@ -357,8 +447,9 @@ const formatMarkdown = (text: string) => {
     .replace(/`(.+?)`/g, '<code>$1</code>')
 }
 
-// 页面加载时获取积分账户
+// 页面加载时获取积分账户和会话列表
 pointsStore.fetchAccount()
+loadSessions()
 
 onUnmounted(() => {
   if (closeConnection.value) {

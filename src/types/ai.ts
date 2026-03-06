@@ -43,3 +43,38 @@ export interface ChatMessage {
   timestamp?: string
 }
 
+/**
+ * @description 聊天会话
+ * @author Michael
+ * @date 2026-03-02
+ */
+export interface ChatSession {
+  id: string
+  name: string
+  createdAt: string
+  updatedAt: string
+  messageCount?: number
+}
+
+/**
+ * @description 清除历史记录响应
+ * @author Michael
+ * @date 2026-03-02
+ */
+export interface ClearHistoryResponse {
+  success: boolean
+  deletedCount: number
+}
+
+/**
+ * @description Agent 思考步骤（预留，后端就绪后使用）
+ * @author Michael
+ * @date 2026-03-02
+ */
+export interface AgentThoughtStep {
+  type: 'thought' | 'action' | 'answer'
+  content: string
+  toolName?: string
+  timestamp: string
+}
+

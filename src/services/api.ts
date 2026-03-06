@@ -122,6 +122,12 @@ apiClient.interceptors.response.use(
         data: error.response?.data,
       })
     }
+
+    // 提取后端返回的错误消息
+    if (error.response?.data?.message) {
+      return Promise.reject(new Error(error.response.data.message))
+    }
+
     return Promise.reject(error)
   },
 )

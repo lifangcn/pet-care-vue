@@ -20,6 +20,7 @@ export interface UserInfo {
   status?: 0 | 1
   address?: string | null
   createdAt?: string
+  isAdmin?: boolean
 }
 
 export interface WechatQRCodeResponse {

@@ -150,14 +150,20 @@
   font-weight: 500;
   color: pet.$pet-primary;
   background: transparent;
-  border: 1px solid pet.$pet-primary;
+  border: 2px solid rgba(224, 122, 95, 0.3);
   border-radius: pet.$pet-radius-md;
   text-decoration: none;
-  transition: all anim.$duration-base anim.$ease-standard;
+  transition: all 200ms ease-out;
 
   &:hover {
-    background: pet.$pet-primary;
-    color: #fff;
+    background: rgba(224, 122, 95, 0.08);
+    border-color: pet.$pet-primary;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(224, 122, 95, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 
@@ -222,12 +228,28 @@
   background: pet.$pet-primary;
   border-radius: pet.$pet-radius-md;
   text-decoration: none;
-  transition: all anim.$duration-base anim.$ease-elastic;
-  box-shadow: 0 4px 16px rgba(224, 122, 95, 0.35);
+  // Claymorphism 按钮
+  border: 2px solid rgba(224, 122, 95, 0.3);
+  box-shadow:
+    inset -2px -2px 6px rgba(0, 0, 0, 0.1),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.25),
+    4px 4px 12px rgba(224, 122, 95, 0.3);
+  transition: all 200ms ease-out;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(224, 122, 95, 0.45);
+    box-shadow:
+      inset -2px -2px 6px rgba(0, 0, 0, 0.1),
+      inset 2px 2px 6px rgba(255, 255, 255, 0.25),
+      6px 6px 16px rgba(224, 122, 95, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+      inset 2px 2px 6px rgba(0, 0, 0, 0.15),
+      inset -2px -2px 6px rgba(255, 255, 255, 0.1),
+      2px 2px 6px rgba(224, 122, 95, 0.25);
   }
 }
 
@@ -258,16 +280,28 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  // 让主图更大，但用固定视觉比例避免“长图/扁图”导致布局松散
+  // 让主图更大，但用固定视觉比例避免”长图/扁图”导致布局松散
   max-width: 460px;
   aspect-ratio: 4 / 3;
   height: auto;
   border-radius: pet.$pet-radius-xl;
-  box-shadow: pet.$pet-shadow-hover;
+  // Claymorphism 图片效果
+  border: 2px solid rgba(212, 163, 115, 0.2);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   object-fit: cover;
   object-position: center;
-  // 轻微错位：减少“完美居中”的模板感
+  // 轻微错位：减少”完美居中”的模板感
   transform: rotate(-0.4deg) translateY(6px);
+  transition: all 250ms ease-out;
+
+  &:hover {
+    transform: rotate(-0.3deg) translateY(4px) scale(1.01);
+    box-shadow:
+      0 12px 32px rgba(224, 122, 95, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
 }
 
 // 功能介绍
@@ -325,7 +359,7 @@
 }
 
 .feature-visual {
-  // 功能区图片容器：避免图片被 max-width 限制后出现“奇怪留白”
+  // 功能区图片容器：避免图片被 max-width 限制后出现”奇怪留白”
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -336,8 +370,20 @@
     max-width: 380px;
     height: auto;
     border-radius: pet.$pet-radius-lg;
-    box-shadow: pet.$pet-shadow;
+    // Claymorphism 图片效果
+    border: 2px solid rgba(212, 163, 115, 0.15);
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
     object-fit: cover;
+    transition: all 250ms ease-out;
+
+    &:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow:
+        0 10px 28px rgba(224, 122, 95, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
   }
 }
 

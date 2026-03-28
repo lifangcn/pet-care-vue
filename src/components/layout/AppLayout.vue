@@ -7,6 +7,10 @@
         </div>
       </div>
       <div class="header-right">
+        <el-button v-if="authStore.isAdmin" text class="admin-entry-btn" @click="goToAdmin">
+          <el-icon><Setting /></el-icon>
+          <span class="admin-entry-label">管理后台</span>
+        </el-button>
         <div class="user-entry">
           <el-avatar :size="36" :src="userAvatar" class="user-avatar" @click="goToProfile">
             <el-icon><User /></el-icon>
@@ -92,7 +96,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { User, SwitchButton } from '@element-plus/icons-vue'
+import { User, SwitchButton, Setting } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useLayoutStore } from '@/store/layout'
 import { useAuthStore } from '@/store/auth'
@@ -168,6 +172,10 @@ const goToProfile = () => {
   router.push('/profile')
 }
 
+const goToAdmin = () => {
+  router.push('/admin')
+}
+
 const handleLogout = async () => {
   try {
     await authStore.logout()
@@ -179,9 +187,12 @@ const handleLogout = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
+  if (authStore.isLoggedIn && authStore.user?.isAdmin === undefined) {
+    authStore.fetchAdminInfo()
+  }
 })
 
 onUnmounted(() => {
@@ -231,6 +242,23 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 16px;
+
+    .admin-entry-btn {
+      padding: 6px 12px;
+      color: #666;
+      font-size: 13px;
+      border-radius: 8px;
+      transition: all 0.2s;
+
+      &:hover {
+        color: #E07A5F;
+        background: rgba(224, 122, 95, 0.08);
+      }
+
+      .admin-entry-label {
+        margin-left: 4px;
+      }
+    }
   }
 }
 
@@ -308,26 +336,26 @@ onUnmounted(() => {
         height: 20px;
       }
 
-      // 侧边栏 active 动画
+      // 侧边栏 active 动画 - 优化：响应更快，持续时间用 CSS infinite 保持
       &.icon-home.is-active svg {
-        animation: navHomeBounce 2.5s anim.$ease-elastic infinite;
+        animation: navHomeBounce 200ms anim.$ease-elastic infinite;
       }
 
       &.icon-paw.is-active svg {
-        animation: navPawWaggle 2s anim.$ease-elastic infinite;
+        animation: navPawWaggle 200ms anim.$ease-elastic infinite;
       }
 
       &.icon-bell.is-active svg {
-        animation: navBellRing 4s anim.$ease-standard infinite;
+        animation: navBellRing 300ms anim.$ease-standard infinite;
         transform-origin: top center;
       }
 
       &.icon-chat.is-active svg {
-        animation: navChatPulse 3s anim.$ease-standard infinite;
+        animation: navChatPulse 250ms anim.$ease-standard infinite;
       }
 
       &.icon-ai.is-active svg {
-        animation: navAiSparkle 3s anim.$ease-standard infinite;
+        animation: navAiSparkle 250ms anim.$ease-standard infinite;
       }
     }
 
@@ -435,28 +463,28 @@ onUnmounted(() => {
 
     // 首页 - 轻弹
     &.icon-home.is-active svg {
-      animation: navHomeBounce 2.5s anim.$ease-elastic infinite;
+      animation: navHomeBounce 200ms anim.$ease-elastic infinite;
     }
 
     // 毛孩子 - 摇摆
     &.icon-paw.is-active svg {
-      animation: navPawWaggle 2s anim.$ease-elastic infinite;
+      animation: navPawWaggle 200ms anim.$ease-elastic infinite;
     }
 
     // 提醒 - 摇铃
     &.icon-bell.is-active svg {
-      animation: navBellRing 4s anim.$ease-standard infinite;
+      animation: navBellRing 300ms anim.$ease-standard infinite;
       transform-origin: top center;
     }
 
     // 说说 - 呼吸
     &.icon-chat.is-active svg {
-      animation: navChatPulse 3s anim.$ease-standard infinite;
+      animation: navChatPulse 250ms anim.$ease-standard infinite;
     }
 
     // AI助手 - 闪烁
     &.icon-ai.is-active svg {
-      animation: navAiSparkle 3s anim.$ease-standard infinite;
+      animation: navAiSparkle 250ms anim.$ease-standard infinite;
     }
   }
 

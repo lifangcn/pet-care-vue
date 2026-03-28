@@ -1,5 +1,8 @@
 <template>
-  <AppLayout v-if="showLayout" :show-footer="false">
+  <AdminLayout v-if="isAdminRoute">
+    <router-view />
+  </AdminLayout>
+  <AppLayout v-else-if="showLayout" :show-footer="false">
     <router-view />
   </AppLayout>
   <router-view v-else />
@@ -9,12 +12,12 @@
 import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 
-// 懒加载 AppLayout 组件，减少初始包大小
 const AppLayout = defineAsyncComponent(() => import('@/components/layout/AppLayout.vue'))
+const AdminLayout = defineAsyncComponent(() => import('@/components/admin/AdminLayout.vue'))
 
 const route = useRoute()
 
-// 不需要布局的页面（落地页、登录页）
 const noLayoutRoutes = ['/', '/login']
 const showLayout = computed(() => !noLayoutRoutes.includes(route.path))
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 </script>

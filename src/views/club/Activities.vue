@@ -251,17 +251,28 @@ onMounted(reload)
 
 .activity-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 16px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  @include anim.anim-standard;
+  // Claymorphism 卡片效果
+  border: 2px solid rgba(212, 163, 115, 0.15);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 200ms ease-out;
   display: flex;
   flex-direction: column;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0 12px 32px rgba(224, 122, 95, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(212, 163, 115, 0.25);
+  }
+
+  &:active {
+    transform: translateY(-2px);
   }
 }
 
@@ -286,23 +297,29 @@ onMounted(reload)
 }
 
 .status-tag {
-  padding: 3px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
   font-size: 12px;
+  font-weight: 500;
   flex-shrink: 0;
+  border: 1px solid transparent;
+  transition: all 150ms ease-out;
 
   &.status-RECRUITING {
-    background: rgba(129, 178, 154, 0.2);
-    color: #81B29A;
+    background: linear-gradient(135deg, rgba(129, 178, 154, 0.15), rgba(129, 178, 154, 0.08));
+    border-color: rgba(129, 178, 154, 0.25);
+    color: #6B9B88;
   }
 
   &.status-ONGOING {
-    background: rgba(242, 204, 143, 0.3);
-    color: #B8860B;
+    background: linear-gradient(135deg, rgba(242, 204, 143, 0.2), rgba(242, 204, 143, 0.1));
+    border-color: rgba(242, 204, 143, 0.3);
+    color: #A67C00;
   }
 
   &.status-ENDED {
     background: #F5F0E8;
+    border-color: rgba(212, 163, 115, 0.15);
     color: pet.$pet-warm-gray;
   }
 }

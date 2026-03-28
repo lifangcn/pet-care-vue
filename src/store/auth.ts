@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { login, logout, sendSmsCode, refreshToken, getWechatQRCode, checkWechatScanStatus } from '@/services/authService'
 import { getCurrentUser } from '@/services/userService'
+import { fetchAdminCurrentUser } from '@/services/adminUserService'
 import type { LoginForm, UserInfo, LoginResponse } from '@/types/auth'
 import { ElMessage } from 'element-plus'
 import { sseService } from '@/services/sse'
@@ -32,6 +33,7 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isLoggedIn: (state) => state.isAuthenticated && !!state.accessToken,
+    isAdmin: (state) => !!state.user?.isAdmin,
   },
 
   actions: {
@@ -118,16 +120,34 @@ export const useAuthStore = defineStore('auth', {
      */
     async fetchUserInfo() {
       try {
-        // [API调用] GET /user/me - 获取当前用户信息
         const { data } = await getCurrentUser()
         this.user = data
         localStorage.setItem('user', JSON.stringify(data))
         return data
       } catch (error) {
         console.error('[Auth Store] 获取用户信息失败:', error)
-        // 如果获取失败，清除认证状态
         this.logout()
         throw error
+      }
+    },
+
+    /**
+     * [API调用] GET /admin/user/me
+     * 获取当前用户管理员信息（含 isAdmin 字段）
+     * @author Michael Li
+     * @date 2026-03-28
+     */
+    async fetchAdminInfo() {
+      try {
+        const { data } = await fetchAdminCurrentUser()
+        if (this.user) {
+          this.user.isAdmin = data.isAdmin
+          localStorage.setItem('user', JSON.stringify(this.user))
+        }
+        return data
+      } catch (error) {
+        console.error('[Auth Store] 获取管理员信息失败:', error)
+        return null
       }
     },
 

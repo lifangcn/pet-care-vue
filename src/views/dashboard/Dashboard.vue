@@ -321,11 +321,13 @@ onMounted(async () => {
 
 // 顶部欢迎条
 .welcome-bar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 28px;
-  background: linear-gradient(135deg, #FF8A4C 0%, #FFB380 50%, #FFD4A8 100%);
+  // 柔化渐变：去掉过于饱和的橙色，保持温暖感
+  background: linear-gradient(135deg, #FFB380 0%, #FFD4A8 100%);
   border-radius: 20px;
   margin-bottom: 20px;
 
@@ -455,15 +457,23 @@ onMounted(async () => {
 
 .pet-card {
   background: #fff;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  @include anim.anim-standard;
+  // 增强阴影层次：使用品牌色阴影
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  // 添加 Claymorphism 边框效果
+  border: 2px solid rgba(212, 163, 115, 0.15);
+  transition: all 200ms ease-out;
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(224, 122, 95, 0.15);
+    border-color: rgba(212, 163, 115, 0.25);
+  }
+
+  &:active {
+    transform: translateY(-1px);
   }
 }
 
@@ -509,14 +519,25 @@ onMounted(async () => {
   gap: 12px;
   padding: 14px 16px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 14px;
   text-decoration: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  @include anim.anim-standard;
+  // Claymorphism 阴影效果
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(212, 163, 115, 0.15);
+  transition: all 200ms ease-out;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 138, 76, 0.15);
+    box-shadow:
+      0 8px 20px rgba(224, 122, 95, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(212, 163, 115, 0.25);
+  }
+
+  &:active {
+    transform: translateY(-1px);
   }
 
   .action-icon {
@@ -559,14 +580,25 @@ onMounted(async () => {
   gap: 12px;
   padding: 14px 16px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  @include anim.anim-standard;
+  // Claymorphism 阴影效果
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(212, 163, 115, 0.15);
+  transition: all 200ms ease-out;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 8px 20px rgba(224, 122, 95, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
     transform: translateX(4px);
+    border-color: rgba(212, 163, 115, 0.25);
+  }
+
+  &:active {
+    transform: translateX(2px);
   }
 }
 

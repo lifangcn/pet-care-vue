@@ -236,26 +236,37 @@ onMounted(async () => {
   width: 140px;
 }
 
-// 瀑布流卡片 3列
+// 瀑布流卡片 - 优化响应式：桌面4列、平板3列、手机2列
 .posts-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
 
 .post-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  @include anim.anim-standard;
+  // Claymorphism 阴影效果
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(212, 163, 115, 0.15);
+  transition: all 200ms ease-out;
   display: flex;
   flex-direction: column;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0 12px 32px rgba(224, 122, 95, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(212, 163, 115, 0.25);
+  }
+
+  &:active {
+    transform: translateY(-2px);
   }
 }
 
@@ -322,14 +333,24 @@ onMounted(async () => {
 }
 
 .mini-tag {
-  padding: 3px 8px;
-  background: #F5F0E8;
-  border-radius: 4px;
+  padding: 4px 10px;
+  // 使用柔和的品牌色背景
+  background: linear-gradient(135deg, rgba(224, 122, 95, 0.08), rgba(212, 163, 115, 0.08));
+  border: 1px solid rgba(212, 163, 115, 0.2);
+  border-radius: 6px;
   font-size: 11px;
-  color: pet.$pet-warm-gray;
+  color: #8B6F5C;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: all 150ms ease-out;
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(224, 122, 95, 0.15), rgba(212, 163, 115, 0.15));
+    border-color: rgba(212, 163, 115, 0.35);
+    transform: translateY(-1px);
+  }
 }
 
 .post-stats {
@@ -384,6 +405,12 @@ onMounted(async () => {
 }
 
 // 响应式
+@media (max-width: 1200px) {
+  .posts-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .posts-page {
     padding: 12px 16px;

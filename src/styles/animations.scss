@@ -96,3 +96,16 @@ $duration-slow: 400ms;
     transform: scale(1);
   }
 }
+
+// === 无障碍：支持 reduced-motion 偏好 ===
+// 当用户系统设置为减少动画时，禁用所有过渡和动画效果
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

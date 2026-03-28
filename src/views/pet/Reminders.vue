@@ -677,23 +677,34 @@ onMounted(async () => {
 
 .reminder-card {
   background: #FFFEFA;
-  border: 2px solid #E8E8E8;
+  // Claymorphism 卡片效果
+  border: 2px solid rgba(212, 163, 115, 0.15);
   border-radius: pet.$pet-radius-md;
   padding: 16px;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 200ms ease-out;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 
   &:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(255, 138, 76, 0.15);
-    border-color: #FFD4A8;
+    transform: translateY(-4px);
+    box-shadow:
+      0 10px 28px rgba(224, 122, 95, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(212, 163, 115, 0.3);
+  }
+
+  &:active {
+    transform: translateY(-2px);
   }
 
   &.inactive {
     opacity: 0.6;
     background: #F5F5F5;
+    border-color: rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -725,19 +736,26 @@ onMounted(async () => {
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+  // Claymorphism 徽章效果
+  border: 1px solid transparent;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 150ms ease-out;
 
   &.active {
     background: linear-gradient(135deg, #B8E6D4 0%, #81B29A 100%);
+    border-color: rgba(129, 178, 154, 0.3);
     color: #2C3E50;
   }
 
   &.completed {
     background: linear-gradient(135deg, #FFB3BA 0%, #FF8A80 100%);
+    border-color: rgba(255, 138, 128, 0.3);
     color: #2C3E50;
   }
 
   &.inactive {
-    background: #E0E0E0;
+    background: #E8E4DD;
+    border-color: rgba(0, 0, 0, 0.08);
     color: #7F8C8D;
   }
 }
@@ -784,15 +802,26 @@ onMounted(async () => {
   align-items: center;
   gap: 4px;
   padding: 6px 10px;
-  background: #FFF3E0;
+  // Claymorphism 标签效果
+  background: linear-gradient(135deg, rgba(224, 122, 95, 0.08), rgba(212, 163, 115, 0.06));
+  border: 1px solid rgba(212, 163, 115, 0.2);
   border-radius: pet.$pet-radius-sm;
   font-size: 12px;
-  color: #5D4037;
+  font-weight: 500;
+  color: #8B6F5C;
   font-family: vars.$font-family-body;
+  transition: all 150ms ease-out;
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(224, 122, 95, 0.12), rgba(212, 163, 115, 0.1));
+    border-color: rgba(212, 163, 115, 0.3);
+    transform: translateY(-1px);
+  }
 
   &.progress {
-    background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%);
-    color: #01579B;
+    background: linear-gradient(135deg, rgba(129, 178, 154, 0.12), rgba(129, 178, 154, 0.08));
+    border-color: rgba(129, 178, 154, 0.25);
+    color: #5A8B76;
   }
 }
 

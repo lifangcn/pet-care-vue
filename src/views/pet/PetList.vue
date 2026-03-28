@@ -1103,10 +1103,21 @@ onMounted(async () => {
 }
 
 .single-pet-card {
+  // Claymorphism 大卡片效果
   border-radius: pet.$pet-radius-lg;
-  border: 1px solid rgba(255, 138, 76, 0.2);
+  border: 2px solid rgba(212, 163, 115, 0.2);
   background: linear-gradient(135deg, #fff, #fffbf7);
-  box-shadow: pet.$pet-shadow;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 200ms ease-out;
+
+  &:hover {
+    border-color: rgba(212, 163, 115, 0.3);
+    box-shadow:
+      0 10px 28px rgba(224, 122, 95, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+  }
 }
 
 .single-pet-header {
@@ -1127,11 +1138,22 @@ onMounted(async () => {
 .pet-avatar-large {
   width: 100px;
   height: 100px;
+  // Claymorphism 头像效果
   border-radius: 20px;
   overflow: hidden;
   flex-shrink: 0;
-  border: 3px solid rgba(255, 138, 76, 0.3);
-  box-shadow: 0 4px 12px rgba(255, 138, 76, 0.15);
+  border: 3px solid rgba(212, 163, 115, 0.3);
+  box-shadow:
+    0 4px 12px rgba(224, 122, 95, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 200ms ease-out;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow:
+      0 6px 16px rgba(224, 122, 95, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
 
   img {
     width: 100%;
@@ -1166,9 +1188,20 @@ onMounted(async () => {
 }
 
 .single-pet-detail-card {
+  // Claymorphism 详情卡片效果
   border-radius: pet.$pet-radius-lg;
-  border: 2px solid rgba(255, 138, 76, 0.25);
-  box-shadow: pet.$pet-shadow;
+  border: 2px solid rgba(212, 163, 115, 0.2);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 200ms ease-out;
+
+  &:hover {
+    border-color: rgba(212, 163, 115, 0.3);
+    box-shadow:
+      0 8px 24px rgba(224, 122, 95, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+  }
 }
 
 .pet-detail-content {
@@ -1177,14 +1210,26 @@ onMounted(async () => {
 
 .pet-info-brief {
   padding: 14px 18px;
-  background: linear-gradient(135deg, rgba(255, 138, 76, 0.08), rgba(255, 209, 166, 0.08));
+  // Claymorphism 信息卡片效果
+  background: linear-gradient(135deg, rgba(224, 122, 95, 0.06), rgba(212, 163, 115, 0.04));
   border-radius: pet.$pet-radius-md;
+  border: 2px solid rgba(212, 163, 115, 0.15);
   color: vars.$pet-charcoal;
   font-size: 14px;
   line-height: 1.6;
   margin-bottom: 20px;
-  border: 1px solid rgba(255, 138, 76, 0.2);
   font-family: vars.$font-family-body;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 200ms ease-out;
+
+  &:hover {
+    border-color: rgba(212, 163, 115, 0.25);
+    box-shadow:
+      0 4px 12px rgba(224, 122, 95, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
 }
 
 .pet-view-tabs {
@@ -1261,10 +1306,27 @@ onMounted(async () => {
 }
 
 .pet-card {
-  border-radius: pet.$pet-radius-md;
-  border: 1px solid pet.$pet-border-color;
+  // Claymorphism 卡片效果
+  border-radius: 20px;
+  border: 2px solid rgba(212, 163, 115, 0.15);
   background: #fff;
   margin-bottom: 12px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 200ms ease-out;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 10px 28px rgba(224, 122, 95, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(212, 163, 115, 0.25);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
 }
 
 .pet-card-header {
@@ -1336,11 +1398,28 @@ onMounted(async () => {
   right: 24px;
   bottom: 24px;
   z-index: 1000;
-  box-shadow: pet.$pet-shadow;
-  @include anim.anim-elastic;
+  // Claymorphism 浮动按钮效果
+  border: 3px solid rgba(224, 122, 95, 0.3);
+  box-shadow:
+    inset -2px -2px 8px rgba(0, 0, 0, 0.12),
+    inset 2px 2px 8px rgba(255, 255, 255, 0.3),
+    6px 6px 16px rgba(224, 122, 95, 0.3);
+  transition: all 200ms ease-out;
 
   &:hover {
-    box-shadow: pet.$pet-shadow-hover;
+    box-shadow:
+      inset -2px -2px 8px rgba(0, 0, 0, 0.12),
+      inset 2px 2px 8px rgba(255, 255, 255, 0.3),
+      8px 8px 20px rgba(224, 122, 95, 0.4);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+      inset 2px 2px 8px rgba(0, 0, 0, 0.15),
+      inset -2px -2px 8px rgba(255, 255, 255, 0.1),
+      3px 3px 8px rgba(224, 122, 95, 0.25);
   }
 }
 

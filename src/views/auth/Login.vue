@@ -423,12 +423,52 @@ watch(
     font-size: 15px;
     font-weight: 500;
   }
+
+  // 输入框 icon 色彩呼应
+  :deep(.el-input__prefix) {
+    .el-icon {
+      color: #D4A373;
+    }
+  }
+
+  :deep(.el-input:focus-within) {
+    .el-input__prefix {
+      .el-icon {
+        color: #E07A5F;
+      }
+    }
+  }
 }
 
 .login-btn {
   width: 100%;
   font-size: 15px;
   margin-top: 8px;
+  // Claymorphism 效果
+  border-radius: 14px;
+  border: 3px solid rgba(224, 122, 95, 0.3);
+  background: linear-gradient(145deg, #E8906A, #D87050);
+  box-shadow:
+    inset -2px -2px 8px rgba(0, 0, 0, 0.1),
+    inset 2px 2px 8px rgba(255, 255, 255, 0.3),
+    4px 4px 12px rgba(224, 122, 95, 0.25);
+  transition: all 200ms ease-out;
+
+  &:hover {
+    box-shadow:
+      inset -2px -2px 8px rgba(0, 0, 0, 0.1),
+      inset 2px 2px 8px rgba(255, 255, 255, 0.3),
+      6px 6px 16px rgba(224, 122, 95, 0.3);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    box-shadow:
+      inset 2px 2px 8px rgba(0, 0, 0, 0.15),
+      inset -2px -2px 8px rgba(255, 255, 255, 0.1),
+      2px 2px 6px rgba(224, 122, 95, 0.2);
+    transform: scale(0.98) translateY(1px);
+  }
 }
 
 .login-tip {

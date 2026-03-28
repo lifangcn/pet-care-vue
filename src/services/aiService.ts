@@ -128,6 +128,8 @@ export const syncActivitiesMigrate = () => {
  * @param {Function} onError - 错误回调函数
  * @param {Function} onClose - 关闭回调函数
  * @returns {Function} 返回关闭连接的函数
+ * @author Michael
+ * @date 2026-03-18
  */
 export const ragChat = (
   message: string,
@@ -136,8 +138,46 @@ export const ragChat = (
   onError: (error: Error) => void,
   onClose: () => void
 ): (() => void) => {
+  return chatRequest('/ai/chat/rag', message, sessionId, onMessage, onError, onClose)
+}
+
+/**
+ * [API调用] GET /ai/chat/agent
+ * Agent对话（多步推理工具调用）
+ * @param {string} message - 用户问题
+ * @param {string} sessionId - 会话ID（可选）
+ * @param {Function} onMessage - 消息回调函数
+ * @param {Function} onError - 错误回调函数
+ * @param {Function} onClose - 关闭回调函数
+ * @returns {Function} 返回关闭连接的函数
+ * @author Michael
+ * @date 2026-03-18
+ */
+export const agentChat = (
+  message: string,
+  sessionId: string | undefined,
+  onMessage: (data: string) => void,
+  onError: (error: Error) => void,
+  onClose: () => void
+): (() => void) => {
+  return chatRequest('/ai/chat/agent', message, sessionId, onMessage, onError, onClose)
+}
+
+/**
+ * @description 聊天请求通用函数（SSE流式响应）
+ * @author Michael
+ * @date 2026-03-18
+ */
+const chatRequest = (
+  endpoint: string,
+  message: string,
+  sessionId: string | undefined,
+  onMessage: (data: string) => void,
+  onError: (error: Error) => void,
+  onClose: () => void
+): (() => void) => {
   const params = new URLSearchParams({ message })
-  if (sessionId) {
+  if (sessionId !== undefined) {
     params.append('sessionId', sessionId)
   }
   const baseURL = apiClient.defaults.baseURL
@@ -145,7 +185,7 @@ export const ragChat = (
     onError(new Error('VITE_API_BASE_URL 环境变量未配置，请设置后端API地址'))
     return () => {}
   }
-  const url = `${baseURL}/ai/chat/rag?${params.toString()}`
+  const url = `${baseURL}${endpoint}?${params.toString()}`
   const token = localStorage.getItem('accessToken')
   
   const controller = new AbortController()

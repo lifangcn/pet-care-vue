@@ -6,11 +6,19 @@
 
 // === 温暖色彩系统 ===
 $pet-primary: #E07A5F;       // 陶土红 - 主色
+$pet-primary-light: #F5E6E1; // 主色的浅色变体 - 用于背景层次
 $pet-secondary: #D4A373;     // 暖棕 - 辅助色
+$pet-secondary-light: #F0EBE5; // 辅助色的浅色变体
 $pet-accent-green: #81B29A;  // 鼠尾草绿
 $pet-accent-sand: #FAEDCD;   // 沙色
 $pet-accent-cream: #F8F4E8;  // 米白
 $pet-warm-gray: #9A8C7B;     // 暖灰
+
+// === 高亮色系列（用于标签、徽章等）===
+$pet-highlight-peach: #FFD4C4; // 桃色高亮
+$pet-highlight-mint: #C8E6D9;  // 薄荷高亮
+$pet-highlight-lavender: #E6E6FA; // 薰衣草高亮
+$pet-highlight-sky: #C8E0F4;    // 天空蓝高亮
 
 $pet-bg-paper: #FDF9F3;      // 纸质背景（暖白）
 $pet-bg-card: #FFFFFF;       // 卡片背景
@@ -36,6 +44,18 @@ $pet-shadow-hover: 0 8px 30px rgba(212, 163, 115, 0.25);
 $pet-border-width: 1px;
 $pet-border-color: rgba(212, 163, 115, 0.2);
 
+// === Z-Index 规范化体系 ===
+// 避免使用任意大数值（如 z-index: 9999），采用分层管理
+$z-base: 1;                // 基础层
+$z-dropdown: 10;           // 下拉菜单
+$z-sticky: 20;             // 吸顶元素
+$z-fixed: 30;              // 固定定位元素（非模态）
+$z-modal-backdrop: 40;     // 模态框背景遮罩
+$z-modal: 50;              // 模态框
+$z-popover: 60;            // 气泡弹出层
+$z-tooltip: 70;            // 提示框
+$z-notification: 80;       // 通知提醒
+
 // === 响应式断点 ===
 $pet-breakpoint-xs: 375px;
 $pet-breakpoint-sm: 576px;
@@ -53,5 +73,124 @@ $pet-breakpoint-xl: 1200px;
 @mixin mobile-down($bp) {
   @media (max-width: $bp - 1px) {
     @content;
+  }
+}
+
+// === Claymorphism 风格组件 ===
+// 粘土形态风格：可爱、有触感、像玩具一样
+// 特征：厚边框(2-3px)、双重阴影、大圆角、柔和按压动画
+
+// Claymorphism 按钮
+@mixin btn-clay {
+  border-radius: $pet-radius-md;
+  border: 3px solid rgba(224, 122, 95, 0.3);
+  background: linear-gradient(145deg, #E8906A, #D87050);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 24px;
+  box-shadow:
+    inset -2px -2px 8px rgba(0, 0, 0, 0.1),
+    inset 2px 2px 8px rgba(255, 255, 255, 0.3),
+    4px 4px 12px rgba(224, 122, 95, 0.2);
+  transition: all 200ms ease-out;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow:
+      inset -2px -2px 8px rgba(0, 0, 0, 0.1),
+      inset 2px 2px 8px rgba(255, 255, 255, 0.3),
+      6px 6px 16px rgba(224, 122, 95, 0.25);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    box-shadow:
+      inset 2px 2px 8px rgba(0, 0, 0, 0.15),
+      inset -2px -2px 8px rgba(255, 255, 255, 0.1),
+      2px 2px 6px rgba(224, 122, 95, 0.2);
+    transform: scale(0.98) translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+// Claymorphism 卡片
+@mixin card-clay {
+  border-radius: $pet-radius-lg;
+  background: #FFFFFF;
+  border: 2px solid rgba(212, 163, 115, 0.15);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 200ms ease-out;
+
+  &:hover {
+    box-shadow:
+      0 8px 24px rgba(224, 122, 95, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    border-color: rgba(212, 163, 115, 0.25);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
+}
+
+// === Claymorphism 空状态样式 ===
+@mixin empty-state-clay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px;
+  background: linear-gradient(145deg, #FFFFFF, #FAFAFA);
+  border-radius: $pet-radius-xl;
+  border: 2px solid rgba(212, 163, 115, 0.15);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  text-align: center;
+
+  .empty-illustration {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, rgba(224, 122, 95, 0.1), rgba(129, 178, 154, 0.08));
+    border-radius: $pet-radius-lg;
+    border: 2px solid rgba(212, 163, 115, 0.15);
+    font-size: 48px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  h3 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #4A4A4A;
+  }
+
+  p {
+    margin: 0 0 24px;
+    font-size: 15px;
+    color: $pet-warm-gray;
+    line-height: 1.6;
+    max-width: 320px;
+  }
+
+  .el-button {
+    @include btn-clay;
   }
 }

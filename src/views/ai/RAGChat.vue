@@ -1,5 +1,5 @@
 <template>
-  <div class="rag-chat-page paw-print top-left">
+  <div class="rag-chat-page paw-print top-left" :class="`mode-${chatMode}`">
     <div class="pet-decorations">
       <div class="deco-circle deco-1"></div>
       <div class="deco-circle deco-2"></div>
@@ -21,7 +21,7 @@
               <el-option
                 v-for="session in sessions"
                 :key="session.id"
-                :label="session.name"
+                :label="session.name || `会话 ${session.id?.substring(0, 8)}...` || '未命名会话'"
                 :value="session.id"
               />
             </el-select>
@@ -47,13 +47,28 @@
             </el-dropdown>
           </div>
         </div>
-        <div class="knowledge-hint">
-          <el-icon><InfoFilled /></el-icon>
-          <span>基于知识库回答，提供专业的宠物护理建议</span>
-          <span class="points-badge">
-            <span class="points-icon">✦</span>
-            {{ pointsStore.availablePoints }} 积分
-          </span>
+        <!-- 模式切换 + 提示信息 -->
+        <div class="mode-section">
+          <div class="mode-switcher">
+            <span class="mode-label">对话模式</span>
+            <el-segmented v-model="chatMode" :options="modeOptions" size="default">
+              <template #default="{ item }">
+                <div class="mode-option">
+                  <el-icon><component :is="item.icon" /></el-icon>
+                  <span>{{ item.label }}</span>
+                </div>
+              </template>
+            </el-segmented>
+          </div>
+          <div class="knowledge-hint" :class="`hint-${chatMode}`">
+            <el-icon><InfoFilled /></el-icon>
+            <span v-if="chatMode === 'rag'">基于知识库快速回答，适合简单问题</span>
+            <span v-else>多步推理工具调用，适合复杂查询（消耗更多积分）</span>
+            <span class="points-badge">
+              <span class="points-icon">✦</span>
+              {{ pointsStore.availablePoints }} 积分
+            </span>
+          </div>
         </div>
       </template>
 
@@ -121,8 +136,9 @@
           <!-- 积分余额提示 -->
           <div class="points-hint">
             <span class="points-hint-label">当前积分</span>
-            <span class="points-hint-value" :class="{ 'points-low': pointsStore.availablePoints < 10 }">{{ pointsStore.availablePoints }}</span>
-            <span class="points-hint-cost">每次提问消耗 10 积分</span>
+            <span class="points-hint-value" :class="{ 'points-low': pointsStore.availablePoints < currentCost }">{{ pointsStore.availablePoints }}</span>
+            <span class="points-hint-cost">本次提问消耗 {{ currentCost }} 积分</span>
+            <span v-if="chatMode === 'agent'" class="mode-badge">Agent 模式</span>
           </div>
           <el-input
             v-model="inputMessage"
@@ -147,19 +163,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Service, ChatDotRound, InfoFilled, Promotion, MoreFilled } from '@element-plus/icons-vue'
+import { User, Service, ChatDotRound, InfoFilled, Promotion, MoreFilled, MagicStick } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ragChat, syncPostsMigrate, syncActivitiesMigrate, clearChatHistory, fetchSessions, createSession, fetchSessionMessages } from '@/services/aiService'
+import { ragChat, agentChat, syncPostsMigrate, syncActivitiesMigrate, clearChatHistory, fetchSessions, createSession, fetchSessionMessages } from '@/services/aiService'
 import { usePointsStore } from '@/store/points'
 import type { ChatMessage } from '@/types/ai'
 
 const router = useRouter()
 const pointsStore = usePointsStore()
 
-/** AI咨询每次消耗积分 */
-const AI_COST_PER_QUERY = 10
+/** 聊天模式 */
+type ChatMode = 'rag' | 'agent'
+const chatMode = ref<ChatMode>('rag')
+
+/** 模式选项 */
+const modeOptions = [
+  { label: 'RAG', value: 'rag', icon: ChatDotRound },
+  { label: 'Agent', value: 'agent', icon: MagicStick },
+]
+
+/** 根据模式获取积分消耗 */
+const getCostPerQuery = (mode: ChatMode): number => {
+  return mode === 'agent' ? 25 : 10
+}
+
+/** 当前模式的积分消耗 */
+const currentCost = computed(() => getCostPerQuery(chatMode.value))
 
 const messages = ref<ChatMessage[]>([])
 const inputMessage = ref(localStorage.getItem('rag_chat_input') || '')
@@ -183,12 +214,19 @@ watch(inputMessage, (newValue) => {
  */
 const createNewSession = async () => {
   try {
-    const newSession = await createSession()
+    const response = await createSession()
+    // 拦截器返回 { ...response, data: response.data.data }
+    // 所以实际数据在 response.data 中
+    const newSession = response.data || response
+    const sessionId = newSession?.id
+    if (!sessionId) {
+      throw new Error('创建会话返回的 ID 为空')
+    }
     sessions.value.unshift({
-      id: newSession.id,
-      name: newSession.name,
+      id: sessionId,
+      name: newSession.name || '',
     })
-    currentSessionId.value = newSession.id
+    currentSessionId.value = sessionId
     messages.value = []
   } catch (e) {
     console.error('创建会话失败', e)
@@ -232,15 +270,12 @@ const loadSessions = async () => {
     if (sessionList.length > 0) {
       sessions.value = sessionList
       currentSessionId.value = sessionList[0].id
-      // 加载第一个会话的消息
       await loadSession()
     } else {
-      // 没有会话，创建一个默认会话
       await createNewSession()
     }
   } catch (e) {
     console.error('加载会话列表失败', e)
-    // 降级：创建临时会话
     await createNewSession()
   } finally {
     sessionsLoading.value = false
@@ -322,11 +357,17 @@ const handleAdminCommand = (command: string) => {
 const handleSend = async () => {
   if (!inputMessage.value.trim() || isStreaming.value) return
 
+  // 确保 sessionId 存在，如果为空则创建新会话
+  if (!currentSessionId.value) {
+    await createNewSession()
+  }
+
   // 积分校验：余额不足时弹窗拦截
-  if (pointsStore.availablePoints < AI_COST_PER_QUERY) {
+  const requiredPoints = currentCost.value
+  if (pointsStore.availablePoints < requiredPoints) {
     try {
       await ElMessageBox.confirm(
-        `当前积分余额 ${pointsStore.availablePoints}，本次咨询需要 ${AI_COST_PER_QUERY} 积分。\n发帖、评论、签到都可以获取积分。`,
+        `当前积分余额 ${pointsStore.availablePoints}，本次咨询需要 ${requiredPoints} 积分。\n发帖、评论、签到都可以获取积分。`,
         '积分不足',
         {
           confirmButtonText: '去赚积分',
@@ -371,7 +412,10 @@ const handleSend = async () => {
       timestamp: new Date().toISOString(),
     }
 
-    const closeFn = ragChat(
+    // 根据模式选择 API
+    const chatApi = chatMode.value === 'rag' ? ragChat : agentChat
+
+    const closeFn = chatApi(
       question,
       currentSessionId.value,
       (data: string) => {
@@ -382,10 +426,10 @@ const handleSend = async () => {
         }
       },
       (error: Error) => {
-        console.error('RAG chat error:', error)
+        console.error(`${chatMode.value.toUpperCase()} chat error:`, error)
         isStreaming.value = false
         closeConnection.value = null
-        
+
         if (assistantMessage.content) {
           messages.value.push(assistantMessage)
         } else {
@@ -401,7 +445,7 @@ const handleSend = async () => {
           messages.value.push(assistantMessage)
         }
         // 本地扣减积分（后端已自动扣分，此处同步前端状态）
-        pointsStore.deductPoints(AI_COST_PER_QUERY)
+        pointsStore.deductPoints(requiredPoints)
         isStreaming.value = false
         streamingContent.value = ''
         closeConnection.value = null
@@ -461,11 +505,35 @@ onUnmounted(() => {
 <style scoped lang="scss">
 @use '@/styles/variables.scss' as vars;
 
+// ========== 主题变量定义 ==========
+$rag-primary: #E07A5F;
+$rag-secondary: #FFB366;
+$rag-accent: #FFD6A5;
+$rag-bg-1: rgba(255, 251, 247, 0.85);
+$rag-bg-2: rgba(255, 248, 240, 0.85);
+$rag-glow: rgba(255, 138, 76, 0.15);
+
+$agent-primary: #8B5CF6;
+$agent-secondary: #A78BFA;
+$agent-accent: #C4B5FD;
+$agent-bg-1: rgba(248, 245, 255, 0.85);
+$agent-bg-2: rgba(243, 238, 255, 0.85);
+$agent-glow: rgba(139, 92, 246, 0.15);
+
+// 平滑过渡
+$theme-transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
 .rag-chat-page {
   position: relative;
   padding: 24px;
   min-height: calc(100vh - 120px);
-  background: linear-gradient(135deg, rgba(255, 251, 247, 0.8), rgba(255, 248, 240, 0.8));
+  background: linear-gradient(135deg, $rag-bg-1, $rag-bg-2);
+  transition: $theme-transition;
+
+  // Agent 模式覆盖
+  &.mode-agent {
+    background: linear-gradient(135deg, $agent-bg-1, $agent-bg-2);
+  }
 
   .pet-decorations {
     position: absolute;
@@ -476,48 +544,78 @@ onUnmounted(() => {
     pointer-events: none;
     z-index: 0;
     overflow: hidden;
+    transition: $theme-transition;
 
     .deco-circle {
       position: absolute;
       border-radius: 50%;
       opacity: 0.08;
-      animation: gentleFloat 15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      animation: gentleFloat 18s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      transition: $theme-transition;
 
+      // RAG 模式装饰
       &.deco-1 {
-        width: 120px;
-        height: 120px;
-        top: 10%;
-        left: 5%;
-        background: linear-gradient(135deg, #FF8A4C, #FFD1A6);
+        width: 180px;
+        height: 180px;
+        top: 8%;
+        left: 4%;
+        background: linear-gradient(135deg, $rag-primary, $rag-accent);
         animation-delay: 0s;
+        filter: blur(40px);
       }
 
       &.deco-2 {
-        width: 80px;
-        height: 80px;
-        top: 30%;
-        right: 8%;
-        background: linear-gradient(135deg, #BFD9F2, #D7CCFF);
-        animation-delay: 3s;
+        width: 160px;
+        height: 160px;
+        bottom: 12%;
+        right: 4%;
+        background: linear-gradient(135deg, $rag-secondary, $rag-accent);
+        animation-delay: 6s;
+        filter: blur(35px);
       }
 
       &.deco-3 {
-        width: 100px;
-        height: 100px;
-        bottom: 25%;
-        left: 3%;
-        background: linear-gradient(135deg, #FFD1A6, #BFD9F2);
-        animation-delay: 6s;
+        width: 120px;
+        height: 120px;
+        top: 45%;
+        right: 8%;
+        background: linear-gradient(135deg, $rag-accent, #FFF5EB);
+        animation-delay: 12s;
+        filter: blur(30px);
+        display: block;
       }
 
       &.deco-4 {
-        width: 90px;
-        height: 90px;
-        bottom: 15%;
-        right: 5%;
-        background: linear-gradient(135deg, #D7CCFF, #FF8A4C);
-        animation-delay: 9s;
+        width: 100px;
+        height: 100px;
+        bottom: 25%;
+        left: 8%;
+        background: linear-gradient(135deg, $rag-secondary, $rag-accent);
+        animation-delay: 3s;
+        filter: blur(25px);
+        display: block;
       }
+    }
+
+    // Agent 模式装饰
+    .mode-agent & .deco-1 {
+      background: linear-gradient(135deg, $agent-primary, $agent-accent);
+      filter: blur(50px);
+    }
+
+    .mode-agent & .deco-2 {
+      background: linear-gradient(135deg, $agent-secondary, $agent-accent);
+      filter: blur(45px);
+    }
+
+    .mode-agent & .deco-3 {
+      background: linear-gradient(135deg, $agent-accent, #EDE9FE);
+      filter: blur(40px);
+    }
+
+    .mode-agent & .deco-4 {
+      background: linear-gradient(135deg, $agent-secondary, $agent-accent);
+      filter: blur(35px);
     }
   }
 
@@ -530,10 +628,29 @@ onUnmounted(() => {
   .chat-card {
     position: relative;
     z-index: 1;
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(255, 138, 76, 0.15);
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    box-shadow:
+      0 8px 32px $rag-glow,
+      0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    transition: $theme-transition;
+
+    .mode-agent & {
+      box-shadow:
+        0 8px 32px $agent-glow,
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    :deep(.el-card__header) {
+      border-bottom: 1px solid rgba(224, 122, 95, 0.1);
+      transition: $theme-transition;
+    }
+
+    .mode-agent & :deep(.el-card__header) {
+      border-bottom-color: rgba(139, 92, 246, 0.1);
+    }
   }
 
   .header {
@@ -551,22 +668,34 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, #FF8A4C, #FFD1A6);
-        border-radius: 12px;
-        animation: wave 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, $rag-primary, $rag-accent);
+        border-radius: 16px;
+        animation: wave 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         color: #fff;
+        box-shadow: 0 4px 16px rgba(224, 122, 95, 0.3);
+        transition: $theme-transition;
       }
 
       h2 {
         margin: 0;
         font-size: 24px;
         font-weight: 600;
-        background: linear-gradient(135deg, #FF8A4C, #FFD1A6);
+        background: linear-gradient(135deg, $rag-primary, $rag-secondary);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        transition: $theme-transition;
+      }
+
+      .mode-agent & .header-icon {
+        background: linear-gradient(135deg, $agent-primary, $agent-accent);
+        box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+      }
+
+      .mode-agent & h2 {
+        background: linear-gradient(135deg, $agent-primary, $agent-secondary);
       }
     }
 
@@ -594,30 +723,107 @@ onUnmounted(() => {
     75% { transform: rotate(8deg); }
   }
 
+  .mode-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .mode-switcher {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .mode-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #606266;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      :deep(.el-segmented) {
+        --el-segmented-bg-color: rgba(255, 255, 255, 0.8);
+        --el-border-radius-base: 12px;
+        transition: $theme-transition;
+
+        .el-segmented__item {
+          padding: 8px 16px;
+          font-weight: 500;
+          transition: $theme-transition;
+
+          &.is-selected {
+            background: linear-gradient(135deg, $rag-primary, $rag-secondary);
+            color: #fff;
+          }
+        }
+      }
+
+      .mode-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .el-icon {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+
+  // Agent 模式下 segmented 的选中样式
+  &.mode-agent .mode-section .mode-switcher {
+    :deep(.el-segmented) .el-segmented__item.is-selected {
+      background: linear-gradient(135deg, $agent-primary, $agent-secondary);
+    }
+  }
+
   .knowledge-hint {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, rgba(255, 209, 166, 0.2), rgba(191, 217, 242, 0.2));
-    border-radius: 12px;
-    color: #FF8A4C;
+    padding: 12px 18px;
+    border-radius: 14px;
     font-size: 14px;
-    border: 1px solid rgba(255, 138, 76, 0.2);
+    border: 1px solid;
+    transition: $theme-transition;
+
+    &.hint-rag {
+      background: linear-gradient(135deg, rgba(255, 209, 166, 0.25), rgba(255, 235, 220, 0.25));
+      color: $rag-primary;
+      border-color: rgba(224, 122, 95, 0.2);
+    }
+
+    &.hint-agent {
+      background: linear-gradient(135deg, rgba(199, 181, 253, 0.3), rgba(237, 233, 254, 0.3));
+      color: $agent-primary;
+      border-color: rgba(139, 92, 246, 0.2);
+    }
 
     .points-badge {
       margin-left: auto;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 4px 12px;
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(255, 138, 76, 0.25);
+      padding: 5px 14px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid;
       border-radius: 20px;
       font-size: 13px;
-      font-weight: 500;
-      color: #FF8A4C;
+      font-weight: 600;
       white-space: nowrap;
+      transition: $theme-transition;
+
+      .hint-rag & {
+        border-color: rgba(224, 122, 95, 0.25);
+        color: $rag-primary;
+        box-shadow: 0 2px 8px rgba(224, 122, 95, 0.15);
+      }
+
+      .hint-agent & {
+        border-color: rgba(139, 92, 246, 0.25);
+        color: $agent-primary;
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
+      }
 
       .points-icon {
         font-size: 12px;
@@ -636,7 +842,30 @@ onUnmounted(() => {
     overflow-y: auto;
     padding: 24px;
     background: linear-gradient(180deg, rgba(255, 251, 247, 0.5), rgba(255, 248, 240, 0.5));
-    border-radius: 12px;
+    border-radius: 16px;
+    transition: $theme-transition;
+
+    .mode-agent & {
+      background: linear-gradient(180deg, rgba(248, 245, 255, 0.5), rgba(243, 238, 255, 0.5));
+    }
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(224, 122, 95, 0.2);
+      border-radius: 3px;
+      transition: $theme-transition;
+    }
+
+    .mode-agent &::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.2);
+    }
 
     .empty-state {
       display: flex;
@@ -736,13 +965,23 @@ onUnmounted(() => {
         flex-shrink: 0;
 
         .user-avatar {
-          background: linear-gradient(135deg, #FF8A4C, #FFD1A6);
-          border: 2px solid rgba(255, 138, 76, 0.3);
+          background: linear-gradient(135deg, $rag-primary, $rag-accent);
+          border: 2px solid rgba(224, 122, 95, 0.3);
+          box-shadow: 0 2px 8px rgba(224, 122, 95, 0.2);
+          transition: $theme-transition;
         }
 
         .assistant-avatar {
           background: linear-gradient(135deg, #BFD9F2, #D7CCFF);
           border: 2px solid rgba(191, 217, 242, 0.3);
+          box-shadow: 0 2px 8px rgba(191, 217, 242, 0.2);
+          transition: $theme-transition;
+        }
+
+        .mode-agent & .assistant-avatar {
+          background: linear-gradient(135deg, $agent-secondary, $agent-accent);
+          border-color: rgba(139, 92, 246, 0.3);
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
         }
       }
 
@@ -752,24 +991,42 @@ onUnmounted(() => {
 
         .message-bubble {
           padding: 14px 18px;
-          border-radius: 16px;
+          border-radius: 18px;
           word-wrap: break-word;
           position: relative;
           animation: fadeInUp 0.3s ease-out;
+          transition: $theme-transition;
 
           &.user {
-            background: linear-gradient(135deg, #FF8A4C, #FFB366);
+            background: linear-gradient(145deg, $rag-primary, $rag-secondary);
             color: #fff;
             margin-left: auto;
-            box-shadow: 0 4px 12px rgba(255, 138, 76, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow:
+              0 4px 12px rgba(224, 122, 95, 0.3),
+              inset -1px -1px 4px rgba(0, 0, 0, 0.15),
+              inset 1px 1px 4px rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+          }
+
+          .mode-agent & .message-bubble.user {
+            background: linear-gradient(145deg, $agent-primary, $agent-secondary);
+            box-shadow:
+              0 4px 12px rgba(139, 92, 246, 0.3),
+              inset -1px -1px 4px rgba(0, 0, 0, 0.15),
+              inset 1px 1px 4px rgba(255, 255, 255, 0.3);
           }
 
           &.assistant {
-            background: linear-gradient(135deg, #fff, #fafafa);
+            background: linear-gradient(145deg, #FFFFFF, #FAFAFA);
             color: #1f2d3d;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 138, 76, 0.1);
+            box-shadow:
+              0 4px 12px rgba(0, 0, 0, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(212, 163, 115, 0.15);
+          }
+
+          .mode-agent & .message-bubble.assistant {
+            border-color: rgba(139, 92, 246, 0.15);
           }
 
           .markdown-content {
@@ -817,8 +1074,14 @@ onUnmounted(() => {
   .input-container {
     padding: 20px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 251, 247, 0.95));
-    border-top: 1px solid rgba(255, 138, 76, 0.15);
-    border-radius: 0 0 12px 12px;
+    border-top: 1px solid rgba(224, 122, 95, 0.12);
+    border-radius: 0 0 16px 16px;
+    transition: $theme-transition;
+
+    .mode-agent & {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 245, 255, 0.95));
+      border-top-color: rgba(139, 92, 246, 0.12);
+    }
 
     .points-hint {
       display: flex;
@@ -835,19 +1098,40 @@ onUnmounted(() => {
       .points-hint-value {
         font-weight: 700;
         font-family: 'SF Mono', 'Consolas', monospace;
-        color: #FF8A4C;
         font-size: 15px;
+        transition: $theme-transition;
+
+        &:not(.points-low) {
+          color: $rag-primary;
+        }
 
         &.points-low {
           color: #E07A5F;
           animation: pulse 1.5s infinite;
         }
+
+        .mode-agent & &:not(.points-low) {
+          color: $agent-primary;
+        }
       }
 
       .points-hint-cost {
-        margin-left: auto;
         font-size: 12px;
         color: #bbb;
+      }
+
+      .mode-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 12px;
+        margin-left: 8px;
+        background: linear-gradient(135deg, $agent-primary, $agent-secondary);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        letter-spacing: 0.3px;
       }
     }
 
@@ -857,14 +1141,27 @@ onUnmounted(() => {
     }
 
     :deep(.el-textarea__inner) {
-      border: 2px solid rgba(255, 138, 76, 0.2);
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.9);
-      transition: all 0.3s ease;
+      border: 2px solid rgba(212, 163, 115, 0.25);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.95);
+      transition: all 0.25s ease-out;
 
       &:focus {
-        border-color: #FF8A4C;
-        box-shadow: 0 0 0 3px rgba(255, 138, 76, 0.1);
+        border-color: rgba(224, 122, 95, 0.5);
+        box-shadow:
+          0 0 0 4px rgba(224, 122, 95, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+    }
+
+    .mode-agent & :deep(.el-textarea__inner) {
+      border-color: rgba(139, 92, 246, 0.2);
+
+      &:focus {
+        border-color: rgba(139, 92, 246, 0.5);
+        box-shadow:
+          0 0 0 4px rgba(139, 92, 246, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
       }
     }
 
@@ -875,19 +1172,67 @@ onUnmounted(() => {
       margin-top: 16px;
 
       .el-button {
-        border-radius: 12px;
-        padding: 10px 24px;
-        font-weight: 500;
-        transition: all 0.3s ease;
+        border-radius: 14px;
+        padding: 12px 28px;
+        font-weight: 600;
+        transition: all 0.25s ease-out;
 
         &.el-button--primary {
-          background: linear-gradient(135deg, #FF8A4C, #FFB366);
-          border: none;
-          box-shadow: 0 4px 12px rgba(255, 138, 76, 0.3);
+          background: linear-gradient(145deg, $rag-primary, $rag-secondary);
+          border: 2px solid rgba(224, 122, 95, 0.3);
+          box-shadow:
+            inset -1px -1px 4px rgba(0, 0, 0, 0.1),
+            inset 1px 1px 4px rgba(255, 255, 255, 0.3),
+            0 4px 12px rgba(224, 122, 95, 0.3);
+          transition: $theme-transition;
 
           &:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(255, 138, 76, 0.4);
+            box-shadow:
+              inset -1px -1px 4px rgba(0, 0, 0, 0.1),
+              inset 1px 1px 4px rgba(255, 255, 255, 0.3),
+              0 6px 16px rgba(224, 122, 95, 0.35);
+          }
+
+          &:active:not(:disabled) {
+            transform: translateY(0) scale(0.98);
+            box-shadow:
+              inset 2px 2px 6px rgba(0, 0, 0, 0.15),
+              inset -1px -1px 4px rgba(255, 255, 255, 0.1),
+              0 2px 6px rgba(224, 122, 95, 0.3);
+          }
+        }
+
+        .mode-agent & .el-button--primary {
+          background: linear-gradient(145deg, $agent-primary, $agent-secondary);
+          border-color: rgba(139, 92, 246, 0.3);
+          box-shadow:
+            inset -1px -1px 4px rgba(0, 0, 0, 0.1),
+            inset 1px 1px 4px rgba(255, 255, 255, 0.3),
+            0 4px 12px rgba(139, 92, 246, 0.3);
+
+          &:hover:not(:disabled) {
+            box-shadow:
+              inset -1px -1px 4px rgba(0, 0, 0, 0.1),
+              inset 1px 1px 4px rgba(255, 255, 255, 0.3),
+              0 6px 16px rgba(139, 92, 246, 0.35);
+          }
+
+          &:active:not(:disabled) {
+            box-shadow:
+              inset 2px 2px 6px rgba(0, 0, 0, 0.15),
+              inset -1px -1px 4px rgba(255, 255, 255, 0.1),
+              0 2px 6px rgba(139, 92, 246, 0.3);
+          }
+        }
+
+        &:not(.el-button--primary) {
+          border-color: rgba(0, 0, 0, 0.08);
+          color: #606266;
+
+          &:hover {
+            border-color: rgba(0, 0, 0, 0.12);
+            background: rgba(0, 0, 0, 0.02);
           }
         }
       }

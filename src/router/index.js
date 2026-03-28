@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -259,6 +260,56 @@ const router = createRouter({
         menu: { hidden: true },
       },
     },
+    // ========== 后台管理路由 ==========
+    {
+      path: '/admin',
+      redirect: '/admin/users',
+      meta: { requiresAdmin: true, menu: { hidden: true } },
+      children: [
+        {
+          path: 'users',
+          name: 'admin-users',
+          component: () => import('@/views/admin/UserManagement.vue'),
+          meta: { title: '用户管理 - 管理后台', requiresAdmin: true, menu: { hidden: true } },
+        },
+        {
+          path: 'posts',
+          name: 'admin-posts',
+          component: () => import('@/views/admin/PostAudit.vue'),
+          meta: { title: '帖子审核 - 管理后台', requiresAdmin: true, menu: { hidden: true } },
+        },
+        {
+          path: 'activities',
+          name: 'admin-activities',
+          component: () => import('@/views/admin/ActivityAudit.vue'),
+          meta: { title: '活动审核 - 管理后台', requiresAdmin: true, menu: { hidden: true } },
+        },
+        {
+          path: 'coupons',
+          name: 'admin-coupons',
+          component: () => import('@/views/admin/CouponManagement.vue'),
+          meta: { title: '积分券模板 - 管理后台', requiresAdmin: true, menu: { hidden: true } },
+        },
+        {
+          path: 'points-records',
+          name: 'admin-points-records',
+          component: () => import('@/views/admin/PointsRecords.vue'),
+          meta: { title: '积分流水 - 管理后台', requiresAdmin: true, menu: { hidden: true } },
+        },
+        {
+          path: 'documents',
+          name: 'admin-documents',
+          component: () => import('@/views/admin/DocumentManagement.vue'),
+          meta: { title: '知识库文档 - 管理后台', requiresAdmin: true, menu: { hidden: true } },
+        },
+        {
+          path: 'sync',
+          name: 'admin-sync',
+          component: () => import('@/views/admin/DataSync.vue'),
+          meta: { title: '数据同步 - 管理后台', requiresAdmin: true, menu: { hidden: true } },
+        },
+      ],
+    },
   ],
 })
 
@@ -274,7 +325,7 @@ function setMeta(name, content, isProperty = false) {
   el.setAttribute('content', content || '')
 }
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   if (to.meta?.title) {
     document.title = to.meta.title
   }
@@ -283,6 +334,27 @@ router.beforeEach((to, _from, next) => {
     setMeta('og:title', to.meta.title, true)
     setMeta('og:description', to.meta.description, true)
   }
+
+  if (to.meta?.requiresAdmin) {
+    const authStore = useAuthStore()
+    if (!authStore.isLoggedIn) {
+      next({ path: '/login', query: { redirect: to.fullPath } })
+      return
+    }
+    if (!authStore.user?.isAdmin) {
+      try {
+        const adminInfo = await authStore.fetchAdminInfo()
+        if (!adminInfo?.isAdmin) {
+          next('/dashboard')
+          return
+        }
+      } catch {
+        next('/dashboard')
+        return
+      }
+    }
+  }
+
   next()
 })
 

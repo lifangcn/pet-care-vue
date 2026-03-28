@@ -48,6 +48,7 @@ apiClient.interceptors.response.use(
   (response) => {
     if (response.data && typeof response.data === 'object' && 'code' in response.data) {
       if (response.data.code === '200' || response.data.code === 200) {
+        // 保持 response 对象结构，只替换 data 字段
         return { ...response, data: response.data.data }
       } else {
         return Promise.reject(new Error(response.data.message || '请求失败'))

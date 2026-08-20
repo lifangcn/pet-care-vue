@@ -1,11 +1,11 @@
 import apiClient from './api'
-import type { Label, PageResult, Post } from '@/types/club'
+import type { Label, PageResult, Post, TypeOfLabel } from '@/types/club'
 
 /**
  * 社区-标签(label)相关接口
  */
 
-export const fetchLabels = (params?: { type?: number }) => {
+export const fetchLabels = (params?: { type?: TypeOfLabel }) => {
   return apiClient.get<Label[]>('/label', { params })
 }
 

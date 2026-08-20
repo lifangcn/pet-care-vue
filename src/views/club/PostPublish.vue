@@ -140,7 +140,7 @@ const normalizeMediaUrls = () => {
 
 const loadCommonLabels = async () => {
   try {
-    const { data } = await fetchLabels({ type: 1 })
+    const { data } = await fetchLabels({ type: 'GENERAL' })
     commonLabels.value = data || []
   } catch (e) {
     commonLabels.value = []

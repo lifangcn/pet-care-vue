@@ -8,6 +8,8 @@ export type PostType =
 
 export type ActivityType = 'ONLINE' | 'OFFLINE'
 
+export type TypeOfLabel = 'GENERAL' | 'BREED' | 'CONTENT'
+
 /**
  * 活动状态枚举
  * @author Michael Li
@@ -18,7 +20,7 @@ export type ActivityStatus = 'RECRUITING' | 'ONGOING' | 'ENDED'
 export interface Label {
   id: string | number
   name: string
-  type?: 1 | 2 | 3
+  type?: TypeOfLabel
   icon?: string
   color?: string
   useCount?: number

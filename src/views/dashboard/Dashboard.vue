@@ -297,7 +297,7 @@ const handleImageError = (e: Event) => {
 
 onMounted(async () => {
   await petStore.loadPets()
-  pointsStore.fetchAccount()
+  pointsStore.fetchAccountWithRetry().catch(() => {})
   await loadReminderExecutions()
   await loadCommunityPosts()
 })

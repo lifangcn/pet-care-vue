@@ -310,9 +310,14 @@ onMounted(async () => {
     stepOneForm.avatar = authStore.user.avatar || ''
     stepOneForm.address = authStore.user.address || ''
   }
-  // 加载积分账户和代金券
-  pointsStore.fetchAccount()
-  loadCoupons()
+  // 先加载代金券，再强制刷新积分账户，刷新完成后重新加载券状态
+  await loadCoupons()
+  try {
+    await pointsStore.fetchAccountWithRetry()
+  } catch (error) {
+    console.error('[Profile] 刷新积分账户失败:', error)
+  }
+  await loadCoupons()
 })
 
 const handleSubmit = async () => {

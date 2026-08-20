@@ -38,10 +38,15 @@ function calcLevel(totalPoints: number): PointsLevel {
   }
 }
 
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
 interface PointsState {
   account: PointsAccount | null
   lastFetchTime: number | null    // 缓存时间戳，避免重复请求
 }
+
+/** 强制刷新轮询的共享 Promise，避免并发重复请求 */
+let refreshPromise: Promise<PointsAccount | null> | null = null
 
 export const usePointsStore = defineStore('points', {
   state: (): PointsState => ({
@@ -82,6 +87,47 @@ export const usePointsStore = defineStore('points', {
       } catch (error) {
         console.error('[Points Store] 获取积分账户失败:', error)
         throw error
+      }
+    },
+
+    /**
+     * 强制刷新积分账户，若 totalPoints 为 0 则有界轮询等待到账
+     * @param maxAttempts 最大尝试次数（默认 6 次，约 5 秒）
+     * @param intervalMs 轮询间隔（默认 1000ms）
+     * @returns 最终获取到的账户信息或 null
+     */
+    async fetchAccountWithRetry(maxAttempts = 6, intervalMs = 1000) {
+      if (refreshPromise) {
+        return refreshPromise
+      }
+
+      refreshPromise = (async () => {
+        let account: PointsAccount | null = null
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          try {
+            account = await this.fetchAccount(true)
+          } catch (error) {
+            console.error('[Points Store] 强制刷新积分账户失败:', error)
+            account = null
+          }
+
+          if (account && account.totalPoints > 0) {
+            break
+          }
+
+          if (attempt < maxAttempts - 1) {
+            await delay(intervalMs)
+          }
+        }
+
+        return account
+      })()
+
+      try {
+        return await refreshPromise
+      } finally {
+        refreshPromise = null
       }
     },
 
